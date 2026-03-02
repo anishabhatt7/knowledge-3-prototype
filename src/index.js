@@ -5,10 +5,7 @@ import { createElement } from 'lwc';
 import App from 'demo/app';
 import { loadSLDS } from './slds-loader';
 
-// Import global styles
-import './global.css';
-
-// Load SLDS dynamically
+// Load SLDS dynamically (pass { slds1: true } to also load the SLDS 1 stylesheet alongside slds-plus)
 loadSLDS();
 
 // Verify synthetic shadow is active

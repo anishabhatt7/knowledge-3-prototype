@@ -1,8 +1,24 @@
 <template>
+    <!-- Icon test page -->
+    <template if:true={showIconTest}>
+        <demo-icon-test onnavigateback={handleNavigateBack}></demo-icon-test>
+    </template>
+
+    <!-- Main page -->
+    <template if:false={showIconTest}>
     <div class="slds-container_x-large slds-container_center slds-m-top_large">
         <!-- Header -->
         <div class="slds-text-heading_large slds-text-align_center slds-m-bottom_large">
             LWC + Vite + Lightning Base Components Demo
+        </div>
+
+        <!-- Nav -->
+        <div class="slds-m-bottom_large slds-text-align_center">
+            <lightning-button
+                label="Icon Test Page"
+                icon-name="utility:image"
+                onclick={handleNavigateToIconTest}>
+            </lightning-button>
         </div>
 
         <!-- Shadow DOM Test Component -->
@@ -226,4 +242,5 @@
             Built with Vite + LWC + Lightning Base Components + SLDS
         </div>
     </div>
+    </template>
 </template>

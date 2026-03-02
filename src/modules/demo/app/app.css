@@ -1,25 +1,25 @@
 :host {
     display: block;
-    background-color: #f3f2f2;
+    background-color: var(--slds-g-color-surface-2);
     min-height: 100vh;
 }
 
 .slds-section {
-    border: 1px solid #dddbda;
-    border-radius: 0.25rem;
-    padding: 1rem;
-    background-color: white;
+    border: 1px solid var(--slds-g-color-border-1);
+    border-radius: var(--slds-g-radius-border-2);
+    padding: var(--slds-g-spacing-4);
+    background-color: var(--slds-g-color-surface-1);
 }
 
 .slds-section__title {
-    font-weight: 600;
-    color: #3e3e3c;
-    margin-bottom: 1rem;
+    font-weight: var(--slds-g-font-weight-6);
+    color: var(--slds-g-color-on-surface-2);
+    margin-bottom: var(--slds-g-spacing-4);
 }
 
 .slds-button-group {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--slds-g-spacing-2);
     flex-wrap: wrap;
 }
 

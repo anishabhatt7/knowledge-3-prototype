@@ -1,6 +1,20 @@
 import { LightningElement, track } from 'lwc';
 
 export default class App extends LightningElement {
+    @track currentPage = 'main';
+
+    get showIconTest() {
+        return this.currentPage === 'iconTest';
+    }
+
+    handleNavigateToIconTest() {
+        this.currentPage = 'iconTest';
+    }
+
+    handleNavigateBack() {
+        this.currentPage = 'main';
+    }
+
     @track inputValue = '';
     @track checkboxGroupValues = []; // Array for checkbox group
     @track selectedRadioValue = 'option1';
