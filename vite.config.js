@@ -18,9 +18,10 @@ export default defineConfig({
       disableSyntheticShadowSupport: false
     })
   ],
+  appType: 'spa',
   server: {
     port: 3000,
-    open: true
+    open: true,
   },
   resolve: {
     alias: {

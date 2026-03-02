@@ -1,18 +1,38 @@
 import { LightningElement, track } from 'lwc';
 
+const ROUTES = {
+    '/icons': 'iconTest',
+};
+
+function pageFromPath(pathname) {
+    return ROUTES[pathname] ?? 'main';
+}
+
 export default class App extends LightningElement {
-    @track currentPage = 'main';
+    @track currentPage = pageFromPath(window.location.pathname);
+
+    connectedCallback() {
+        this._onPopState = (event) => {
+            this.currentPage = event.state?.page ?? pageFromPath(window.location.pathname);
+        };
+        window.addEventListener('popstate', this._onPopState);
+    }
+
+    disconnectedCallback() {
+        window.removeEventListener('popstate', this._onPopState);
+    }
 
     get showIconTest() {
         return this.currentPage === 'iconTest';
     }
 
     handleNavigateToIconTest() {
+        history.pushState({ page: 'iconTest' }, '', '/icons');
         this.currentPage = 'iconTest';
     }
 
     handleNavigateBack() {
-        this.currentPage = 'main';
+        history.back();
     }
 
     @track inputValue = '';
