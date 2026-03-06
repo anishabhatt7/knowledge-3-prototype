@@ -19,7 +19,8 @@ export default defineConfig({
       ],
       // Enable synthetic shadow (like Salesforce platform)
       // false = use synthetic shadow, true = use native shadow
-      disableSyntheticShadowSupport: false
+      disableSyntheticShadowSupport: false,
+      exclude: [path.resolve('./index.html')]
     })
   ],
   appType: 'spa',

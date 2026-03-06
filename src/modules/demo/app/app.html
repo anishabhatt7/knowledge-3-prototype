@@ -19,10 +19,21 @@
                 icon-name="utility:image"
                 onclick={handleNavigateToIconTest}>
             </lightning-button>
+            <lightning-button
+                class="slds-m-left_small"
+                label={sldsToggleLabel}
+                icon-name="utility:palette"
+                onclick={handleToggleSLDS}>
+            </lightning-button>
+            <template if:true={showDarkModeButton}>
+                <lightning-button
+                    class="slds-m-left_small"
+                    label={darkModeLabel}
+                    icon-name="utility:light_bulb"
+                    onclick={handleToggleDarkMode}>
+                </lightning-button>
+            </template>
         </div>
-
-        <!-- Shadow DOM Test Component -->
-        <demo-shadow-test></demo-shadow-test>
 
         <!-- Card Container -->
         <lightning-card title="Lightning Base Components Showcase" icon-name="standard:lightning_component">

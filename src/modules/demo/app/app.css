@@ -1,25 +1,25 @@
 :host {
-    display: block;
-    background-color: var(--slds-g-color-surface-2);
-    min-height: 100vh;
+   display: block;
+   background-color: var(--slds-g-color-surface-2, #f3f3f3);
+   min-height: 100vh;
 }
 
 .slds-section {
-    border: 1px solid var(--slds-g-color-border-1);
-    border-radius: var(--slds-g-radius-border-2);
-    padding: var(--slds-g-spacing-4);
-    background-color: var(--slds-g-color-surface-1);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-2, 0.5rem);
+    padding: var(--slds-g-spacing-4, 1rem);
+    background-color: var(--slds-g-color-surface-1, #ffffff);
 }
 
 .slds-section__title {
-    font-weight: var(--slds-g-font-weight-6);
-    color: var(--slds-g-color-on-surface-2);
-    margin-bottom: var(--slds-g-spacing-4);
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    margin-bottom: var(--slds-g-spacing-4, 1rem);
 }
 
 .slds-button-group {
     display: flex;
-    gap: var(--slds-g-spacing-2);
+    gap: var(--slds-g-spacing-2, 0.5rem);
     flex-wrap: wrap;
 }
 

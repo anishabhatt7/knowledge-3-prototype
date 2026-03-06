@@ -1,15 +1,16 @@
 // MUST import synthetic shadow BEFORE any LWC imports
 import '@lwc/synthetic-shadow';
 
+// Pre-load icon template modules so they're in the module registry before any
+// component mounts. This eliminates the async gap in primitiveIcon's
+// requestIconTemplates() — hasIconLibrary() returns true on first render.
+import '/node_modules/lightning-base-components/src/lightning/iconSvgTemplatesUtility/iconSvgTemplatesUtility.js';
+import '/node_modules/lightning-base-components/src/lightning/iconSvgTemplatesStandard/iconSvgTemplatesStandard.js';
+import '/node_modules/lightning-base-components/src/lightning/iconSvgTemplatesDoctype/iconSvgTemplatesDoctype.js';
+import '/node_modules/lightning-base-components/src/lightning/iconSvgTemplatesAction/iconSvgTemplatesAction.js';
+
 import { createElement } from 'lwc';
 import App from 'demo/app';
-import { loadSLDS } from './slds-loader';
-
-// Load SLDS dynamically — prefers SLDS 2 (slds-plus.css), falls back to SLDS 1
-loadSLDS();
-
-// Verify synthetic shadow is active
-console.log('LWC Synthetic Shadow Active:', typeof window.SyntheticShadowRoot !== 'undefined');
 
 // Create the app component
 const app = createElement('demo-app', {
@@ -19,11 +20,9 @@ const app = createElement('demo-app', {
 // Mount the app to the DOM
 document.querySelector('#app').appendChild(app);
 
-// Additional verification after mount
-setTimeout(() => {
-    const appEl = document.querySelector('demo-app');
-    if (appEl) {
-        console.log('App element shadowRoot:', appEl.shadowRoot);
-        console.log('Can query inside app:', document.querySelectorAll('demo-app .slds-section').length > 0);
-    }
-}, 1000);
+// Icons are already loaded (static imports above), so hide the spinner and
+// reveal the app immediately after mount — no flash, no race condition.
+const spinner = document.getElementById('app-spinner');
+const appEl = document.getElementById('app');
+spinner.classList.add('is-hidden');
+appEl.classList.add('is-ready');

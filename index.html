@@ -4,8 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
     <title>LWC Vite Demo</title>
+    <link rel="stylesheet" href="/css/slds-plus.css" data-slds="slds-plus">
+    <link rel="stylesheet" href="/slds/styles/salesforce-lightning-design-system.min.css" data-slds="salesforce-lightning-design-system" media="not all">
+    <style>
+        #app {
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+        #app.is-ready {
+            opacity: 1;
+        }
+        @keyframes spinner-delayed-appear {
+            from { opacity: 0; visibility: hidden; }
+            to   { opacity: 1; visibility: visible; }
+        }
+        #app-spinner {
+            animation: spinner-delayed-appear 0.15s ease forwards;
+            animation-delay: 1s;
+        }
+        #app-spinner.is-hidden {
+            animation: none;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: none;
+        }
+    </style>
 </head>
-<body class="slds-scope">
+<body>
+    <div id="app-spinner" class="slds-spinner_container" style="opacity:0;visibility:hidden">
+        <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+            <span class="slds-assistive-text">Loading</span>
+            <div class="slds-spinner__dot-a"></div>
+            <div class="slds-spinner__dot-b"></div>
+        </div>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/index.js"></script>
 </body>

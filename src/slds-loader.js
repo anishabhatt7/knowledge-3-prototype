@@ -1,40 +1,46 @@
 /**
- * Dynamically injects stylesheets to bypass Vite/LWC CSS processing.
+ * SLDS stylesheets are loaded as static <link> tags in index.html to avoid FOUC.
+ * The active sheet is toggled via the media attribute:
+ *   - media="" / "all"  → applied
+ *   - media="not all"   → fetched but not applied
  *
- * LWC's CSS transformer rejects selectors like :root, so any stylesheet that
- * uses them (slds-plus, SLDS itself) must be loaded at runtime via <link> tags
- * rather than through ES module imports.
- *
- * Strategy: prefer SLDS 2 (slds-plus.css). Only fall back to SLDS 1
- * (salesforce-lightning-design-system.min.css) when SLDS 2 is unavailable.
+ * LWC's CSS transformer rejects :root selectors, so SLDS cannot be imported
+ * as an ES module — <link> tag injection is required.
  */
-export function loadSLDS() {
-    const slds2Href = '/css/slds-plus.css';
-    const slds1Href = '/slds/styles/salesforce-lightning-design-system.min.css';
 
-    fetch(slds2Href, { method: 'HEAD' })
-        .then((res) => {
-            if (res.ok) {
-                injectLink(slds2Href, 'slds-plus');
-            } else {
-                injectLink(slds1Href, 'salesforce-lightning-design-system');
-            }
-        })
-        .catch(() => {
-            injectLink(slds1Href, 'salesforce-lightning-design-system');
-        });
+const SLDS2_KEY = 'slds-plus';
+const SLDS1_KEY = 'salesforce-lightning-design-system';
 
-    if (!document.body.classList.contains('slds-scope')) {
-        document.body.classList.add('slds-scope');
+function getLink(key) {
+    return document.querySelector(`link[data-slds="${key}"]`);
+}
+
+export function activateSLDS2() {
+    const slds2 = getLink(SLDS2_KEY);
+    const slds1 = getLink(SLDS1_KEY);
+    if (slds2) slds2.media = 'all';
+    if (slds1) slds1.media = 'not all';
+}
+
+export function activateSLDS1() {
+    const slds2 = getLink(SLDS2_KEY);
+    const slds1 = getLink(SLDS1_KEY);
+    if (slds2) slds2.media = 'not all';
+    if (slds1) slds1.media = 'all';
+}
+
+export function toggleSLDS() {
+    const slds2 = getLink(SLDS2_KEY);
+    if (!slds2) return;
+    const usingSlds2 = slds2.media !== 'not all';
+    if (usingSlds2) {
+        activateSLDS1();
+    } else {
+        activateSLDS2();
     }
 }
 
-function injectLink(href, key) {
-    if (!document.querySelector(`link[data-slds="${key}"]`)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = href;
-        link.dataset.slds = key;
-        document.head.appendChild(link);
-    }
+export function activeSLDSVersion() {
+    const slds2 = getLink(SLDS2_KEY);
+    return slds2 && slds2.media !== 'not all' ? 2 : 1;
 }

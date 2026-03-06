@@ -1,4 +1,5 @@
 import { LightningElement, track } from 'lwc';
+import { toggleSLDS, activeSLDSVersion } from '../../../slds-loader';
 
 const ROUTES = {
     '/icons': 'iconTest',
@@ -10,6 +11,34 @@ function pageFromPath(pathname) {
 
 export default class App extends LightningElement {
     @track currentPage = pageFromPath(window.location.pathname);
+    @track _sldsVersion = activeSLDSVersion();
+    @track _darkMode = false;
+
+    get sldsToggleLabel() {
+        return this._sldsVersion === 2 ? 'Switch to SLDS 1' : 'Switch to SLDS 2';
+    }
+
+    get showDarkModeButton() {
+        return this._sldsVersion === 2;
+    }
+
+    get darkModeLabel() {
+        return this._darkMode ? 'Light Mode' : 'Dark Mode';
+    }
+
+    handleToggleSLDS() {
+        toggleSLDS();
+        this._sldsVersion = activeSLDSVersion();
+        if (this._sldsVersion !== 2 && this._darkMode) {
+            this._darkMode = false;
+            document.body.classList.remove('slds-color-scheme_dark');
+        }
+    }
+
+    handleToggleDarkMode() {
+        this._darkMode = !this._darkMode;
+        document.body.classList.toggle('slds-color-scheme_dark', this._darkMode);
+    }
 
     connectedCallback() {
         this._onPopState = (event) => {
