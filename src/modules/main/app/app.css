@@ -1,11 +1,47 @@
 :host {
     display: flex;
     flex-direction: column;
+    height: 100vh;
     min-height: 100vh;
+    overflow: hidden;
     background-color: var(--slds-g-color-surface-2, #f3f3f3);
 }
 
-/* Main content area: fills remaining height, scrolls */
+/* Global shell stays fixed at top and stacks above the body/panel */
+:host > main-global-shell {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+
+/* Wrapper for main content + panel layout: fills remaining height, scroll only here */
+.app-body {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+}
+
+.utility-full-height {
+    height: 100%;
+}
+
+/* Allow content cell to shrink so scroll wrapper gets a bounded height */
+.app-body__content-cell {
+    min-height: 0;
+}
+
+/* Wrapper that fills the layout cell and establishes flex for the scroll area */
+.app-body__scroll-wrapper {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Main content area: fills wrapper and scrolls */
 .app-main {
     flex: 1 1 0;
     min-height: 0;

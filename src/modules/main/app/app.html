@@ -3,19 +3,30 @@
     <main-global-shell current-page={currentNavPage} onnavigate={handleNavNavigate} onpanelselect={handlePanelSelect}>
     </main-global-shell>
 
-    <!-- Main content: fills available height, contents scroll -->
-    <div class="app-main">
-        <div class="app-main__inner slds-container_x-large slds-container_center slds-p-around_medium">
-            <!-- Router outlet -->
-            <template lwc:if={componentCtor}>
-                <lwc:component lwc:is={componentCtor} onnavigateback={handleNavigateBack}></lwc:component>
-            </template>
-        </div>
-        <main-theme-switcher
-            slds-version={_sldsVersion}
-            dark-mode={_darkMode}
-            ontoggleslds={handleToggleSLDS}
-            ontoggledarkmode={handleToggleDarkMode}>
-        </main-theme-switcher>
-    </div>
+    <!-- Main content and docked panel -->
+    <main class="app-body">
+        <lightning-layout vertical-align="stretch" class="utility-full-height">
+            <lightning-layout-item flexibility="auto" class="app-body__content-cell">
+                <div class="app-body__scroll-wrapper">
+                    <div class="app-main">
+                        <div class="app-main__inner slds-container_x-large slds-container_center slds-p-around_medium">
+                        <!-- Router outlet -->
+                        <template lwc:if={componentCtor}>
+                            <lwc:component lwc:is={componentCtor} onnavigateback={handleNavigateBack}></lwc:component>
+                        </template>
+                    </div>
+                    <main-theme-switcher
+                        slds-version={_sldsVersion}
+                        dark-mode={_darkMode}
+                        ontoggleslds={handleToggleSLDS}
+                        ontoggledarkmode={handleToggleDarkMode}>
+                    </main-theme-switcher>
+                    </div>
+                </div>
+            </lightning-layout-item>
+            <lightning-layout-item class={panelClasses}>
+                <main-panel selected-panel={selectedPanel} onpanelclose={handlePanelClose}></main-panel>
+            </lightning-layout-item>
+        </lightning-layout>
+    </main>
 </template>

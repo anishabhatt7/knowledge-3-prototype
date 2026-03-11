@@ -2,14 +2,35 @@
     <div class="slds-context-bar">
         <div class="slds-context-bar__primary">
             <div
-                class="slds-context-bar__item slds-context-bar__dropdown-trigger slds-dropdown-trigger slds-dropdown-trigger_click slds-no-hover">
-                <div class="slds-context-bar__icon-action slds-p-left_none">
-                    <lightning-button-menu icon-name="utility:apps" title="Open Menu" variant="bare" icon-size="medium">
-                        <lightning-menu-item label="Home" value="home" onselect={handleMenuNavigate}></lightning-menu-item>
-                        <lightning-menu-item label="Icons" value="icons" onselect={handleMenuNavigate}></lightning-menu-item>
-                        <lightning-menu-item label="Settings" value="settings" onselect={handleMenuNavigate}></lightning-menu-item>
-                        <lightning-menu-item label="User 42" value="user" onselect={handleMenuNavigate}></lightning-menu-item>
-                    </lightning-button-menu>
+                class={waffleDropdownTriggerClass}
+                role="presentation">
+                <div class="slds-context-bar__icon-action">
+                    <main-waffle
+                        title="Open App Launcher"
+                        assistive-text="Open App Launcher"
+                        onopen={handleWaffleOpen}>
+                    </main-waffle>
+                </div>
+                <div
+                    class="slds-dropdown slds-dropdown_left"
+                    role="menu"
+                    aria-label="App Launcher"
+                    if:true={isWaffleMenuOpen}
+                    onkeydown={handleWaffleMenuKeydown}>
+                    <ul class="slds-dropdown__list" role="group">
+                        <li class="slds-dropdown__item" role="presentation">
+                            <a href="/" role="menuitem" tabindex="-1" data-value="home" onclick={handleWaffleMenuItemClick}>Home</a>
+                        </li>
+                        <li class="slds-dropdown__item" role="presentation">
+                            <a href="/icons" role="menuitem" tabindex="-1" data-value="icons" onclick={handleWaffleMenuItemClick}>Icons</a>
+                        </li>
+                        <li class="slds-dropdown__item" role="presentation">
+                            <a href="/settings" role="menuitem" tabindex="-1" data-value="settings" onclick={handleWaffleMenuItemClick}>Settings</a>
+                        </li>
+                        <li class="slds-dropdown__item" role="presentation">
+                            <a href="/users/42" role="menuitem" tabindex="-1" data-value="user" onclick={handleWaffleMenuItemClick}>User 42</a>
+                        </li>
+                    </ul>
                 </div>
                 <span class="slds-context-bar__label-action slds-context-bar__app-name">
                     <span class="slds-truncate" title="Salesforce UI Starter Kit">Salesforce UI Starter Kit</span>

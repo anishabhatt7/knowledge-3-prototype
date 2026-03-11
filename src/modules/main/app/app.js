@@ -36,6 +36,8 @@ export default class App extends LightningElement {
     @track route;
     @track _sldsVersion = 2;
     @track _darkMode = false;
+    @track selectedPanel = 'agentforce_panel';
+    @track isPanelOpen = false;
 
     get componentCtor() {
         const name = this.route?.component;
@@ -102,8 +104,17 @@ export default class App extends LightningElement {
         navigate(path);
     }
 
-    handlePanelSelect() {
-        // Panel open/close can be wired later
+    handlePanelSelect(event) {
+        this.selectedPanel = event.detail?.name ?? this.selectedPanel;
+        this.isPanelOpen = true;
+    }
+
+    handlePanelClose() {
+        this.isPanelOpen = false;
+    }
+
+    get panelClasses() {
+        return `slds-panel slds-size_medium slds-panel_docked slds-panel_docked-right ${this.isPanelOpen ? 'slds-is-open' : ''}`;
     }
 
     handleNavigateBack() {
