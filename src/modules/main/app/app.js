@@ -1,16 +1,16 @@
 import { LightningElement, track } from 'lwc';
 import { subscribe, navigate } from '../../../router';
 import { toggleSLDS, activeSLDSVersion } from '../../../slds-loader';
-import Home from 'main/home';
-import IconTest from 'main/iconTest';
-import Settings from 'main/settings';
-import User from 'main/user';
+import Home from 'page/home';
+import IconTest from 'page/iconTest';
+import Settings from 'page/settings';
+import User from 'page/user';
 
 const ROUTE_COMPONENTS = {
-    'main-home': Home,
-    'main-icon-test': IconTest,
-    'main-settings': Settings,
-    'main-user': User,
+    'page-home': Home,
+    'page-icon-test': IconTest,
+    'page-settings': Settings,
+    'page-user': User,
 };
 
 export default class App extends LightningElement {

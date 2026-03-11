@@ -37,16 +37,37 @@ The demo app showcases various Lightning Base Components including:
 salesforce-ui/
 ├── src/
 │   ├── modules/
-│   │   └── demo/
-│   │       └── app/
-│   │           ├── app.js       # Component controller
-│   │           ├── app.html     # Component template
-│   │           └── app.css      # Component styles
+│   │   ├── main/
+│   │   │   └── app/             # App shell (main-app)
+│   │   ├── page/                # Route-level views (page-*)
+│   │   │   ├── home/
+│   │   │   ├── user/
+│   │   │   ├── settings/
+│   │   │   └── iconTest/
+│   │   ├── ui/                  # Reusable building blocks (ui-*)
+│   │   │   └── example/
+│   │   └── lightning/            # Reserved — do not use
+│   ├── router.js
 │   └── index.js                 # App entry point
 ├── index.html                   # HTML entry point
-├── vite.config.js              # Vite configuration
+├── vite.config.js               # Vite configuration
 └── package.json
 ```
+
+### Component namespaces
+
+This template uses **folder-based namespaces** so component roles are obvious. LWC turns the first folder under `src/modules/` into the tag prefix.
+
+| Folder   | Tag prefix | Use for |
+|----------|------------|--------|
+| **page/** | `page-*`   | Route-level views (one per URL). e.g. `page-user` → `/users/:id`. |
+| **ui/**   | `ui-*`     | Reusable building blocks (cards, buttons, modals, form controls). Used inside pages or other components. |
+| **main/** | `main-*`   | App shell only (e.g. `main-app`). Not for feature pages. |
+| **lightning/** | — | **Do not use.** Reserved for lightning-base-components and required template setup (e.g. icon templates). |
+
+Only add components under **page/** or **ui/**; do not use **lightning/** (reserved for the template and lightning-base-components).
+
+**Examples:** Add `src/modules/page/dashboard/` → use in router as `page-dashboard`, route e.g. `/dashboard`. Add `src/modules/ui/card/` → use in templates as `<ui-card>`. Keep **page/** for full-screen views and **ui/** for smaller, reusable pieces.
 
 ## Running the Project
 

@@ -4,10 +4,10 @@
  */
 
 const routes = [
-  { path: '/', component: 'main-home' },
-  { path: '/icons', component: 'main-icon-test' },
-  { path: '/settings', component: 'main-settings' },
-  { path: '/users/:id', component: 'main-user' },
+  { path: '/', component: 'page-home' },
+  { path: '/icons', component: 'page-icon-test' },
+  { path: '/settings', component: 'page-settings' },
+  { path: '/users/:id', component: 'page-user' },
 ];
 
 const listeners = new Set();
