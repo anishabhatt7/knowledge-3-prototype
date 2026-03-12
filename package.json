@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "clean": "rm -rf dist .vite node_modules",
     "prebuild-icons": "node scripts/prebuild-icons.mjs",
     "dev": "node scripts/prebuild-icons.mjs && vite",
     "build": "node scripts/prebuild-icons.mjs && vite build",
