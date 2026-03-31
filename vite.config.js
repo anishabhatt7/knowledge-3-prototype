@@ -8,6 +8,7 @@ import {
 } from './vite-plugins/icon-templates.js';
 
 export default defineConfig({
+  base: './',
   plugins: [
     resolveIconTemplatesPlugin(),
     lwc({
