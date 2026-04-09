@@ -3,10 +3,9 @@
         <h2 class="slds-panel__header-title slds-text-heading_small slds-truncate" title={panelTitle}>{panelTitle}
         </h2>
         <div class="slds-panel__header-actions">
-            <lightning-button-icon icon-name="utility:pinned" size="small" label="Unpin Panel" variant="bare"
-                class="slds-p-right_xx-small"></lightning-button-icon>
+            <lightning-button-icon icon-name="utility:pinned" size="small" label="Unpin Panel" variant="container"></lightning-button-icon>
             <lightning-button-icon icon-name="utility:close" size="small" label="Close Panel"
-                variant="bare" onclick={handleClosePanel}></lightning-button-icon>
+                variant="container" onclick={handleClosePanel}></lightning-button-icon>
         </div>
     </div>
     <div class="slds-panel__body">{panelContent}</div>
