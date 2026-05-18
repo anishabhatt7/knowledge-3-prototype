@@ -11,7 +11,6 @@ import {
 import { toggleSLDS, activeSLDSVersion, STORAGE_KEY_SLDS_VERSION } from '../../../build/slds-loader';
 import Home from 'page/home';
 import IconTest from 'page/iconTest';
-import User from 'page/user';
 import Contacts from 'page/contacts';
 import ContactDetail from 'page/contactDetail';
 import NotFound from 'page/notFound';
@@ -20,7 +19,6 @@ import NotFound from 'page/notFound';
 const ROUTE_COMPONENTS = {
     'page-home': Home,
     'page-icon-test': IconTest,
-    'page-user': User,
     'page-contacts': Contacts,
     'page-contact-detail': ContactDetail,
 };

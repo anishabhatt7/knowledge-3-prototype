@@ -28,14 +28,6 @@ export const routes = [
     navLabel: 'Icons',
   },
   {
-    path: '/users/:id',
-    component: 'page-user',
-    title: (params) => `User ${params.id}`,
-    navPage: 'user',
-    navLabel: 'User',
-    navPath: '/users/42',
-  },
-  {
     path: '/contacts',
     component: 'page-contacts',
     title: 'Contacts',

@@ -1,3 +1,7 @@
+lightning-card {
+    --slds-c-card-body-spacing-inline: var(--slds-g-spacing-var-inline-4);
+}
+
 /* Stack above lightning-spinner backdrop (z-index 9050 in LBC spinner.slds.css). */
 .theme-switcher {
     bottom: 0;

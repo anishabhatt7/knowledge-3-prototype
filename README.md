@@ -10,12 +10,13 @@ A **starter template** for prototyping and developing Salesforce experiences loc
 
 ## What you get
 
-- **App shell** — Header, global navigation, theme switcher (light/dark, SLDS 1/2), and panel layout  
-- **Client-side routing** — Declarative routes in `src/routes.config.js` with path params (e.g. `/users/:id`), History API, no full page reload  
-- **SLDS + Lightning Base Components** — Design system and Salesforce component library wired and ready to use  
-- **Synthetic Shadow DOM** — Matches Salesforce platform behavior so styles and DOM semantics align with production  
-- **Icon setup** — Prebuild script, Vite aliases for `lightning/iconSvgTemplates*`, and shim modules under `src/build/lightning-icon/shims/`; generated bundles in `src/build/generated/`  
-- **Example pages** — Home, Icons, Contacts, and a sample parameterized page (`/users/:id`). See `src/modules/page/` and `src/modules/ui/` for patterns.
+- **App shell:** Header, global navigation, theme switcher (light/dark, SLDS 1/2), and panel layout  
+- **Client-side routing:** Declarative routes in `src/routes.config.js` with path params (e.g. `/contacts/:id`), History API, no full page reload  
+- **SLDS + Lightning Base Components:** Design system and Salesforce component library wired and ready to use  
+- **Synthetic Shadow DOM:** Matches Salesforce platform behavior so styles and DOM semantics align with production  
+- **Icon setup:** Prebuild script, Vite aliases for `lightning/iconSvgTemplates*`, and shim modules under `src/build/lightning-icon/shims/`; generated bundles in `src/build/generated/`  
+- **Example pages:** Home, Icons, and Contacts (with parameterized detail route `/contacts/:id`). See `src/modules/page/` and `src/modules/ui/` for patterns.
+- **Multi-app shell:** Two app modes (Standard with tabs, Console with object switcher) configured in `src/apps.config.js`
 
 ## Quick start
 
@@ -44,7 +45,8 @@ design-system-2-starter-kit/
 │   │   │   └── themeSwitcher/     # SLDS version + dark mode
 │   │   ├── page/                  # Route-level views (page-*)
 │   │   │   ├── home/
-│   │   │   ├── user/              # e.g. /users/:id
+│   │   │   ├── contacts/
+│   │   │   ├── contactDetail/     # e.g. /contacts/:id
 │   │   │   └── iconTest/
 │   │   ├── ui/                    # Reusable building blocks (ui-*)
 │   │   │   ├── globalHeader/      # Top bar (ui-global-header)
@@ -75,9 +77,9 @@ Folder-based namespaces under `src/modules/` define the LWC tag prefix:
 | Folder        | Tag prefix | Use for |
 |---------------|------------|--------|
 | **shell/**    | `shell-*`  | App shell only (e.g. `shell-app`, `shell-global-shell`). Not for feature pages. |
-| **page/**     | `page-*`   | Route-level views (one per URL). e.g. `page-user` → `/users/:id`. |
+| **page/**     | `page-*`   | Route-level views (one per URL). e.g. `page-contact-detail` for `/contacts/:id`. |
 | **ui/**       | `ui-*`     | Reusable building blocks and SLDS blueprint implementations (e.g. `ui-global-header`, `ui-global-navigation`). Used inside pages or other components. |
-| **data/**     | —          | Plain modules (e.g. fixtures), imported as `data/<name>`. Not LWC tags. |
+| **data/**     | -          | Plain modules (e.g. fixtures), imported as `data/<name>`. Not LWC tags. |
 
 Only add components under **page/** or **ui/**. Put app-shell wiring in **`shell/`** only; reusable SLDS blueprint implementations belong in **`ui/`**. Icon template shims live under **`src/build/lightning-icon/shims/`**; do not add other files there. Do not add a **`lightning/`** folder under **`src/modules`** for custom components.
 
@@ -88,39 +90,52 @@ Only add components under **page/** or **ui/**. Put app-shell wiring in **`shell
 1. Clone or copy the repo, then `npm install` and `npm run dev`.
 2. **Add a page:** Create a folder under `src/modules/page/<name>/`, then:
    - Add a route in `src/routes.config.js` (e.g. `{ path: '/dashboard', component: 'page-dashboard', title: 'Dashboard', navPage: 'dashboard', navLabel: 'Dashboard' }`).
-   - In `src/modules/shell/app/app.js`, import the component and add it to `ROUTE_COMPONENTS`. That's it — `src/router.js` does not need editing.
+   - In `src/modules/shell/app/app.js`, import the component and add it to `ROUTE_COMPONENTS`. That's it - `src/router.js` does not need editing.
    - For child routes under an existing tab (e.g. `/contacts/:id`), use `navHighlight: '<parentNavPage>'` instead of `navPage` so the parent tab is highlighted without creating a new nav entry.
 3. **Add a reusable component:** Create a folder under `src/modules/ui/<name>/` and use it as `<ui-<name>>` in any page or other component.
 4. Follow the namespace rules above and the SLDS/LWC conventions referenced in this repo (e.g. `.cursor/rules` if present).
 
-**Modals:** For modal dialogs, extend `LightningModal` from `lightning/modal` and use the in-repo example as your starting point: `src/modules/ui/demoModal/`. It shows the correct structure (header → body → footer with `lightning-modal-header`, `lightning-modal-body`, `lightning-modal-footer`) and opening via `MyModal.open({ size, label })`. Do not implement modals with raw SLDS modal markup.
+**Modals:** For modal dialogs, extend `LightningModal` from `lightning/modal` and use the in-repo example as your starting point: `src/modules/ui/demoModal/`. It shows the correct structure (header, body, footer with `lightning-modal-header`, `lightning-modal-body`, `lightning-modal-footer`) and opening via `MyModal.open({ size, label })`. Do not implement modals with raw SLDS modal markup.
 
 ## Routing
 
 The app uses a small client-side router in `src/router.js`:
 
-- **Route config** — Routes are defined in `src/routes.config.js` as `{ path, component, title, navPage?, navLabel?, navPath?, navHighlight? }`. `title` can be a string or function of route params.
-- **Path params** — Use `:id` (e.g. `/users/:id`); params are available to the page component via `getCurrentRoute()` from `src/router.js`.
-- **Nav tabs** — Only routes with `navPage` create a tab in the global nav. Child routes that should highlight a parent tab use `navHighlight` instead (e.g. `navHighlight: 'contacts'` on `/contacts/:id`).
-- **Navigation** — Use `navigate(path)` from the router; the app shell subscribes to route changes and renders the matching `page-*` component.
-- **History** — Uses the History API; back/forward work without full page reload.
+- **Route config:** Routes are defined in `src/routes.config.js` as `{ path, component, title, navPage?, navLabel?, navPath?, navHighlight? }`. `title` can be a string or function of route params.
+- **Path params:** Use `:id` (e.g. `/contacts/:id`); params are available to the page component via `getCurrentRoute()` from `src/router.js`.
+- **Nav tabs:** Only routes with `navPage` create a tab in the global nav. Child routes that should highlight a parent tab use `navHighlight` instead (e.g. `navHighlight: 'contacts'` on `/contacts/:id`).
+- **Navigation:** Use `navigate(path)` from the router; the app shell subscribes to route changes and renders the matching `page-*` component.
+- **History:** Uses the History API; back/forward work without full page reload.
+
+## Apps (Standard and Console)
+
+The starter kit ships two app modes configured in `src/apps.config.js`:
+
+| App | Variant | Navigation | URL prefix |
+|-----|---------|------------|------------|
+| Standard App | `standard` | Tab bar | `/app` |
+| Console App | `console` | Object switcher | `/console` |
+
+Each app declares a `pages` array referencing `navPage` ids from `src/routes.config.js`. The same pages can appear in multiple apps. Users switch between apps via the App Launcher (waffle icon).
+
+To add or remove pages from an app, edit the `pages` array in the app's config entry. To create a new app, add another object to the `apps` array with a unique `id`, `pathPrefix`, and `defaultPath`.
 
 ## Tech stack and dependencies
 
-- **vite** — Build tool and dev server  
-- **vite-plugin-lwc** — LWC support for Vite  
-- **lwc** — Lightning Web Components framework  
-- **@lwc/synthetic-shadow** — Synthetic shadow DOM (Salesforce-like)  
-- **lightning-base-components** — Salesforce component library  
-- **@salesforce-ux/design-system** — Classic SLDS; Vite bundles `assets/styles/salesforce-lightning-design-system.min.css` (and nested `url(...)` assets) when SLDS 1 is loaded  
-- **@salesforce-ux/design-system-2** — SLDS 2 / Cosmos; Vite bundles `dist/css/bundled/slds2.cosmos.css` for the default theme  
+- **vite:** Build tool and dev server  
+- **vite-plugin-lwc:** LWC support for Vite  
+- **lwc:** Lightning Web Components framework  
+- **@lwc/synthetic-shadow:** Synthetic shadow DOM (Salesforce-like)  
+- **lightning-base-components:** Salesforce component library  
+- **@salesforce-ux/design-system:** Classic SLDS; Vite bundles `assets/styles/salesforce-lightning-design-system.min.css` (and nested `url(...)` assets) when SLDS 1 is loaded  
+- **@salesforce-ux/design-system-2:** SLDS 2 / Cosmos; Vite bundles `dist/css/bundled/slds2.cosmos.css` for the default theme  
 - **`public/images/`** (e.g. favicon `salesforce.svg`) stays in the repo as app-owned assets.
 
 ## SLDS 1 and SLDS 2
 
 **SLDS 2** is the default. `src/index.js` awaits **`initSldsFromStorage()`** from **`src/build/slds-loader.js`** before mounting LWC so the correct theme is active on first paint (including when `localStorage` says the last session used SLDS 1).
 
-The loader injects **`<link rel="stylesheet" data-slds="...">`** elements and toggles the active sheet with the **`media`** attribute (`all` vs `not all`), matching the previous static-HTML behavior. Stylesheet URLs come from **`new URL(..., import.meta.url)`** pointing at files under **`node_modules/@salesforce-ux/...`** so Vite emits versioned CSS assets and rewrites nested **`url(...)`** references. **SLDS 1** is loaded **lazily** (dynamic `import()` of `src/build/slds/slds1-url.js`) until the user switches themes or a saved preference requires it—so the default bundle does not fetch classic SLDS until needed.
+The loader injects **`<link rel="stylesheet" data-slds="...">`** elements and toggles the active sheet with the **`media`** attribute (`all` vs `not all`), matching the previous static-HTML behavior. Stylesheet URLs come from **`new URL(..., import.meta.url)`** pointing at files under **`node_modules/@salesforce-ux/...`** so Vite emits versioned CSS assets and rewrites nested **`url(...)`** references. **SLDS 1** is loaded **lazily** (dynamic `import()` of `src/build/slds/slds1-url.js`) until the user switches themes or a saved preference requires it - so the default bundle does not fetch classic SLDS until needed.
 
 Icon templates come from **lightning-base-components** via **`prebuild-icons.mjs`**.
 
@@ -135,7 +150,7 @@ This template uses **Synthetic Shadow DOM** so behavior and styling match the Sa
 | DOM queries    | Can query inside components| Cannot query in |
 | `shadowRoot`   | `null`                     | ShadowRoot      |
 
-**Verify:** In the browser console at http://localhost:3000 run `document.querySelector('shell-app').shadowRoot` — `null` means synthetic shadow is active.
+**Verify:** In the browser console at http://localhost:3000 run `document.querySelector('shell-app').shadowRoot` - `null` means synthetic shadow is active.
 
 **Switch to native shadow:** In `vite.config.js` set `disableSyntheticShadowSupport: true` in the LWC plugin options.
 
@@ -176,15 +191,15 @@ After GitHub finishes publishing, find your live site URL on **Settings → Page
 
 ## AI tooling
 
-This project includes an `mcp.json` that automatically configures the [Salesforce DX MCP server](https://www.npmjs.com/package/@salesforce/mcp) for AI-assisted development. Editors that support MCP (e.g. Claude Code, Cursor, VS Code with Copilot) will pick it up and gain access to Salesforce-specific code analysis and LWC guidance tools. No setup is required — the server runs via `npx` on demand.
+This project includes an `mcp.json` that automatically configures the [Salesforce DX MCP server](https://www.npmjs.com/package/@salesforce/mcp) for AI-assisted development. Editors that support MCP (e.g. Claude Code, Cursor, VS Code with Copilot) will pick it up and gain access to Salesforce-specific code analysis and LWC guidance tools. No setup is required - the server runs via `npx` on demand.
 
 ### Agent skills (layout)
 
-- **`.agent/skills/afv-library/`** — Selected skills from [`forcedotcom/afv-library`](https://github.com/forcedotcom/afv-library) (`develop`) are copied here on **`npm install`** (gitignored). Refresh with **`npm run skills:sync`**.
-- **`.agent/skills/<skill-id>/`** — Skills that ship with this project.
+- **`.agent/skills/afv-library/`:** Selected skills from [`forcedotcom/afv-library`](https://github.com/forcedotcom/afv-library) (`develop`) are copied here on **`npm install`** (gitignored). Refresh with **`npm run skills:sync`**.
+- **`.agent/skills/<skill-id>/`:** Skills that ship with this project.
 
 ## References
 
 - [Lightning Design System](https://lightningdesignsystem.com)  
 - [Lightning Web Components (Salesforce)](https://developer.salesforce.com/docs/component-library/overview/components)  
-- [LWC (OSS) / vite-plugin-lwc](https://github.com/salesforce/lwc) — for local LWC + Vite behavior
+- [LWC (OSS) / vite-plugin-lwc](https://github.com/salesforce/lwc) - for local LWC + Vite behavior

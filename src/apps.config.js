@@ -24,15 +24,15 @@ export const apps = [
     variant: 'standard',
     pathPrefix: '/app',
     defaultPath: '/app',
-    pages: ['home', 'icons', 'user', 'contacts'],
+    pages: ['home', 'icons', 'contacts'],
   },
   {
     id: 'console',
     label: 'Console App',
     variant: 'console',
     pathPrefix: '/console',
-    defaultPath: '/console/contacts',
-    pages: ['contacts', 'user'],
+    defaultPath: '/console',
+    pages: ['home', 'icons', 'contacts'],
   },
 ];
 

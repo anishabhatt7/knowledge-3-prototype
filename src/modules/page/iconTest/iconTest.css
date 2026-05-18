@@ -1,7 +1,11 @@
+lightning-card {
+    display: block;
+    --slds-c-card-body-spacing-inline: var(--slds-g-spacing-var-inline-4);
+}
+
 :host {
    display: block;
    background-color: var(--slds-g-color-surface-2, #f3f3f3);
-   min-height: 100vh;
 }
 
 .page {
@@ -10,26 +14,20 @@
     padding: var(--slds-g-spacing-6, 2rem);
 }
 
-/* ── Header ── */
 .page-header {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 1rem);
     margin-bottom: var(--slds-g-spacing-6, 2rem);
 }
 
 .page-header__title {
     display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: var(--slds-g-spacing-1, 0.25rem);
+    flex-direction: column;
 }
 
 .page-header__subtitle {
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
-}
-
-.page-header__help {
     color: var(--slds-g-color-on-surface-1, #5c5c5c);
 }
 
