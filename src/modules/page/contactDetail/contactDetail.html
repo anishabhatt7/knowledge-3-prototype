@@ -42,7 +42,7 @@
                 <!-- Left 2/3: Details Card -->
                 <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12">
                     <lightning-card title="Contact Details">
-                        <div class="c-contact-details-grid slds-p-horizontal_medium slds-p-bottom_medium">
+                        <div class="c-contact-details-grid slds-p-bottom_medium">
                             <template for:each={cardFields} for:item="field">
                                 <lightning-textarea
                                     lwc:if={field.isTextarea}
@@ -72,7 +72,7 @@
                             <lightning-button label="Log a Call" variant="neutral"></lightning-button>
                             <lightning-button label="New Task" variant="neutral"></lightning-button>
                         </lightning-button-group>
-                        <div class="slds-p-horizontal_small slds-p-bottom_small">
+                        <div class="slds-p-bottom_small">
                             <ul class="slds-timeline">
                                 <template for:each={activityItems} for:item="item">
                                     <li key={item.id} class="slds-timeline__item">
