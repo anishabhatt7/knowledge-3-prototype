@@ -1,6 +1,6 @@
-// src/modules/data/articleState.js
-import { analyzeArticle } from './validationRules';
-import { suggestMetadata, generateEnrichment } from './simulationEngine';
+// src/modules/data/articleState/articleState.js
+import { analyzeArticle } from 'data/validationRules';
+import { suggestMetadata, generateEnrichment } from 'data/simulationEngine';
 
 let currentArticle = null;
 let analysisResults = null;
