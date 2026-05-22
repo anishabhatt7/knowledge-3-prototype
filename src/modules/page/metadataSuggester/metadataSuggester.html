@@ -1,0 +1,126 @@
+<template>
+  <div class="metadata-container">
+    <lightning-card title="Metadata Suggester" icon-name="utility:tags">
+      <div class="slds-p-around_medium">
+
+        <template if:false={hasArticle}>
+          <div class="slds-text-align_center slds-p-vertical_large">
+            <lightning-icon
+              icon-name="utility:info"
+              size="medium"
+              variant="warning"
+            ></lightning-icon>
+            <div class="slds-text-heading_small slds-m-top_small">
+              No article selected
+            </div>
+            <div class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
+              Go to Article Analyzer or Guided Author to select an article first
+            </div>
+          </div>
+        </template>
+
+        <template if:true={hasArticle}>
+          <!-- Article preview -->
+          <div class="article-preview slds-box slds-m-bottom_medium">
+            <div class="slds-text-title slds-m-bottom_xx-small">Article</div>
+            <div class="slds-text-heading_small slds-m-bottom_xx-small">{articleTitle}</div>
+            <div class="slds-text-body_small slds-text-color_weak">{articleSnippet}</div>
+          </div>
+
+          <!-- Completeness -->
+          <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+            <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+              <div>
+                <div class="slds-text-title">Metadata Completeness</div>
+                <div class="slds-text-body_small slds-text-color_weak">{completenessSummary}</div>
+              </div>
+              <div class="slds-text-heading_large">{completenessPercent}%</div>
+            </div>
+            <lightning-progress-bar value={completenessPercent} size="medium" class="slds-m-top_small"></lightning-progress-bar>
+          </div>
+
+          <!-- Metadata fields -->
+          <div class="slds-grid slds-wrap slds-gutters_small">
+            <template for:each={fieldEntries} for:item="field">
+              <div key={field.name} class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                <div class="metadata-field slds-box">
+                  <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                    <span class="slds-text-title">
+                      {field.label}
+                      <template if:true={field.required}>
+                        <span class="slds-text-color_destructive"> *</span>
+                      </template>
+                    </span>
+                    <template if:true={field.confidence}>
+                      <ui-confidence-badge confidence={field.confidence} size="small"></ui-confidence-badge>
+                    </template>
+                  </div>
+
+                  <!-- Multi-select values -->
+                  <template if:true={field.isMulti}>
+                    <div class="slds-grid slds-wrap">
+                      <template for:each={field.suggestedValues} for:item="val">
+                        <span key={val.value} class="slds-pill slds-m-right_xx-small slds-m-bottom_xx-small">
+                          <span class="slds-pill__label">{val.value}</span>
+                        </span>
+                      </template>
+                      <template if:false={field.hasSuggestions}>
+                        <span class="slds-text-body_small slds-text-color_weak">No suggestion - please add</span>
+                      </template>
+                    </div>
+                  </template>
+
+                  <!-- Single-select values -->
+                  <template if:false={field.isMulti}>
+                    <template if:true={field.suggestedValue}>
+                      <div class="slds-text-body_regular">
+                        <strong>{field.suggestedValue}</strong>
+                      </div>
+                    </template>
+                    <template if:false={field.suggestedValue}>
+                      <span class="slds-text-body_small slds-text-color_weak">No suggestion - please select</span>
+                    </template>
+                  </template>
+
+                  <template if:true={field.lowConfidence}>
+                    <div class="slds-text-body_small slds-text-color_warning slds-m-top_xx-small">
+                      ⚠ Low confidence - please review
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Actions -->
+          <div class="slds-m-top_medium slds-text-align_center">
+            <lightning-button
+              label="Accept All Suggestions"
+              variant="brand"
+              onclick={handleAcceptAll}
+              class="slds-m-right_small"
+            ></lightning-button>
+            <lightning-button
+              label="Accept High-Confidence Only"
+              variant="neutral"
+              onclick={handleAcceptHighConfidence}
+              class="slds-m-right_small"
+            ></lightning-button>
+            <lightning-button
+              label="View Enrichment"
+              variant="success"
+              onclick={handleViewEnrichment}
+            ></lightning-button>
+          </div>
+
+          <template if:true={showAcceptedMessage}>
+            <div class="slds-notify slds-notify_alert slds-theme_success slds-m-top_medium">
+              <span class="slds-assistive-text">Success</span>
+              <h2 class="slds-text-body_regular">{acceptedMessage}</h2>
+            </div>
+          </template>
+        </template>
+      </div>
+    </lightning-card>
+  </div>
+</template>
