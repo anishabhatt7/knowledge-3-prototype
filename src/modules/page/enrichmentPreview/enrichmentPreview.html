@@ -1,0 +1,165 @@
+<template>
+  <div class="enrichment-container">
+    <lightning-card title="Enrichment Preview" icon-name="utility:einstein">
+      <div class="slds-p-around_medium">
+
+        <template if:false={hasArticle}>
+          <div class="slds-text-align_center slds-p-vertical_large">
+            <lightning-icon
+              icon-name="utility:info"
+              size="medium"
+              variant="warning"
+            ></lightning-icon>
+            <div class="slds-text-heading_small slds-m-top_small">
+              No article loaded
+            </div>
+            <div class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
+              Select an article in the Analyzer or Author tab first
+            </div>
+          </div>
+        </template>
+
+        <template if:true={hasArticle}>
+          <!-- AI Abstract -->
+          <lightning-card title="AI-Generated Abstract" icon-name="utility:summary" class="slds-m-bottom_medium">
+            <div class="slds-p-around_medium">
+              <div class="abstract-text slds-text-body_regular">
+                {abstract}
+              </div>
+              <div class="slds-m-top_small slds-text-align_right">
+                <lightning-button-icon
+                  icon-name="utility:edit"
+                  variant="border-filled"
+                  alternative-text="Edit Abstract"
+                ></lightning-button-icon>
+              </div>
+            </div>
+          </lightning-card>
+
+          <!-- FAQ Extraction -->
+          <lightning-card title="FAQ Extraction" icon-name="utility:question_mark" class="slds-m-bottom_medium">
+            <div class="slds-p-around_medium">
+              <div class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
+                Top questions this article answers (used for query matching)
+              </div>
+              <ul class="slds-list_vertical slds-has-dividers_around-space">
+                <template for:each={faqs} for:item="faq" for:index="idx">
+                  <li key={faq} class="slds-item slds-p-around_x-small">
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                      <lightning-input
+                        type="checkbox"
+                        checked
+                        variant="label-hidden"
+                        label="Include FAQ"
+                        class="slds-m-right_small"
+                      ></lightning-input>
+                      <span class="slds-text-body_regular">{faq}</span>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+            </div>
+          </lightning-card>
+
+          <!-- Entity Extraction -->
+          <lightning-card title="Entity Extraction" icon-name="utility:knowledge_smart_link" class="slds-m-bottom_medium">
+            <div class="slds-p-around_medium">
+              <div class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
+                Salesforce entities detected in the article
+              </div>
+
+              <!-- Products -->
+              <div class="slds-m-bottom_medium">
+                <div class="slds-text-title slds-m-bottom_xx-small">Products</div>
+                <template if:true={hasProducts}>
+                  <div class="slds-grid slds-wrap">
+                    <template for:each={products} for:item="entity">
+                      <span key={entity} class="slds-pill slds-m-right_xx-small slds-m-bottom_xx-small entity-product">
+                        <span class="slds-pill__label">{entity}</span>
+                      </span>
+                    </template>
+                  </div>
+                </template>
+                <template if:false={hasProducts}>
+                  <span class="slds-text-body_small slds-text-color_weak">No products detected</span>
+                </template>
+              </div>
+
+              <!-- Features -->
+              <div class="slds-m-bottom_medium">
+                <div class="slds-text-title slds-m-bottom_xx-small">Features</div>
+                <template if:true={hasFeatures}>
+                  <div class="slds-grid slds-wrap">
+                    <template for:each={features} for:item="entity">
+                      <span key={entity} class="slds-pill slds-m-right_xx-small slds-m-bottom_xx-small entity-feature">
+                        <span class="slds-pill__label">{entity}</span>
+                      </span>
+                    </template>
+                  </div>
+                </template>
+                <template if:false={hasFeatures}>
+                  <span class="slds-text-body_small slds-text-color_weak">No features detected</span>
+                </template>
+              </div>
+
+              <!-- UI Elements -->
+              <div class="slds-m-bottom_medium">
+                <div class="slds-text-title slds-m-bottom_xx-small">UI Elements</div>
+                <template if:true={hasUiElements}>
+                  <div class="slds-grid slds-wrap">
+                    <template for:each={uiElements} for:item="entity">
+                      <span key={entity} class="slds-pill slds-m-right_xx-small slds-m-bottom_xx-small entity-ui">
+                        <span class="slds-pill__label">{entity}</span>
+                      </span>
+                    </template>
+                  </div>
+                </template>
+                <template if:false={hasUiElements}>
+                  <span class="slds-text-body_small slds-text-color_weak">No UI elements detected</span>
+                </template>
+              </div>
+
+              <!-- API Names -->
+              <div>
+                <div class="slds-text-title slds-m-bottom_xx-small">API Names</div>
+                <template if:true={hasApiNames}>
+                  <div class="slds-grid slds-wrap">
+                    <template for:each={apiNames} for:item="entity">
+                      <span key={entity} class="slds-pill slds-m-right_xx-small slds-m-bottom_xx-small entity-api">
+                        <span class="slds-pill__label">{entity}</span>
+                      </span>
+                    </template>
+                  </div>
+                </template>
+                <template if:false={hasApiNames}>
+                  <span class="slds-text-body_small slds-text-color_weak">No API names detected</span>
+                </template>
+              </div>
+            </div>
+          </lightning-card>
+
+          <!-- Actions -->
+          <div class="slds-m-top_medium slds-text-align_center">
+            <lightning-button
+              label="Approve All Enrichments"
+              variant="brand"
+              onclick={handleApproveAll}
+              class="slds-m-right_small"
+            ></lightning-button>
+            <lightning-button
+              label="View Dashboard"
+              variant="neutral"
+              onclick={handleViewDashboard}
+            ></lightning-button>
+          </div>
+
+          <template if:true={showApprovedMessage}>
+            <div class="slds-notify slds-notify_alert slds-theme_success slds-m-top_medium">
+              <h2 class="slds-text-body_regular">Enrichments approved! Article ready for publish.</h2>
+            </div>
+          </template>
+        </template>
+      </div>
+    </lightning-card>
+  </div>
+</template>
