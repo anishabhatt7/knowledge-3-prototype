@@ -1,205 +1,249 @@
-# Salesforce Design System 2 Starter Kit
+# AI Ready Knowledge
 
-A **starter template** for prototyping and developing Salesforce experiences locally. Built with **LWC** (Lightning Web Components), **Vite**, **SLDS** (Salesforce Lightning Design System), and **lightning-base-components**, so you get fast builds, hot reload, and a setup that aligns with the Salesforce platform (synthetic shadow, base components, design tokens).
+An interactive prototype demonstrating how Salesforce Knowledge can be enhanced with AI to make articles **RAG-ready** for Help Agent retrieval. Built as a high-fidelity LWC prototype that mimics the Salesforce Knowledge article experience with embedded AI assistance for analysis, authoring, metadata, enrichment, and health monitoring.
 
-## Who this is for
+> **Status:** Interactive mockup with simulated AI responses. All AI features use deterministic logic that mirrors what production Einstein/Claude integrations would produce.
 
-- Developers prototyping Salesforce UIs locally before or alongside platform deployment  
-- Teams designing or evaluating experiences with LWC and SLDS  
-- Anyone who wants a local dev environment that matches Salesforce behavior (synthetic shadow, global SLDS styles, Lightning Base Components)
+---
 
-## What you get
+## The Problem
 
-- **App shell:** Header, global navigation, theme switcher (light/dark, SLDS 1/2), and panel layout  
-- **Client-side routing:** Declarative routes in `src/routes.config.js` with path params (e.g. `/contacts/:id`), History API, no full page reload  
-- **SLDS + Lightning Base Components:** Design system and Salesforce component library wired and ready to use  
-- **Synthetic Shadow DOM:** Matches Salesforce platform behavior so styles and DOM semantics align with production  
-- **Icon setup:** Prebuild script, Vite aliases for `lightning/iconSvgTemplates*`, and shim modules under `src/build/lightning-icon/shims/`; generated bundles in `src/build/generated/`  
-- **Example pages:** Home, Icons, and Contacts (with parameterized detail route `/contacts/:id`). See `src/modules/page/` and `src/modules/ui/` for patterns.
-- **Multi-app shell:** Two app modes (Standard with tabs, Console with object switcher) configured in `src/apps.config.js`
+KB articles today are written for human readers. The Help Agent retriever operates on semantic similarity and has no way to distinguish:
 
-## Quick start
+- A Winter '25 admin article from a Spring '26 developer article on the same topic
+- A "Setup" article from a "Troubleshooting" article when both contain the same keywords
+- A 600-word answer buried after a 200-word preamble from a 50-word direct answer
+
+The result: **imprecise retrievals** even when the correct answer exists in the KB. This is not a model problem — it is a content structure and metadata problem.
+
+This prototype demonstrates four interlocking solutions:
+
+1. **RAG Authoring Guidelines** — how to write so chunking and retrieval works correctly
+2. **Mandatory Metadata Schema** — machine-readable fields that enable filtered retrieval
+3. **AI Enrichment Layer** — AI-generated signals authors never have to fill manually
+4. **Health Dashboard** — Fix Queue and metrics for continuous KB quality
+
+---
+
+## What's Inside
+
+### The Knowledge Article Experience
+
+The prototype recreates a Salesforce Knowledge article detail page with:
+
+- **Salesforce global header** with search and app launcher icons
+- **Q Branch app navigation** with active Knowledge tab
+- **Article header** with title, metadata fields (Article Number, Type, Version, Status, Language), and action buttons
+- **Tabbed content area:** Details, Related, AI Metadata, AI Enrichment, Version Comparison, Translations, Approvals
+- **Right-side Feed panel** with sample Chatter activity
+
+### AI Action Buttons
+
+Four AI features are accessible from the article header, alongside Follow / Edit / Assign / Publish:
+
+| Button | What it does |
+|---|---|
+| **Analyze** | Opens an analysis modal showing RAG compliance score (0–100), structure violations (answer-first, section length, preamble, vague headings), and metadata completeness for the current article |
+| **Get Metadata** | Suggests AI-populated metadata for 8 controlled-vocabulary fields (Products, Feature Area, Audience, Content Type, Release Versions, Use Case, Complexity, Confidence Level) with per-field confidence scores |
+| **Enrich** | Generates AI Summary, Abstract, FAQ extraction (top 5 questions), and entity extraction (Products / Features / UI Elements / API Names) |
+| **Dashboard** | Opens the Knowledge Health Dashboard in a new window with KB-wide metrics, Fix Queue, and distribution charts |
+
+### Edit Modal with AI Guided Author
+
+Clicking **Edit** opens a Salesforce-style edit modal with:
+
+- **Left (60%)** — Title, Summary, Details rich text editor (with toolbar), Internal Comments
+- **Right (40%)** — **AI Guided Author panel** with live feedback as you type:
+  - Live RAG Score (debounced, updates 500ms after typing stops)
+  - Structure Checks (✓/⚠ for answer-first, section length, preamble, headings)
+  - Issues Found with specific suggestions
+  - Contextual Writing Tips
+
+### Persistent AI Output
+
+Once accepted in modals, AI output flows back into the article view:
+
+- Approved **Summary** appears in the Information section's Summary field with an "AI" badge
+- Accepted **Metadata** appears in the AI Metadata tab with an "Accepted" badge
+- Approved **Enrichment** (Summary, Abstract, FAQs, Entities) appears in the AI Enrichment tab with an "Approved" badge
+- Tabs show a green dot indicator (●) when AI output is present
+
+---
+
+## Demo Flow (5 minutes)
+
+A suggested walkthrough that hits every feature:
+
+1. **Land on the page** — see "Configure SSO for Service Cloud" loaded with parsed content blocks
+2. **Click Analyze** — see the article scores 45/100 with 4 violations (preamble, vague headings, long sections, missing answer-first)
+3. **Click "Fix in Guided Author"** — Analyze modal closes, Edit modal opens with the article pre-loaded
+4. **Type in the editor** — watch the RAG score update live, structure checks change colors, writing tips appear
+5. **Close the Edit modal, click Get Metadata** — see AI suggestions for all 8 fields with confidence badges (some 92%, some 70%)
+6. **Click "Accept All Suggestions"** — close the modal
+7. **Click the AI Metadata tab** — see all 8 metadata fields populated, with green "Accepted" badge
+8. **Click Enrich** — see AI Summary, Abstract, 5 FAQs, and grouped entity chips
+9. **Click "Approve All"** — close the modal
+10. **Look at the Information section** — Summary field is now populated with an "AI" badge
+11. **Click the AI Enrichment tab** — see the full enrichment output (Summary, Abstract, FAQs, Entities)
+12. **Click Dashboard** — opens a new window with KB-wide health metrics, Fix Queue (10 articles ranked by priority), and distribution charts
+
+---
+
+## Architecture
+
+### Tech Stack
+
+- **LWC** (Lightning Web Components) with synthetic shadow DOM
+- **Vite** for fast builds and hot reload
+- **SLDS 2 (Cosmos)** as the design system
+- **lightning-base-components** for SF-native UI elements
+- Built on top of [`design-system-2-starter-kit`](https://git.soma.salesforce.com/nimit-khurana/design-system-2-starter-kit)
+
+### Module Layout
+
+```
+src/modules/
+├── shell/
+│   └── app/                    # SF global header + app nav shell
+├── page/
+│   ├── knowledgeArticle/       # Main Knowledge article view (tabs, modals, AI sections)
+│   ├── articleAnalyzer/        # Analyze modal content (scores + violations)
+│   ├── guidedAuthor/           # Standalone Guided Author page (legacy)
+│   ├── metadataSuggester/      # Metadata modal content (8-field suggestions)
+│   ├── enrichmentPreview/      # Enrich modal content (Summary, Abstract, FAQs, Entities)
+│   └── healthDashboard/        # Dashboard new-window content (metrics, Fix Queue, charts)
+├── ui/
+│   ├── scoreCard/              # RAG score card with color-coded status
+│   ├── violationList/          # List of structure violations
+│   ├── confidenceBadge/        # Color-coded confidence percentage badge
+│   └── ...
+└── data/
+    ├── sampleArticles/         # 4 pre-built articles + 10-row Fix Queue
+    ├── articleState/           # Shared state across modals
+    ├── validationRules/        # RAG compliance checks (answer-first, length, preamble, headings)
+    ├── metadataVocabulary/     # 8 metadata fields with controlled vocabulary
+    └── simulationEngine/       # Deterministic AI simulators for metadata, abstract, summary, FAQs, entities
+```
+
+### Multi-Entry Build
+
+The prototype has two HTML entry points configured in `vite.config.js`:
+
+- `index.html` → main Knowledge article app
+- `dashboard.html` → standalone Health Dashboard (opened in a new window from the main app)
+
+Both share the same SLDS bootstrap and synthetic-shadow setup.
+
+### How AI is Simulated
+
+There is no LLM call in this prototype. All AI behavior is deterministic logic in `data/simulationEngine` and `data/validationRules`:
+
+- **RAG analysis** parses markdown sections, checks for action verbs in opening sentences, counts words per section, detects preamble phrases ("this article provides..."), and flags vague headings ("Overview", "Introduction")
+- **Metadata suggestion** uses keyword matching against a controlled vocabulary (e.g. "service cloud" → Service Cloud at 92% confidence; numbered steps → Procedure at 95% confidence)
+- **Enrichment** generates Summary/Abstract/FAQs from article structure and Content Type; entity extraction uses regex patterns for product names, UI elements, and API field suffixes (`__c`, `__mdt`)
+
+The simulators are designed so that swapping them for real Einstein/Claude calls is a one-function-replacement change in production.
+
+---
+
+## Sample Articles
+
+Four pre-built articles demonstrate different quality levels:
+
+| ID | Title | RAG Score | Issues |
+|---|---|---|---|
+| 1 | Configure SSO for Service Cloud | **45** (Poor) | Preamble, vague heading, section >250 words, no answer-first |
+| 2 | Create a Flow in Setup | **85** (Good) | None — follows all RAG guidelines |
+| 3 | Troubleshoot Case Assignment Rules | **62** (Mixed) | Some sections lack answer-first, vague subheading |
+| 4 | Knowledge Article Visibility Settings | **73** (Good) | Preamble in opening section |
+
+The default loaded article is Article 1 (intentionally poor quality, so the AI features have something to fix).
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 20+
+- npm
+
+### Run Locally
 
 ```bash
+git clone https://git.soma.salesforce.com/nimit-khurana/AI-Ready-Knowledge.git
+cd AI-Ready-Knowledge
 npm install
 npm run dev
 ```
 
-Dev server runs at **http://localhost:3000**. Global SLDS styles are resolved from **`@salesforce-ux/design-system`** and **`@salesforce-ux/design-system-2`** by Vite (hashed CSS in `dist/assets/` on build); see **`src/build/slds-loader.js`**. Icons for `<lightning-icon>` are generated on `dev` / `build`. To build and preview a production bundle:
+Open http://localhost:3000 in your browser.
+
+### Production Build
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Project structure
+The dashboard at `dashboard.html` is bundled as a separate entry. Opening the main app and clicking the **Dashboard** button will open it in a new browser window.
 
-```
-design-system-2-starter-kit/
-├── src/
-│   ├── modules/
-│   │   ├── shell/                 # App shell (shell-*)
-│   │   │   ├── app/               # Root app, route rendering
-│   │   │   ├── globalShell/       # Layout wrapper
-│   │   │   ├── panel/             # Side panel
-│   │   │   └── themeSwitcher/     # SLDS version + dark mode
-│   │   ├── page/                  # Route-level views (page-*)
-│   │   │   ├── home/
-│   │   │   ├── contacts/
-│   │   │   ├── contactDetail/     # e.g. /contacts/:id
-│   │   │   └── iconTest/
-│   │   ├── ui/                    # Reusable building blocks (ui-*)
-│   │   │   ├── globalHeader/      # Top bar (ui-global-header)
-│   │   │   ├── globalNavigation/ # App navigation (ui-global-navigation)
-│   │   │   └── example/
-│   │   └── data/                  # Shared modules (e.g. fixtures) imported as data/*
-│   ├── build/                     # Build wiring, generated assets, shims (not LWC app UI)
-│   │   ├── generated/             # Generated icon modules (do not edit)
-│   │   ├── shim/                  # LWC / package shims (e.g. gate modules)
-│   │   ├── slds/
-│   │   │   └── slds1-url.js       # Lazy chunk: resolved URL for SLDS 1 stylesheet
-│   │   ├── lightning-icon/shims/  # Icon template overrides (lightning/iconSvgTemplates* → here)
-│   │   └── slds-loader.js         # SLDS stylesheet link injection, theme bootstrap, lazy SLDS 1
-│   ├── router.js                  # Route definitions and navigation
-│   └── index.js                   # App entry point
-├── scripts/
-│   ├── prebuild-icons.mjs         # Icon codegen (run via npm scripts)
-│   └── sync-afv-skills.mjs        # Copies afv-library skills → .agent/skills/afv-library/
-├── index.html
-├── vite.config.js
-└── package.json
-```
+---
 
-### Component namespaces
+## RAG Compliance Rules
 
-Folder-based namespaces under `src/modules/` define the LWC tag prefix:
+The validation engine in `data/validationRules` checks four rules per article:
 
-| Folder        | Tag prefix | Use for |
-|---------------|------------|--------|
-| **shell/**    | `shell-*`  | App shell only (e.g. `shell-app`, `shell-global-shell`). Not for feature pages. |
-| **page/**     | `page-*`   | Route-level views (one per URL). e.g. `page-contact-detail` for `/contacts/:id`. |
-| **ui/**       | `ui-*`     | Reusable building blocks and SLDS blueprint implementations (e.g. `ui-global-header`, `ui-global-navigation`). Used inside pages or other components. |
-| **data/**     | -          | Plain modules (e.g. fixtures), imported as `data/<name>`. Not LWC tags. |
+1. **Answer-first structure** — H2 sections should start with a direct answer (action verbs, numbered steps, or definition patterns), not preamble like "This article covers..."
+2. **Section length** — sections > 250 words penalized (chunkers split on paragraphs; long sections cause answers to straddle chunk boundaries)
+3. **Preamble detection** — opening paragraph flagged if it uses introductory phrases or exceeds 100 words before the answer
+4. **Vague headings** — single-word or generic headings ("Overview", "Introduction", "Details") flagged because heading text is part of the chunk's semantic fingerprint
 
-Only add components under **page/** or **ui/**. Put app-shell wiring in **`shell/`** only; reusable SLDS blueprint implementations belong in **`ui/`**. Icon template shims live under **`src/build/lightning-icon/shims/`**; do not add other files there. Do not add a **`lightning/`** folder under **`src/modules`** for custom components.
+Each violation reduces the RAG score (-15 for answer-first, -10 for section length, -10 for preamble, -5 for vague heading), capped at 0.
 
-**Examples:** Add `src/modules/page/dashboard/` → register in router and app, use as `page-dashboard` on e.g. `/dashboard`. Add `src/modules/ui/card/` → use in templates as `<ui-card>`.
+---
 
-## Using this as a template
+## Metadata Schema
 
-1. Clone or copy the repo, then `npm install` and `npm run dev`.
-2. **Add a page:** Create a folder under `src/modules/page/<name>/`, then:
-   - Add a route in `src/routes.config.js` (e.g. `{ path: '/dashboard', component: 'page-dashboard', title: 'Dashboard', navPage: 'dashboard', navLabel: 'Dashboard' }`).
-   - In `src/modules/shell/app/app.js`, import the component and add it to `ROUTE_COMPONENTS`. That's it - `src/router.js` does not need editing.
-   - For child routes under an existing tab (e.g. `/contacts/:id`), use `navHighlight: '<parentNavPage>'` instead of `navPage` so the parent tab is highlighted without creating a new nav entry.
-3. **Add a reusable component:** Create a folder under `src/modules/ui/<name>/` and use it as `<ui-<name>>` in any page or other component.
-4. Follow the namespace rules above and the SLDS/LWC conventions referenced in this repo (e.g. `.cursor/rules` if present).
+Eight controlled-vocabulary fields, all required except Use Case:
 
-**Modals:** For modal dialogs, extend `LightningModal` from `lightning/modal` and use the in-repo example as your starting point: `src/modules/ui/demoModal/`. It shows the correct structure (header, body, footer with `lightning-modal-header`, `lightning-modal-body`, `lightning-modal-footer`) and opening via `MyModal.open({ size, label })`. Do not implement modals with raw SLDS modal markup.
+| Field | Type | Examples |
+|---|---|---|
+| **Products** | Multi-select | Service Cloud, Sales Cloud, Marketing Cloud, Platform, Einstein, Data Cloud, Knowledge |
+| **Feature Area** | Multi-select | Knowledge Management, Case Management, Flows, Reports, API, Security |
+| **Primary Audience** | Single-select | Admin, Developer, End User, Architect, Analyst |
+| **Content Type** | Single-select | Procedure, Concept, Reference, Troubleshooting, FAQ, Release Notes |
+| **Release Versions** | Multi-select | Winter25, Spring25, Summer25, Winter26, Spring26, Summer26 |
+| **Use Case** | Multi-select (optional) | Setup, Configuration, Troubleshooting, How-to, Best Practices |
+| **Complexity** | Single-select | Beginner, Intermediate, Advanced |
+| **Confidence Level** | Single-select | Verified, In Review, Needs Update |
 
-## Routing
+Metadata completeness % is calculated as filled-required / total-required and surfaced in the Analyze modal and Dashboard.
 
-The app uses a small client-side router in `src/router.js`:
+---
 
-- **Route config:** Routes are defined in `src/routes.config.js` as `{ path, component, title, navPage?, navLabel?, navPath?, navHighlight? }`. `title` can be a string or function of route params.
-- **Path params:** Use `:id` (e.g. `/contacts/:id`); params are available to the page component via `getCurrentRoute()` from `src/router.js`.
-- **Nav tabs:** Only routes with `navPage` create a tab in the global nav. Child routes that should highlight a parent tab use `navHighlight` instead (e.g. `navHighlight: 'contacts'` on `/contacts/:id`).
-- **Navigation:** Use `navigate(path)` from the router; the app shell subscribes to route changes and renders the matching `page-*` component.
-- **History:** Uses the History API; back/forward work without full page reload.
+## Documentation
 
-## Apps (Standard and Console)
+- **Design spec:** `docs/superpowers/specs/2026-05-22-ai-ready-knowledge-prototype-design.md`
+- **Implementation plan:** `docs/superpowers/plans/2026-05-22-ai-ready-knowledge-prototype.md`
 
-The starter kit ships two app modes configured in `src/apps.config.js`:
+---
 
-| App | Variant | Navigation | URL prefix |
-|-----|---------|------------|------------|
-| Standard App | `standard` | Tab bar | `/app` |
-| Console App | `console` | Object switcher | `/console` |
+## Roadmap (Post-Prototype)
 
-Each app declares a `pages` array referencing `navPage` ids from `src/routes.config.js`. The same pages can appear in multiple apps. Users switch between apps via the App Launcher (waffle icon).
+This prototype is intentionally a high-fidelity mockup. To take it to production:
 
-To add or remove pages from an app, edit the `pages` array in the app's config entry. To create a new app, add another object to the `apps` array with a unique `id`, `pathPrefix`, and `defaultPath`.
+- Replace `simulationEngine` keyword matching with **Einstein LLM** structured-output calls
+- Wire metadata persistence to **`KnowledgeArticleVersion`** custom fields
+- Hook the structure validator into **publish-time validation** (soft gate, not blocking)
+- Connect the Fix Queue priority score to real **Help Agent retrieval analytics** (helpful% × retrieval frequency)
+- Add **conflict detection** via the existing Help Agent vector store
+- Add **freshness monitoring** via scheduled post-release scans
 
-## Tech stack and dependencies
+The full architecture, phasing (264 → 266 → knowledge graph layer), and engineering swimlanes are documented in the spec.
 
-- **vite:** Build tool and dev server  
-- **vite-plugin-lwc:** LWC support for Vite  
-- **lwc:** Lightning Web Components framework  
-- **@lwc/synthetic-shadow:** Synthetic shadow DOM (Salesforce-like)  
-- **lightning-base-components:** Salesforce component library  
-- **@salesforce-ux/design-system:** Classic SLDS; Vite bundles `assets/styles/salesforce-lightning-design-system.min.css` (and nested `url(...)` assets) when SLDS 1 is loaded  
-- **@salesforce-ux/design-system-2:** SLDS 2 / Cosmos; Vite bundles `dist/css/bundled/slds2.cosmos.css` for the default theme  
-- **`public/images/`** (e.g. favicon `salesforce.svg`) stays in the repo as app-owned assets.
+---
 
-## SLDS 1 and SLDS 2
+## License
 
-**SLDS 2** is the default. `src/index.js` awaits **`initSldsFromStorage()`** from **`src/build/slds-loader.js`** before mounting LWC so the correct theme is active on first paint (including when `localStorage` says the last session used SLDS 1).
-
-The loader injects **`<link rel="stylesheet" data-slds="...">`** elements and toggles the active sheet with the **`media`** attribute (`all` vs `not all`), matching the previous static-HTML behavior. Stylesheet URLs come from **`new URL(..., import.meta.url)`** pointing at files under **`node_modules/@salesforce-ux/...`** so Vite emits versioned CSS assets and rewrites nested **`url(...)`** references. **SLDS 1** is loaded **lazily** (dynamic `import()` of `src/build/slds/slds1-url.js`) until the user switches themes or a saved preference requires it - so the default bundle does not fetch classic SLDS until needed.
-
-Icon templates come from **lightning-base-components** via **`prebuild-icons.mjs`**.
-
-## Shadow DOM (synthetic vs native)
-
-This template uses **Synthetic Shadow DOM** so behavior and styling match the Salesforce platform.
-
-| Feature        | Synthetic Shadow (default) | Native Shadow   |
-|----------------|----------------------------|-----------------|
-| Platform match | Matches Salesforce          | Different       |
-| Global styles  | Penetrate components       | Blocked         |
-| DOM queries    | Can query inside components| Cannot query in |
-| `shadowRoot`   | `null`                     | ShadowRoot      |
-
-**Verify:** In the browser console at http://localhost:3000 run `document.querySelector('shell-app').shadowRoot` - `null` means synthetic shadow is active.
-
-**Switch to native shadow:** In `vite.config.js` set `disableSyntheticShadowSupport: true` in the LWC plugin options.
-
-**Why synthetic?** Matches Salesforce platform behavior, allows global SLDS styles to apply, simplifies migration of components to the platform, and keeps DOM inspectable for tests and tooling.
-
-## Icons
-
-SLDS icons are generated by a prebuild step. Run `npm run dev` or `npm run build` so `scripts/prebuild-icons.mjs` runs and updates `src/build/generated/`. Vite resolves **`lightning/iconSvgTemplates*`** to the shim modules under **`src/build/lightning-icon/shims/`**; do not add unrelated code there.
-
-## Conventions and design system
-
-The project follows SLDS and LWC best practices: prefer Lightning Base Components, then SLDS utility classes, then styling hooks for customisation. For detailed guidance (e.g. tokens, components, accessibility), see the [Lightning Design System](https://lightningdesignsystem.com) and [Lightning Web Components](https://developer.salesforce.com/docs/component-library/documentation/en/lwc) documentation. This repo may include additional conventions (e.g. in `.cursor/rules`).
-
-## Deployment and platform
-
-This template is for **local development and prototyping**. Deploying to the Salesforce platform (e.g. as an LWC-based experience or in a specific product) follows standard Salesforce deployment and may require product-specific configuration; it is out of scope for this README.
-
-### GitHub Pages
-
-Publishing is **`npm run deploy`** only: a **`build:gh-pages`** production build (hash-based client routes for static hosting), then push **`dist/`** to the **`gh-pages`** branch on **`origin`** ([`gh-pages`](https://www.npmjs.com/package/gh-pages)).
-This repo does not use GitHub Actions for Pages.
-
-**One-time setup**
-
-1. Configure Git so you can **`git push` to `origin`**.
-2. Run **`npm run deploy`** once so branch **`gh-pages`** exists on the remote.
-3. On GitHub: **Settings → Pages** → **Build and deployment** → **Deploy from a branch** → Branch **`gh-pages`**, folder **`/` (root)** → Save.
-
-**Ongoing:** run **`npm run deploy`** whenever you want to publish a new build.
-
-After GitHub finishes publishing, find your live site URL on **Settings → Pages** (the hostname depends on your GitHub plan and organization settings).
-
-**Routing:** Default **`npm run dev`** and **`npm run build`** use normal path URLs (`/settings`). **`npm run deploy`** uses **`npm run build:gh-pages`**, which enables **hash URLs** (e.g. `…/your-repo/#/settings`) so refreshes and deep links work on GitHub Pages. Path-only bookmarks like `…/your-repo/settings` (no hash) will still 404 on Pages.
-
-**Preview locally:** **`npm run build`** then **`npm run preview`** exercises path routing. To preview the GitHub Pages bundle, run **`npm run build:gh-pages`** then **`npm run preview`**.
-
-**Another remote or URL:** `npx gh-pages -d dist -o <remote-name>` or `npx gh-pages -d dist -r https://github.com/org/repo.git`.
-
-## AI tooling
-
-This project includes an `mcp.json` that automatically configures the [Salesforce DX MCP server](https://www.npmjs.com/package/@salesforce/mcp) for AI-assisted development. Editors that support MCP (e.g. Claude Code, Cursor, VS Code with Copilot) will pick it up and gain access to Salesforce-specific code analysis and LWC guidance tools. No setup is required - the server runs via `npx` on demand.
-
-### Agent skills (layout)
-
-- **`.agent/skills/afv-library/`:** Selected skills from [`forcedotcom/afv-library`](https://github.com/forcedotcom/afv-library) (`develop`) are copied here on **`npm install`** (gitignored). Refresh with **`npm run skills:sync`**.
-- **`.agent/skills/<skill-id>/`:** Skills that ship with this project.
-
-## References
-
-- [Lightning Design System](https://lightningdesignsystem.com)  
-- [Lightning Web Components (Salesforce)](https://developer.salesforce.com/docs/component-library/overview/components)  
-- [LWC (OSS) / vite-plugin-lwc](https://github.com/salesforce/lwc) - for local LWC + Vite behavior
+Inherits the Apache License 2.0 from the design-system-2-starter-kit foundation.
