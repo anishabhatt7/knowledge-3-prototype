@@ -1,0 +1,24 @@
+<template>
+  <lightning-card class="score-card">
+    <div class={cardClass}>
+      <div class="slds-grid slds-grid_vertical slds-grid_align-center">
+        <div class="slds-col slds-text-align_center">
+          <lightning-icon
+            if:true={iconName}
+            icon-name={iconName}
+            size="small"
+            variant={iconVariant}
+            class="slds-m-bottom_x-small"
+          ></lightning-icon>
+          <div class="slds-text-heading_large slds-m-bottom_xx-small">
+            {value}
+          </div>
+          <div class="slds-text-title">{title}</div>
+          <div if:true={subtitle} class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
+            {subtitle}
+          </div>
+        </div>
+      </div>
+    </div>
+  </lightning-card>
+</template>

@@ -1,0 +1,24 @@
+.score-card-content {
+  padding: var(--slds-c-card-spacing-block, 1rem) var(--slds-c-card-spacing-inline, 1rem);
+  border-radius: var(--slds-c-card-radius, 0.25rem);
+}
+
+.status-success {
+  background-color: rgba(75, 202, 129, 0.1);
+  border-left: 4px solid rgb(75, 202, 129);
+}
+
+.status-warning {
+  background-color: rgba(255, 183, 93, 0.1);
+  border-left: 4px solid rgb(255, 183, 93);
+}
+
+.status-error {
+  background-color: rgba(194, 57, 52, 0.1);
+  border-left: 4px solid rgb(194, 57, 52);
+}
+
+.status-neutral {
+  background-color: rgba(0, 0, 0, 0.02);
+  border-left: 4px solid rgb(107, 109, 112);
+}
