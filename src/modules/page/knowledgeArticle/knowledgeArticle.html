@@ -8,7 +8,7 @@
         </div>
         <div class="kb-article__title-block">
           <div class="kb-article__breadcrumb">Knowledge</div>
-          <h1 class="kb-article__title">Frequently asked questions about policy coverage</h1>
+          <h1 class="kb-article__title">{currentArticleTitle}</h1>
           <div class="kb-article__metadata">
             <div class="kb-article__metadata-item">
               <div class="kb-article__metadata-label">Article Number</div>
@@ -90,13 +90,26 @@
       <div class="kb-article__main">
         <!-- Tab Nav -->
         <ul class="kb-tabs">
-          <li class="kb-tabs__item kb-tabs__item--active">Details</li>
-          <li class="kb-tabs__item">Related</li>
-          <li class="kb-tabs__item">Version Comparison</li>
-          <li class="kb-tabs__item">Translations</li>
-          <li class="kb-tabs__item">Approvals</li>
+          <li class={detailsTabClass} data-tab="details" onclick={handleMainTabClick}>Details</li>
+          <li class={relatedTabClass} data-tab="related" onclick={handleMainTabClick}>Related</li>
+          <li class={metadataTabClass} data-tab="aiMetadata" onclick={handleMainTabClick}>
+            AI Metadata
+            <template if:true={hasAcceptedMetadata}>
+              <span class="kb-tabs__badge">●</span>
+            </template>
+          </li>
+          <li class={enrichmentTabClass} data-tab="aiEnrichment" onclick={handleMainTabClick}>
+            AI Enrichment
+            <template if:true={hasApprovedEnrichment}>
+              <span class="kb-tabs__badge">●</span>
+            </template>
+          </li>
+          <li class={versionTabClass} data-tab="version" onclick={handleMainTabClick}>Version Comparison</li>
+          <li class={translationsTabClass} data-tab="translations" onclick={handleMainTabClick}>Translations</li>
+          <li class={approvalsTabClass} data-tab="approvals" onclick={handleMainTabClick}>Approvals</li>
         </ul>
 
+        <template if:true={isDetailsTabActive}>
         <!-- Information Section -->
         <section class="kb-section">
           <div class="kb-section__header">
@@ -107,7 +120,7 @@
             <div class="kb-field">
               <div class="kb-field__label">Title</div>
               <div class="kb-field__value">
-                <span>Frequently asked questions about policy coverage</span>
+                <span>{currentArticleTitle}</span>
                 <lightning-button-icon icon-name="utility:edit" variant="bare" size="small" alternative-text="Edit Title"></lightning-button-icon>
               </div>
             </div>
@@ -115,9 +128,17 @@
               <div class="kb-field__label">
                 Summary
                 <lightning-icon icon-name="utility:info" size="xx-small" class="slds-m-left_xx-small" alternative-text="Info"></lightning-icon>
+                <template if:true={hasEnrichmentSummary}>
+                  <span class="kb-field__ai-badge">AI</span>
+                </template>
               </div>
               <div class="kb-field__value">
-                <span class="kb-field__placeholder"></span>
+                <template if:true={hasEnrichmentSummary}>
+                  <span>{enrichmentSummary}</span>
+                </template>
+                <template if:false={hasEnrichmentSummary}>
+                  <span class="kb-field__placeholder"></span>
+                </template>
                 <lightning-button-icon icon-name="utility:edit" variant="bare" size="small" alternative-text="Edit Summary"></lightning-button-icon>
               </div>
             </div>
@@ -135,28 +156,24 @@
               <div class="kb-field__label">Details</div>
               <div class="kb-field__value kb-field__value--rich">
                 <div class="kb-rich-content">
-                  <p><strong>When is my payment due?</strong><br/>
-                  The first payment is due at the time your Activation Letter is sent (including services such as extra FTP accounts, IRO/IRMs, and SSL setups). The following payments will be due on the anniversary date of the order, or on the same day as your other accounts. There are three possible scenarios that define the payment due date.</p>
-
-                  <div class="slds-m-left_medium">
-                    <p><strong>First Monthly Account</strong><br/>
-                    If this is your first account with FutureQuest, and you have chosen the monthly payment plan, then your first payment will be due on the activation day and each payment thereafter will be due on the same date of each month. So if your account was activated on May 5th, then your payment due date will be the 5th day of each month.</p>
-
-                    <p><strong>Multiple Monthly Accounts</strong><br/>
-                    Your first monthly package will determine your due date each month, as explained above. Each monthly package ordered, after the first monthly account, will have its first month's fees pro-rated so that the multiple accounts will all share the same due date as the first account.</p>
-
-                    <p><strong>Annual Account</strong><br/>
-                    All annual accounts are due on the day of activation and each year on that same date thereafter. If you had an annual account activated on June 18th, 2001 then the next due date for that package will be on June 18th 2002, regardless whether or not you have other accounts.</p>
-                  </div>
-
-                  <p><strong>What if there is an error on my invoice?</strong><br/>
-                  If you notice an error on your invoice, simply contact us explaining the error and we will address the situation immediately. It is important that you let us know. Errors left unattended for any length of time become more difficult to correct.</p>
-
-                  <p><strong>Can you send me an invoice by request?</strong><br/>
-                  You can actually do this yourself via the community! Once logged in you may review your transaction history and send yourself current or past invoices.</p>
-
-                  <p><strong>How do I update the credit card information you have on file?</strong><br/>
-                  To update the credit card on file for the automatic payment plan, simply return to the form where you submitted the original credit card information, located at <a href="#">https://secure.FutureQuest.net/cgi-ssl/Preferred.cgi</a>, and submit the information for the new card just as you did the first time. This will cause the credit card information on file for your account to be updated to the new card you have just submitted.</p>
+                  <template for:each={contentBlocks} for:item="block">
+                    <template if:true={block.isH3}>
+                      <h3 key={block.id} class="kb-rich-content__h3">{block.text}</h3>
+                    </template>
+                    <template if:true={block.isH4}>
+                      <h4 key={block.id} class="kb-rich-content__h4">{block.text}</h4>
+                    </template>
+                    <template if:true={block.isP}>
+                      <p key={block.id}>{block.html}</p>
+                    </template>
+                    <template if:true={block.isOl}>
+                      <ol key={block.id}>
+                        <template for:each={block.items} for:item="item">
+                          <li key={item.id}>{item.text}</li>
+                        </template>
+                      </ol>
+                    </template>
+                  </template>
                 </div>
                 <lightning-button-icon icon-name="utility:edit" variant="bare" size="small" alternative-text="Edit Details" class="kb-field__edit-icon"></lightning-button-icon>
               </div>
@@ -202,21 +219,16 @@
             <span class="kb-section__title">Properties</span>
           </div>
         </section>
+        </template>
 
-        <!-- AI Metadata Section -->
-        <section class="kb-section">
-          <div class="kb-section__header">
-            <lightning-icon icon-name="utility:chevrondown" size="x-small" alternative-text="Collapse"></lightning-icon>
-            <span class="kb-section__title">
-              <lightning-icon icon-name="utility:einstein" size="xx-small" class="slds-m-right_xx-small" alternative-text="AI"></lightning-icon>
-              AI Metadata
-            </span>
+        <!-- AI Metadata Tab Panel -->
+        <template if:true={isMetadataTabActive}>
+          <div class="kb-tab-panel">
             <template if:true={hasAcceptedMetadata}>
-              <span class="kb-section__badge kb-section__badge--success">Accepted</span>
-            </template>
-          </div>
-          <div class="kb-section__body">
-            <template if:true={hasAcceptedMetadata}>
+              <div class="kb-tab-panel__header">
+                <h2 class="kb-tab-panel__title">AI-Suggested Metadata</h2>
+                <span class="kb-section__badge kb-section__badge--success">Accepted</span>
+              </div>
               <div class="kb-metadata-grid">
                 <template for:each={metadataDisplayRows} for:item="row">
                   <div key={row.key} class="kb-field">
@@ -241,22 +253,25 @@
               </div>
             </template>
           </div>
-        </section>
+        </template>
 
-        <!-- AI Enrichment Section -->
-        <section class="kb-section">
-          <div class="kb-section__header">
-            <lightning-icon icon-name="utility:chevrondown" size="x-small" alternative-text="Collapse"></lightning-icon>
-            <span class="kb-section__title">
-              <lightning-icon icon-name="utility:einstein" size="xx-small" class="slds-m-right_xx-small" alternative-text="AI"></lightning-icon>
-              AI Enrichment
-            </span>
+        <!-- AI Enrichment Tab Panel -->
+        <template if:true={isEnrichmentTabActive}>
+          <div class="kb-tab-panel">
             <template if:true={hasApprovedEnrichment}>
-              <span class="kb-section__badge kb-section__badge--success">Approved</span>
-            </template>
-          </div>
-          <div class="kb-section__body">
-            <template if:true={hasApprovedEnrichment}>
+              <div class="kb-tab-panel__header">
+                <h2 class="kb-tab-panel__title">AI Enrichment</h2>
+                <span class="kb-section__badge kb-section__badge--success">Approved</span>
+              </div>
+
+              <!-- Summary -->
+              <template if:true={hasEnrichmentSummary}>
+                <div class="kb-field">
+                  <div class="kb-field__label">AI-Generated Summary</div>
+                  <div class="kb-enrichment-summary">{enrichmentSummary}</div>
+                </div>
+              </template>
+
               <!-- Abstract -->
               <div class="kb-field">
                 <div class="kb-field__label">AI Abstract</div>
@@ -318,11 +333,25 @@
               <div class="kb-empty-state">
                 <lightning-icon icon-name="utility:einstein" size="small" alternative-text="AI"></lightning-icon>
                 <div class="kb-empty-state__text">No enrichment generated yet.</div>
-                <div class="kb-empty-state__hint">Click <strong>Enrich</strong> in the header to generate an AI abstract, FAQ questions, and extracted entities.</div>
+                <div class="kb-empty-state__hint">Click <strong>Enrich</strong> in the header to generate an AI summary, abstract, FAQ questions, and extracted entities.</div>
               </div>
             </template>
           </div>
-        </section>
+        </template>
+
+        <!-- Placeholder tab panels -->
+        <template if:true={isRelatedTabActive}>
+          <div class="kb-tab-panel kb-tab-panel--placeholder">No related items.</div>
+        </template>
+        <template if:true={isVersionTabActive}>
+          <div class="kb-tab-panel kb-tab-panel--placeholder">No version comparison available.</div>
+        </template>
+        <template if:true={isTranslationsTabActive}>
+          <div class="kb-tab-panel kb-tab-panel--placeholder">No translations.</div>
+        </template>
+        <template if:true={isApprovalsTabActive}>
+          <div class="kb-tab-panel kb-tab-panel--placeholder">No approval requests.</div>
+        </template>
       </div>
 
       <!-- Right: Feed Panel -->

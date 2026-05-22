@@ -10,6 +10,12 @@ import {
 export default class KnowledgeArticle extends LightningElement {
   @track activeModal = null; // null | 'analyze' | 'metadata' | 'enrich' | 'dashboard'
 
+  // Currently displayed article (drives main page rendering)
+  @track currentArticle = SAMPLE_ARTICLES[0];
+
+  // Active main tab
+  @track activeMainTab = 'details';
+
   // Edit modal state
   @track isEditModalOpen = false;
   @track editTitle = '';
@@ -26,9 +32,152 @@ export default class KnowledgeArticle extends LightningElement {
   connectedCallback() {
     // Default to first sample article (Configure SSO - the poor quality one)
     setCurrentArticle(SAMPLE_ARTICLES[0]);
+    this.currentArticle = SAMPLE_ARTICLES[0];
     this.editTitle = SAMPLE_ARTICLES[0].title;
     this.editDetails = SAMPLE_ARTICLES[0].content;
     this.refreshFromState();
+  }
+
+  get currentArticleTitle() {
+    return this.currentArticle?.title || '';
+  }
+
+  get contentBlocks() {
+    if (!this.currentArticle?.content) return [];
+    const lines = this.currentArticle.content.split('\n');
+    const blocks = [];
+    let currentList = null;
+    let currentParagraph = null;
+
+    const flushParagraph = () => {
+      if (currentParagraph) {
+        blocks.push({ type: 'p', id: `b${blocks.length}`, html: currentParagraph });
+        currentParagraph = null;
+      }
+    };
+    const flushList = () => {
+      if (currentList) {
+        blocks.push({ type: 'ol', id: `b${blocks.length}`, items: currentList });
+        currentList = null;
+      }
+    };
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) {
+        flushParagraph();
+        flushList();
+        continue;
+      }
+      if (line.startsWith('# ')) {
+        // Skip H1 - it's the article title shown in header
+        continue;
+      }
+      if (line.startsWith('## ')) {
+        flushParagraph();
+        flushList();
+        blocks.push({ type: 'h3', id: `b${blocks.length}`, text: line.slice(3) });
+        continue;
+      }
+      if (line.startsWith('### ')) {
+        flushParagraph();
+        flushList();
+        blocks.push({ type: 'h4', id: `b${blocks.length}`, text: line.slice(4) });
+        continue;
+      }
+      const numbered = line.match(/^(\d+)\.\s+(.+)$/);
+      if (numbered) {
+        flushParagraph();
+        if (!currentList) currentList = [];
+        currentList.push({ id: `i${blocks.length}-${currentList.length}`, text: numbered[2] });
+        continue;
+      }
+      flushList();
+      // Bold inline replacement: strip markers; we render plain
+      const text = line.replace(/\*\*([^*]+)\*\*/g, '$1');
+      if (currentParagraph) {
+        currentParagraph += ' ' + text;
+      } else {
+        currentParagraph = text;
+      }
+    }
+    flushParagraph();
+    flushList();
+
+    return blocks.map((b) => ({
+      ...b,
+      isH3: b.type === 'h3',
+      isH4: b.type === 'h4',
+      isP: b.type === 'p',
+      isOl: b.type === 'ol'
+    }));
+  }
+
+  // ========== Main Tab Handlers ==========
+
+  handleMainTabClick(event) {
+    const tab = event.currentTarget.dataset.tab;
+    if (tab) {
+      this.activeMainTab = tab;
+    }
+  }
+
+  get isDetailsTabActive() {
+    return this.activeMainTab === 'details';
+  }
+  get isRelatedTabActive() {
+    return this.activeMainTab === 'related';
+  }
+  get isMetadataTabActive() {
+    return this.activeMainTab === 'aiMetadata';
+  }
+  get isEnrichmentTabActive() {
+    return this.activeMainTab === 'aiEnrichment';
+  }
+  get isVersionTabActive() {
+    return this.activeMainTab === 'version';
+  }
+  get isTranslationsTabActive() {
+    return this.activeMainTab === 'translations';
+  }
+  get isApprovalsTabActive() {
+    return this.activeMainTab === 'approvals';
+  }
+
+  get detailsTabClass() {
+    return this.isDetailsTabActive
+      ? 'kb-tabs__item kb-tabs__item--active'
+      : 'kb-tabs__item';
+  }
+  get relatedTabClass() {
+    return this.isRelatedTabActive
+      ? 'kb-tabs__item kb-tabs__item--active'
+      : 'kb-tabs__item';
+  }
+  get metadataTabClass() {
+    return this.isMetadataTabActive
+      ? 'kb-tabs__item kb-tabs__item--active'
+      : 'kb-tabs__item';
+  }
+  get enrichmentTabClass() {
+    return this.isEnrichmentTabActive
+      ? 'kb-tabs__item kb-tabs__item--active'
+      : 'kb-tabs__item';
+  }
+  get versionTabClass() {
+    return this.isVersionTabActive
+      ? 'kb-tabs__item kb-tabs__item--active'
+      : 'kb-tabs__item';
+  }
+  get translationsTabClass() {
+    return this.isTranslationsTabActive
+      ? 'kb-tabs__item kb-tabs__item--active'
+      : 'kb-tabs__item';
+  }
+  get approvalsTabClass() {
+    return this.isApprovalsTabActive
+      ? 'kb-tabs__item kb-tabs__item--active'
+      : 'kb-tabs__item';
   }
 
   refreshFromState() {
@@ -301,6 +450,14 @@ export default class KnowledgeArticle extends LightningElement {
 
   get hasApprovedEnrichment() {
     return !!this.approvedEnrichment;
+  }
+
+  get enrichmentSummary() {
+    return this.approvedEnrichment?.summary || '';
+  }
+
+  get hasEnrichmentSummary() {
+    return !!this.approvedEnrichment?.summary;
   }
 
   get enrichmentAbstract() {

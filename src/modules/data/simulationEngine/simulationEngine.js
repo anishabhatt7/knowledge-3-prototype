@@ -117,10 +117,34 @@ export function suggestMetadata(articleContent, articleTitle) {
 
 export function generateEnrichment(articleContent, articleTitle, metadata) {
   return {
+    summary: generateSummary(articleContent, articleTitle, metadata.contentType?.value),
     abstract: generateAbstract(articleContent, articleTitle, metadata.contentType?.value),
     faqs: generateFAQs(articleContent, articleTitle, metadata.contentType?.value),
     entities: extractEntities(articleContent)
   };
+}
+
+function generateSummary(content, title, contentType) {
+  // Get the first 1-2 meaningful sentences from the content
+  const cleanContent = content.replace(/^#.*$/gm, '').replace(/\*\*/g, '').trim();
+  const sentences = cleanContent.split(/[.!?]+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 20 && !/^(this article|this guide|this section|in this)/i.test(s));
+
+  const firstTwo = sentences.slice(0, 2).join('. ').replace(/\s+/g, ' ');
+
+  // Frame by content type
+  if (contentType === 'Procedure') {
+    const stepCount = (content.match(/^\d+\./gm) || []).length;
+    return `Step-by-step guide for ${title.toLowerCase()}. ${firstTwo}. Includes ${stepCount} steps with prerequisites and expected results.`.replace(/\.\.+/g, '.');
+  }
+  if (contentType === 'Concept') {
+    return `Overview of ${title.toLowerCase()}. ${firstTwo}.`.replace(/\.\.+/g, '.');
+  }
+  if (contentType === 'Troubleshooting') {
+    return `Troubleshooting guide for ${title.toLowerCase()}. ${firstTwo}.`.replace(/\.\.+/g, '.');
+  }
+  return `${title}. ${firstTwo}.`.replace(/\.\.+/g, '.');
 }
 
 function generateAbstract(content, title, contentType) {
