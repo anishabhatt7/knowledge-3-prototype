@@ -328,3 +328,38 @@
 .kb-feed__comment-input {
   flex: 1;
 }
+
+/* AI action group separator */
+.kb-article__ai-divider {
+  width: 1px;
+  background-color: var(--slds-g-color-border-base-1, #d8dde6);
+  margin: 0 0.5rem;
+  align-self: stretch;
+}
+
+/* Make AI buttons stand out subtly with Einstein purple-ish accent */
+.kb-article__actions lightning-button[variant="brand-outline"] {
+  --kb-c-button-brand-outline-color-border: #5867e8;
+  --kb-c-button-brand-outline-text-color: #5867e8;
+}
+
+/* Modal sizing - large enough for the existing page components */
+.kb-ai-modal {
+  max-width: 90vw;
+  width: 1280px;
+  max-height: 90vh;
+}
+
+.kb-ai-modal__content {
+  max-height: calc(90vh - 130px);
+  overflow-y: auto;
+  background-color: var(--slds-g-color-neutral-base-95, #f3f3f3);
+}
+
+/* Reset background-color of card sections inside modal so reused components look right */
+.kb-ai-modal__content .analyzer-container,
+.kb-ai-modal__content .metadata-container,
+.kb-ai-modal__content .enrichment-container,
+.kb-ai-modal__content .dashboard-container {
+  max-width: none;
+}

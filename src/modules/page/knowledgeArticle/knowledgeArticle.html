@@ -45,6 +45,42 @@
         <lightning-button label="Assign" variant="neutral"></lightning-button>
         <lightning-button label="Publish" variant="neutral"></lightning-button>
         <lightning-button-icon icon-name="utility:down" variant="border-filled" alternative-text="More actions"></lightning-button-icon>
+
+        <!-- AI action group with separator -->
+        <div class="kb-article__ai-divider"></div>
+
+        <lightning-button
+          variant="brand-outline"
+          label="Analyze"
+          icon-name="utility:einstein"
+          icon-position="left"
+          onclick={handleAnalyzeClick}
+          title="Analyze RAG compliance with AI">
+        </lightning-button>
+        <lightning-button
+          variant="brand-outline"
+          label="Get Metadata"
+          icon-name="utility:tags"
+          icon-position="left"
+          onclick={handleMetadataClick}
+          title="AI-suggested metadata">
+        </lightning-button>
+        <lightning-button
+          variant="brand-outline"
+          label="Enrich"
+          icon-name="utility:summary"
+          icon-position="left"
+          onclick={handleEnrichClick}
+          title="AI enrichment (abstract, FAQ, entities)">
+        </lightning-button>
+        <lightning-button
+          variant="brand-outline"
+          label="Dashboard"
+          icon-name="utility:metrics"
+          icon-position="left"
+          onclick={handleDashboardClick}
+          title="KB health dashboard">
+        </lightning-button>
       </div>
     </header>
 
@@ -238,4 +274,44 @@
       </aside>
     </div>
   </div>
+
+  <!-- AI Feature Modals -->
+  <template if:true={isAnyModalOpen}>
+    <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open slds-modal_large">
+      <div class="slds-modal__container kb-ai-modal">
+        <button class="slds-button slds-button_icon slds-modal__close" onclick={handleCloseModal} title="Close">
+          <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+        </button>
+
+        <header class="slds-modal__header">
+          <h2 class="slds-modal__title slds-hyphenate">
+            <template if:true={isAnalyzeModalOpen}>AI Analysis</template>
+            <template if:true={isMetadataModalOpen}>AI Metadata Suggestions</template>
+            <template if:true={isEnrichModalOpen}>AI Enrichment</template>
+            <template if:true={isDashboardModalOpen}>Knowledge Health Dashboard</template>
+          </h2>
+        </header>
+
+        <div class="slds-modal__content slds-p-around_medium kb-ai-modal__content">
+          <template if:true={isAnalyzeModalOpen}>
+            <page-article-analyzer onnavigate={handleNavigate}></page-article-analyzer>
+          </template>
+          <template if:true={isMetadataModalOpen}>
+            <page-metadata-suggester onnavigate={handleNavigate}></page-metadata-suggester>
+          </template>
+          <template if:true={isEnrichModalOpen}>
+            <page-enrichment-preview onnavigate={handleNavigate}></page-enrichment-preview>
+          </template>
+          <template if:true={isDashboardModalOpen}>
+            <page-health-dashboard onnavigate={handleNavigate}></page-health-dashboard>
+          </template>
+        </div>
+
+        <footer class="slds-modal__footer">
+          <lightning-button label="Close" onclick={handleCloseModal}></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
 </template>
