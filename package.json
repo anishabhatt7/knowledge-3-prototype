@@ -1,7 +1,7 @@
 {
-  "name": "design-system-2-starter-kit",
+  "name": "ai-knowledge-prototype",
   "version": "1.0.0",
-  "description": "Starter template for prototyping Salesforce experiences with LWC, Vite, SLDS, and Lightning Base Components",
+  "description": "AI Ready Knowledge prototype demonstrating RAG-optimized KB authoring",
   "author": "Salesforce UX",
   "scripts": {
     "postinstall": "npm run skills:sync",
@@ -21,6 +21,7 @@
     "@lwc/synthetic-shadow": "^9.0.2",
     "@salesforce-ux/design-system": "^2.29.0",
     "@salesforce-ux/design-system-2": "^2.0.0",
+    "chart.js": "^4.5.1",
     "lightning-base-components": "^1.28.15-alpha",
     "lwc": "^9.0.2"
   },
