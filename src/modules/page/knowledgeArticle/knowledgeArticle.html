@@ -202,6 +202,127 @@
             <span class="kb-section__title">Properties</span>
           </div>
         </section>
+
+        <!-- AI Metadata Section -->
+        <section class="kb-section">
+          <div class="kb-section__header">
+            <lightning-icon icon-name="utility:chevrondown" size="x-small" alternative-text="Collapse"></lightning-icon>
+            <span class="kb-section__title">
+              <lightning-icon icon-name="utility:einstein" size="xx-small" class="slds-m-right_xx-small" alternative-text="AI"></lightning-icon>
+              AI Metadata
+            </span>
+            <template if:true={hasAcceptedMetadata}>
+              <span class="kb-section__badge kb-section__badge--success">Accepted</span>
+            </template>
+          </div>
+          <div class="kb-section__body">
+            <template if:true={hasAcceptedMetadata}>
+              <div class="kb-metadata-grid">
+                <template for:each={metadataDisplayRows} for:item="row">
+                  <div key={row.key} class="kb-field">
+                    <div class="kb-field__label">{row.label}</div>
+                    <div class="kb-field__value">
+                      <template if:true={row.hasValue}>
+                        <span class="kb-metadata-value">{row.value}</span>
+                      </template>
+                      <template if:false={row.hasValue}>
+                        <span class="kb-field__empty">—</span>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+            <template if:false={hasAcceptedMetadata}>
+              <div class="kb-empty-state">
+                <lightning-icon icon-name="utility:einstein" size="small" alternative-text="AI"></lightning-icon>
+                <div class="kb-empty-state__text">No metadata generated yet.</div>
+                <div class="kb-empty-state__hint">Click <strong>Get Metadata</strong> in the header to use AI to suggest metadata for this article.</div>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        <!-- AI Enrichment Section -->
+        <section class="kb-section">
+          <div class="kb-section__header">
+            <lightning-icon icon-name="utility:chevrondown" size="x-small" alternative-text="Collapse"></lightning-icon>
+            <span class="kb-section__title">
+              <lightning-icon icon-name="utility:einstein" size="xx-small" class="slds-m-right_xx-small" alternative-text="AI"></lightning-icon>
+              AI Enrichment
+            </span>
+            <template if:true={hasApprovedEnrichment}>
+              <span class="kb-section__badge kb-section__badge--success">Approved</span>
+            </template>
+          </div>
+          <div class="kb-section__body">
+            <template if:true={hasApprovedEnrichment}>
+              <!-- Abstract -->
+              <div class="kb-field">
+                <div class="kb-field__label">AI Abstract</div>
+                <div class="kb-enrichment-abstract">{enrichmentAbstract}</div>
+              </div>
+
+              <!-- FAQs -->
+              <template if:true={hasFaqs}>
+                <div class="kb-field">
+                  <div class="kb-field__label">FAQ Questions</div>
+                  <ul class="kb-enrichment-faqs">
+                    <template for:each={enrichmentFaqs} for:item="faq">
+                      <li key={faq} class="kb-enrichment-faqs__item">{faq}</li>
+                    </template>
+                  </ul>
+                </div>
+              </template>
+
+              <!-- Entities -->
+              <div class="kb-field">
+                <div class="kb-field__label">Extracted Entities</div>
+                <div class="kb-enrichment-entities">
+                  <template if:true={hasEntityProducts}>
+                    <div class="kb-entity-group">
+                      <span class="kb-entity-group__label">Products:</span>
+                      <template for:each={entityProducts} for:item="entity">
+                        <span key={entity} class="kb-entity-pill kb-entity-pill--product">{entity}</span>
+                      </template>
+                    </div>
+                  </template>
+                  <template if:true={hasEntityFeatures}>
+                    <div class="kb-entity-group">
+                      <span class="kb-entity-group__label">Features:</span>
+                      <template for:each={entityFeatures} for:item="entity">
+                        <span key={entity} class="kb-entity-pill kb-entity-pill--feature">{entity}</span>
+                      </template>
+                    </div>
+                  </template>
+                  <template if:true={hasEntityUiElements}>
+                    <div class="kb-entity-group">
+                      <span class="kb-entity-group__label">UI Elements:</span>
+                      <template for:each={entityUiElements} for:item="entity">
+                        <span key={entity} class="kb-entity-pill kb-entity-pill--ui">{entity}</span>
+                      </template>
+                    </div>
+                  </template>
+                  <template if:true={hasEntityApiNames}>
+                    <div class="kb-entity-group">
+                      <span class="kb-entity-group__label">API Names:</span>
+                      <template for:each={entityApiNames} for:item="entity">
+                        <span key={entity} class="kb-entity-pill kb-entity-pill--api">{entity}</span>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+            <template if:false={hasApprovedEnrichment}>
+              <div class="kb-empty-state">
+                <lightning-icon icon-name="utility:einstein" size="small" alternative-text="AI"></lightning-icon>
+                <div class="kb-empty-state__text">No enrichment generated yet.</div>
+                <div class="kb-empty-state__hint">Click <strong>Enrich</strong> in the header to generate an AI abstract, FAQ questions, and extracted entities.</div>
+              </div>
+            </template>
+          </div>
+        </section>
       </div>
 
       <!-- Right: Feed Panel -->

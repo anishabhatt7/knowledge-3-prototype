@@ -1,6 +1,11 @@
 import { LightningElement, track } from 'lwc';
 import { SAMPLE_ARTICLES } from 'data/sampleArticles';
-import { setCurrentArticle, getAnalysisResults } from 'data/articleState';
+import {
+  setCurrentArticle,
+  getCurrentArticle,
+  getAnalysisResults,
+  getEnrichmentData
+} from 'data/articleState';
 
 export default class KnowledgeArticle extends LightningElement {
   @track activeModal = null; // null | 'analyze' | 'metadata' | 'enrich' | 'dashboard'
@@ -14,11 +19,24 @@ export default class KnowledgeArticle extends LightningElement {
   @track editAnalysis = null;
   debounceTimer = null;
 
+  // Accepted AI data (refreshed on modal close)
+  @track acceptedMetadata = null;
+  @track approvedEnrichment = null;
+
   connectedCallback() {
     // Default to first sample article (Configure SSO - the poor quality one)
     setCurrentArticle(SAMPLE_ARTICLES[0]);
     this.editTitle = SAMPLE_ARTICLES[0].title;
     this.editDetails = SAMPLE_ARTICLES[0].content;
+    this.refreshFromState();
+  }
+
+  refreshFromState() {
+    const article = getCurrentArticle();
+    if (article && article.metadata) {
+      this.acceptedMetadata = article.metadata;
+    }
+    this.approvedEnrichment = getEnrichmentData();
   }
 
   get isAnalyzeModalOpen() {
@@ -54,11 +72,17 @@ export default class KnowledgeArticle extends LightningElement {
   }
 
   handleDashboardClick() {
-    this.activeModal = 'dashboard';
+    // Open dashboard in a new browser window so it appears as a separate full-page view
+    window.open(
+      './dashboard.html',
+      'kb-dashboard',
+      'width=1400,height=900,resizable=yes,scrollbars=yes'
+    );
   }
 
   handleCloseModal() {
     this.activeModal = null;
+    this.refreshFromState();
   }
 
   // Handle navigate events from child components - switch to the requested modal
@@ -68,11 +92,19 @@ export default class KnowledgeArticle extends LightningElement {
       articleAnalyzer: 'analyze',
       metadataSuggester: 'metadata',
       enrichmentPreview: 'enrich',
-      healthDashboard: 'dashboard',
-      guidedAuthor: null // Guided author closes modals - it's the Edit modal handled separately
+      healthDashboard: 'dashboard'
     };
-    this.activeModal =
-      tabToModal[tab] !== undefined ? tabToModal[tab] : this.activeModal;
+
+    if (tab === 'guidedAuthor') {
+      // Close current modal, open Edit modal with current article pre-loaded
+      this.activeModal = null;
+      this.handleEditClick();
+      return;
+    }
+
+    if (tabToModal[tab]) {
+      this.activeModal = tabToModal[tab];
+    }
   }
 
   // ========== Edit Modal Handlers ==========
@@ -225,5 +257,104 @@ export default class KnowledgeArticle extends LightningElement {
     tips.push('Make headings specific and descriptive');
 
     return tips.slice(0, 4);
+  }
+
+  // ========== AI Metadata / Enrichment Display Getters ==========
+
+  get hasAcceptedMetadata() {
+    if (!this.acceptedMetadata) return false;
+    return Object.keys(this.acceptedMetadata).some((k) => {
+      const v = this.acceptedMetadata[k];
+      return Array.isArray(v) ? v.length > 0 : !!v;
+    });
+  }
+
+  get metadataDisplayRows() {
+    if (!this.acceptedMetadata) return [];
+    const labels = {
+      products: 'Products',
+      featureArea: 'Feature Area',
+      primaryAudience: 'Primary Audience',
+      contentType: 'Content Type',
+      releaseVersions: 'Release Versions',
+      useCase: 'Use Case',
+      complexity: 'Complexity',
+      confidenceLevel: 'Confidence Level'
+    };
+
+    return Object.keys(labels).map((key) => {
+      const value = this.acceptedMetadata[key];
+      let displayValue = '—';
+      if (Array.isArray(value) && value.length > 0) {
+        displayValue = value.join(', ');
+      } else if (value && typeof value === 'string') {
+        displayValue = value;
+      }
+      return {
+        key,
+        label: labels[key],
+        value: displayValue,
+        hasValue: displayValue !== '—'
+      };
+    });
+  }
+
+  get hasApprovedEnrichment() {
+    return !!this.approvedEnrichment;
+  }
+
+  get enrichmentAbstract() {
+    return this.approvedEnrichment?.abstract || '';
+  }
+
+  get enrichmentFaqs() {
+    return this.approvedEnrichment?.faqs || [];
+  }
+
+  get hasFaqs() {
+    return this.enrichmentFaqs.length > 0;
+  }
+
+  get enrichmentEntities() {
+    return (
+      this.approvedEnrichment?.entities || {
+        products: [],
+        features: [],
+        uiElements: [],
+        apiNames: []
+      }
+    );
+  }
+
+  get entityProducts() {
+    return this.enrichmentEntities.products || [];
+  }
+
+  get entityFeatures() {
+    return this.enrichmentEntities.features || [];
+  }
+
+  get entityUiElements() {
+    return this.enrichmentEntities.uiElements || [];
+  }
+
+  get entityApiNames() {
+    return this.enrichmentEntities.apiNames || [];
+  }
+
+  get hasEntityProducts() {
+    return this.entityProducts.length > 0;
+  }
+
+  get hasEntityFeatures() {
+    return this.entityFeatures.length > 0;
+  }
+
+  get hasEntityUiElements() {
+    return this.entityUiElements.length > 0;
+  }
+
+  get hasEntityApiNames() {
+    return this.entityApiNames.length > 0;
   }
 }
