@@ -1,0 +1,94 @@
+<template>
+  <div class="analyzer-container">
+    <lightning-card title="Article Analyzer" icon-name="utility:search">
+      <div class="slds-p-around_medium">
+        <div class="slds-m-bottom_medium">
+          <lightning-combobox
+            name="sampleArticle"
+            label="Load Sample Article"
+            placeholder="Select an article"
+            options={sampleArticleOptions}
+            onchange={handleSampleArticleSelect}
+            class="slds-m-bottom_small"
+          ></lightning-combobox>
+        </div>
+
+        <lightning-textarea
+          label="Article Content"
+          placeholder="Paste article text here or select a sample above"
+          value={articleContent}
+          onchange={handleContentChange}
+          rows="10"
+          class="slds-m-bottom_medium"
+        ></lightning-textarea>
+
+        <lightning-button
+          label="Analyze Article"
+          variant="brand"
+          onclick={handleAnalyze}
+          disabled={isAnalyzeDisabled}
+        ></lightning-button>
+      </div>
+    </lightning-card>
+
+    <template if:true={showResults}>
+      <div class="slds-m-top_medium">
+        <div class="slds-grid slds-wrap slds-gutters_small slds-m-bottom_medium">
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+            <ui-score-card
+              title="RAG Score"
+              value={scoreDisplay}
+              subtitle={scoreLabel}
+              status={scoreStatus}
+              icon-name="utility:metrics"
+            ></ui-score-card>
+          </div>
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+            <ui-score-card
+              title="Metadata Completeness"
+              value={metadataDisplay}
+              subtitle={metadataSubtitle}
+              status={metadataStatus}
+              icon-name="utility:checkin"
+            ></ui-score-card>
+          </div>
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+            <ui-score-card
+              title="Structure Violations"
+              value={violationCount}
+              subtitle={violationSubtitle}
+              status={violationStatus}
+              icon-name="utility:warning"
+            ></ui-score-card>
+          </div>
+        </div>
+
+        <lightning-card title="Structure Violations">
+          <div class="slds-p-around_medium">
+            <ui-violation-list violations={violations}></ui-violation-list>
+          </div>
+        </lightning-card>
+
+        <div class="slds-m-top_medium slds-text-align_center">
+          <lightning-button
+            label="Fix in Guided Author"
+            variant="brand"
+            onclick={handleFixInAuthor}
+            class="slds-m-right_small"
+          ></lightning-button>
+          <lightning-button
+            label="Add Metadata"
+            variant="neutral"
+            onclick={handleAddMetadata}
+            class="slds-m-right_small"
+          ></lightning-button>
+          <lightning-button
+            label="View Dashboard"
+            variant="neutral"
+            onclick={handleViewDashboard}
+          ></lightning-button>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>
