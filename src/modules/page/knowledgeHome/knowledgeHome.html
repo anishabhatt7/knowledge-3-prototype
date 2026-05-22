@@ -1,0 +1,210 @@
+<template lwc:render-mode="light">
+    <div class="kh-shell">
+        <!-- ═══ LEFT RAIL — collapsible (267px ↔ 48px) ═══ -->
+        <nav class={railClass} aria-label="Knowledge navigation">
+            <div class="kh-rail__top">
+                <template for:each={railTopItems} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class={item.rowClass}
+                        data-id={item.id}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+
+                <div class="kh-rail__divider" role="separator"></div>
+                <div class="kh-rail__group-header">Maintain</div>
+                <template for:each={railMaintain} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class="kh-rail__row"
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+
+                <div class="kh-rail__divider" role="separator"></div>
+                <div class="kh-rail__group-header">Create</div>
+                <template for:each={railCreate} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class="kh-rail__row"
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+
+            </div>
+
+            <div class="kh-rail__bottom">
+                <button
+                    type="button"
+                    class="kh-rail__row kh-rail__row--collapse"
+                    aria-label={collapseAriaLabel}
+                    onclick={handleToggleRail}
+                >
+                    <lightning-icon
+                        icon-name={collapseIconName}
+                        size="x-small"
+                        alternative-text={collapseAriaLabel}
+                        class="kh-rail__icon"
+                    ></lightning-icon>
+                    <span class="kh-rail__label">Collapse</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- ═══ MAIN CONTENT ═══ -->
+        <main class="kh-main">
+            <!-- Quick Actions -->
+            <section class="kh-section">
+                <h2 class="kh-section__title">Quick Actions</h2>
+                <div class="kh-quick-row">
+                    <template for:each={quickActions} for:item="q">
+                        <button
+                            key={q.id}
+                            type="button"
+                            class={q.cardClass}
+                            data-id={q.id}
+                            onclick={handleQuickAction}
+                        >
+                            <span class={q.iconClass} aria-hidden="true">
+                                <lightning-icon
+                                    icon-name={q.icon}
+                                    size="small"
+                                    alternative-text=""
+                                ></lightning-icon>
+                            </span>
+                            <span class="kh-quick-card__body">
+                                <span class="kh-quick-card__title">{q.title}</span>
+                                <span class="kh-quick-card__desc">{q.description}</span>
+                            </span>
+                        </button>
+                    </template>
+                </div>
+            </section>
+
+            <!-- My Watchlist — Figma 443:51067 -->
+            <section class="kh-section">
+                <h2 class="kh-section__title">My Watchlist</h2>
+                <div class="kh-watch-row">
+                    <template for:each={watchlist} for:item="w">
+                        <article key={w.id} class="kh-metric-card">
+                            <header class="kh-metric-card__header">
+                                <div class="kh-metric-card__heading">
+                                    <h3 class="kh-metric-card__title">{w.title}</h3>
+                                    <p class="kh-metric-card__cadence">{w.cadence}</p>
+                                </div>
+                                <lightning-button-icon
+                                    icon-name="utility:down"
+                                    variant="border-filled"
+                                    size="x-small"
+                                    alternative-text="Filter"
+                                ></lightning-button-icon>
+                            </header>
+                            <div class="kh-metric-card__details">
+                                <div class="kh-metric-card__value">{w.value}</div>
+                                <div class="kh-metric-card__delta">
+                                    <span class="kh-metric-card__delta-value">{w.delta}</span>
+                                    <span class="kh-metric-card__delta-label">period vs period</span>
+                                </div>
+                            </div>
+                            <div class="kh-metric-card__actions">
+                                <lightning-button
+                                    variant="brand-outline"
+                                    label={w.footerLink}
+                                    class="kh-metric-card__cta"
+                                ></lightning-button>
+                            </div>
+                        </article>
+                    </template>
+                </div>
+            </section>
+
+            <!-- Recently Accessed -->
+            <section class="kh-section">
+                <h2 class="kh-section__title">Recently Accessed</h2>
+                <div class="kh-recent-row">
+                    <template for:each={recentlyAccessed} for:item="r">
+                        <article key={r.id} class="kh-recent-card">
+                            <span class="kh-recent-card__icon">
+                                <lightning-icon
+                                    icon-name="standard:knowledge"
+                                    size="small"
+                                    alternative-text="Article"
+                                ></lightning-icon>
+                            </span>
+                            <div class="kh-recent-card__body">
+                                <div class="kh-recent-card__title">{r.title}</div>
+                                <div class="kh-recent-card__sub">{r.subtitle}</div>
+                            </div>
+                        </article>
+                    </template>
+                </div>
+            </section>
+
+            <!-- Templates for Article — Figma 443:50484 -->
+            <section class="kh-section">
+                <header class="kh-section__head-row">
+                    <h2 class="kh-section__title">Templates for Article</h2>
+                    <a href="#" class="kh-section__link">Explore All</a>
+                </header>
+                <div class="kh-templates-row">
+                    <template for:each={templates} for:item="t">
+                        <article key={t.id} class={t.cardClass}>
+                            <div class="kh-template-card__text">
+                                <h3 class="kh-template-card__title">{t.title}</h3>
+                                <p class="kh-template-card__body">{t.body}</p>
+                            </div>
+                            <div class="kh-template-card__actions">
+                                <lightning-button
+                                    variant="brand-outline"
+                                    label="Select"
+                                    class="kh-template-card__cta"
+                                ></lightning-button>
+                                <lightning-button
+                                    variant="base"
+                                    label="View Details"
+                                    class="kh-template-card__cta kh-template-card__cta--base"
+                                ></lightning-button>
+                            </div>
+                        </article>
+                    </template>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Draft-with-Agentforce modal. Mounted always; renders only when open. -->
+    <ui-draft-agentforce-modal
+        open={_modalOpen}
+        oncancel={handleModalCancel}
+        ongenerate={handleModalGenerate}
+    ></ui-draft-agentforce-modal>
+</template>

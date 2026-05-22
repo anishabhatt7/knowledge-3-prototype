@@ -1,0 +1,170 @@
+<template lwc:render-mode="light">
+  <div class="page-header">
+    <div class="page-header-row">
+      <div class="page-header-title-section">
+        <template lwc:if={isKbCreationFlow}>
+          <img src="/public/assets/kb-icon-object.png" alt={headerEntityName} class="page-header-custom-icon" width="32" height="32" />
+        </template>
+        <template lwc:else>
+          <lightning-icon
+            icon-name={headerIcon}
+            size="medium"
+            alternative-text={headerEntityName}
+            title={headerEntityName}
+            class="page-header-entity-icon"
+          ></lightning-icon>
+        </template>
+        <div class="title-text-section">
+          <span class="page-header-entity-name">{headerEntityName}</span>
+          <div class="title-row">
+            <h1 class="page-header-title">Recently Viewed</h1>
+            <lightning-button-icon
+              icon-name="utility:pinned"
+              variant="border-filled"
+              size="medium"
+              alternative-text="Pin list"
+              title="Pin list"
+              class="ph-pin-btn"
+            ></lightning-button-icon>
+          </div>
+        </div>
+      </div>
+      <div class="page-header-actions">
+        <!-- Split button: New Article + chevron dropdown -->
+        <lightning-button-group class="ph-pill-group ph-pill-group--new">
+          <lightning-button
+            label={newButtonLabel}
+            title={newButtonLabel}
+            onclick={handleNew}
+          ></lightning-button>
+          <lightning-button-menu
+            alternative-text="New actions"
+            variant="border-filled"
+            menu-alignment="right"
+            onselect={handleNewMenuSelect}
+          >
+            <lightning-menu-item
+              label="New from template"
+              value="new_from_template"
+              prefix-icon-name="utility:new"
+            ></lightning-menu-item>
+            <lightning-menu-item
+              label="New from existing"
+              value="new_from_existing"
+              prefix-icon-name="utility:copy"
+            ></lightning-menu-item>
+          </lightning-button-menu>
+        </lightning-button-group>
+
+        <!-- Connected pill: Publish | Assign | Archive | Delete Article | chevron -->
+        <lightning-button-group class="ph-pill-group ph-pill-group--actions">
+          <lightning-button
+            label="Publish"
+            title="Publish"
+            onclick={handlePublish}
+          ></lightning-button>
+          <lightning-button
+            label="Assign"
+            title="Assign"
+            onclick={handleAssign}
+          ></lightning-button>
+          <lightning-button
+            label="Archive"
+            title="Archive"
+            onclick={handleArchive}
+          ></lightning-button>
+          <lightning-button
+            label="Delete Article"
+            title="Delete Article"
+            onclick={handleDelete}
+          ></lightning-button>
+          <lightning-button-menu
+            alternative-text="More actions"
+            variant="border-filled"
+            menu-alignment="right"
+            onselect={handleMenuSelect}
+          >
+            <lightning-menu-item
+              label="Delete Draft"
+              value="delete_draft"
+              prefix-icon-name="utility:delete"
+            ></lightning-menu-item>
+            <lightning-menu-item
+              label="Restore"
+              value="restore"
+              prefix-icon-name="utility:refresh"
+            ></lightning-menu-item>
+            <lightning-menu-item
+              label="Submit for Translations"
+              value="submit_translations"
+              prefix-icon-name="utility:world"
+            ></lightning-menu-item>
+            <lightning-menu-item
+              label="Change Owner"
+              value="change_owner"
+              prefix-icon-name="utility:user"
+            ></lightning-menu-item>
+            <lightning-menu-item
+              label="Identify Knowledge Blocks"
+              value="identify_knowledge_blocks"
+              prefix-icon-name="utility:knowledge_base"
+            ></lightning-menu-item>
+          </lightning-button-menu>
+        </lightning-button-group>
+      </div>
+    </div>
+    <div class="page-header-bottom-row">
+      <p class="page-header-meta">20 items • Updated a few seconds ago</p>
+      <div class="page-header-controls">
+        <div class="page-header-search">
+          <lightning-input
+            type="search"
+            placeholder="Search…"
+            variant="label-hidden"
+            label="Search"
+          ></lightning-input>
+        </div>
+        <lightning-button-icon
+          icon-name="utility:settings"
+          variant="border-filled"
+          size="medium"
+          alternative-text="Settings"
+          title="Settings"
+          class="ph-icon-btn"
+        ></lightning-button-icon>
+        <lightning-button-icon
+          icon-name="utility:table"
+          variant="border-filled"
+          size="medium"
+          alternative-text="Display as"
+          title="Display as"
+          class="ph-icon-btn"
+        ></lightning-button-icon>
+        <lightning-button-icon
+          icon-name="utility:refresh"
+          variant="border-filled"
+          size="medium"
+          alternative-text="Refresh"
+          title="Refresh"
+          class="ph-icon-btn"
+        ></lightning-button-icon>
+        <lightning-button-group class="ph-pill-icon-group">
+          <lightning-button-icon
+            icon-name="utility:chart"
+            variant="border-filled"
+            size="medium"
+            alternative-text="Charts"
+            title="Charts"
+          ></lightning-button-icon>
+          <lightning-button-icon
+            icon-name="utility:filterList"
+            variant="border-filled"
+            size="medium"
+            alternative-text="Filters"
+            title="Filters"
+          ></lightning-button-icon>
+        </lightning-button-group>
+      </div>
+    </div>
+  </div>
+</template>

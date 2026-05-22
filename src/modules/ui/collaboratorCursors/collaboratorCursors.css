@@ -1,0 +1,72 @@
+/* Collaborator cursors — Google Docs / Figma multiplayer style.
+   Each cursor is a vertical text caret + a small name pill, anchored to
+   a real character position inside a contenteditable article block.
+   GSAP advances the cursor along a paragraph (typing) then jumps to a
+   new paragraph, so it reads as "this person is editing here". */
+
+ui-collaborator-cursors {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.cc-cursor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform, opacity;
+    pointer-events: none;
+    --cc-color: #4f46e5;
+    --cc-caret-height: 20px;
+}
+
+.cc-cursor_pink   { --cc-color: #d62d8e; }
+.cc-cursor_teal   { --cc-color: #0e9488; }
+.cc-cursor_amber  { --cc-color: #d97706; }
+.cc-cursor_indigo { --cc-color: #4f46e5; }
+
+/* The blinking text caret, sized to match the line height of the
+   block the collaborator is "editing". */
+.cc-caret {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: var(--cc-caret-height);
+    background: var(--cc-color);
+    border-radius: 1px;
+    animation: cc-caret-blink 1.05s steps(1, end) infinite;
+}
+
+.cc-cursor_typing .cc-caret {
+    animation-duration: 0.55s;
+}
+
+@keyframes cc-caret-blink {
+    0%, 50% { opacity: 1; }
+    50.01%, 100% { opacity: 0.18; }
+}
+
+/* The name pill sits just above the caret, like in Google Docs. */
+.cc-pill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translateY(calc(-100% - 4px));
+    padding: 2px var(--slds-g-spacing-2, 8px);
+    border-radius: var(--slds-g-radius-border-1, 4px);
+    background: var(--cc-color);
+    color: var(--slds-g-color-on-accent-1, #ffffff);
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Segoe UI', system-ui, sans-serif);
+    font-size: 11px;
+    font-weight: var(--slds-g-font-weight-7, 600);
+    line-height: 14px;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(3, 35, 77, 0.18);
+}
+
+.cc-pill__name {
+    color: var(--slds-g-color-on-accent-1, #ffffff);
+}

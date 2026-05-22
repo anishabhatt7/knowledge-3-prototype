@@ -1,0 +1,391 @@
+/* ═══ Draft-with-Agentforce modal — SLDS 2 styling ═════════════════ */
+
+ui-draft-agentforce-modal {
+    /* Host stays out of the layout flow — backdrop handles its own
+       positioning. Without `display: contents` the modal would push
+       siblings around when it mounts. */
+    display: contents;
+}
+
+.da-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 23, 75, 0.5); /* SLDS scrim */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9000;
+    animation: da-backdrop-in 160ms ease-out;
+}
+
+@keyframes da-backdrop-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.da-modal {
+    position: relative;
+    width: 100%;
+    max-width: 813px;
+    max-height: calc(100vh - 96px);
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+    border-radius: var(--slds-g-radius-border-4, 12px);
+    box-shadow:
+        0 0 8px 0 rgba(0, 0, 0, 0.16),
+        0 8px 16px 0 rgba(0, 0, 0, 0.16);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: da-modal-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes da-modal-in {
+    from { transform: translateY(8px) scale(0.98); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* ── Close (X) — sits on the modal corner per Figma ─── */
+.da-close {
+    position: absolute;
+    top: -16px;
+    right: -16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+    border: 1px solid var(--slds-g-color-border-2, #aeaeae);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.da-close:hover {
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+.da-close:disabled {
+    cursor: default;
+    opacity: 0.4;
+}
+
+/* ── Header ── */
+.da-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--slds-g-color-border-1, #e5e5e5);
+}
+
+.da-header__title {
+    margin: 0;
+    font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: 700;
+    color: var(--slds-g-color-on-surface-3, #181818);
+    text-align: center;
+}
+
+.da-header__subtitle {
+    margin: 8px 0 0;
+    font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.da-header__subtitle strong {
+    color: var(--slds-g-color-on-surface-3, #181818);
+    font-weight: 600;
+}
+
+/* ── Body ── */
+.da-body {
+    padding: 16px 24px 24px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ▸ Step 1: form */
+.da-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.da-field {
+    display: block;
+}
+
+/* ▸ Step 2: similarity */
+.da-sim-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.da-sim-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    column-gap: 16px;
+    align-items: start;
+    padding: 4px 0;
+}
+
+.da-sim-row__check {
+    padding-top: 2px;
+    cursor: pointer;
+}
+
+.da-sim-row__check input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.da-sim-row__main {
+    min-width: 0;
+}
+
+.da-sim-row__title {
+    font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+    color: var(--slds-g-color-accent-2, #0250d9);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.da-sim-row__title:hover {
+    text-decoration: underline;
+}
+
+.da-sim-row__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    flex-wrap: wrap;
+}
+
+.da-sim-row__icon {
+    --sds-c-icon-color-foreground: var(--slds-g-color-accent-2, #0250d9);
+}
+
+.da-sim-row__source {
+    color: var(--slds-g-color-on-surface-2, #3e3e3c);
+    font-weight: 600;
+}
+
+.da-sim-row__sep {
+    color: var(--slds-g-color-on-surface-1, #aeaeae);
+}
+
+.da-status-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.da-status-pill--draft {
+    background-color: #f3f3f3;
+    color: #3e3e3c;
+}
+
+.da-status-pill--published {
+    background-color: #cdf2cd;
+    color: #056636;
+}
+
+.da-sim-row__aspects {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.da-sim-row__aspects-label {
+    font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    color: var(--slds-g-color-on-surface-2, #3e3e3c);
+    margin-right: 4px;
+}
+
+.da-aspect-tag {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 8px;
+    border: 1px solid var(--slds-g-color-border-2, #aeaeae);
+    border-radius: 11px;
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+    font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--slds-g-color-on-surface-2, #3e3e3c);
+}
+
+.da-sim-row__score {
+    text-align: right;
+    min-width: 96px;
+}
+
+.da-sim-row__score-label {
+    display: block;
+    font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.da-sim-row__score-value {
+    display: block;
+    font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: 700;
+    color: var(--slds-g-color-on-surface-3, #181818);
+    margin-top: 2px;
+}
+
+.da-sim-row__actions {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    padding-top: 4px;
+}
+
+/* ▸ Step 3: generating spinner */
+.da-generating {
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    position: relative;
+}
+
+.da-generating lightning-spinner {
+    position: relative;
+    height: 40px;
+    width: 40px;
+}
+
+.da-generating__label {
+    margin: 0;
+    font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 600;
+    color: var(--slds-g-color-on-surface-3, #181818);
+}
+
+.da-generating__subtle {
+    margin: 0;
+    font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* ── Footer ── */
+.da-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--slds-g-color-border-1, #e5e5e5);
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+}
+
+.da-footer__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Two-dot stepper with a connecting bar between them. */
+.da-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    max-width: 200px;
+}
+
+.da-progress__dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--slds-g-color-border-2, #aeaeae);
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.da-progress__dot--active {
+    border-color: var(--slds-g-color-accent-2, #0250d9);
+    background-color: var(--slds-g-color-accent-2, #0250d9);
+    box-shadow: inset 0 0 0 2px var(--slds-g-color-surface-container-1, #fff);
+}
+
+.da-progress__dot--complete {
+    border-color: var(--slds-g-color-accent-2, #0250d9);
+    background-color: var(--slds-g-color-accent-2, #0250d9);
+    position: relative;
+}
+
+.da-progress__dot--complete::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 3px;
+    border-left: 1.5px solid #fff;
+    border-bottom: 1.5px solid #fff;
+    transform: translate(-50%, -65%) rotate(-45deg);
+}
+
+.da-progress__bar {
+    flex: 1;
+    height: 2px;
+    background-color: var(--slds-g-color-border-2, #aeaeae);
+    border-radius: 1px;
+    overflow: hidden;
+}
+
+.da-progress__fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    background-color: var(--slds-g-color-accent-2, #0250d9);
+    transition: width 240ms ease-out;
+}
+
+.da-progress__fill--full {
+    width: 100%;
+}

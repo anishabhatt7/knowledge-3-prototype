@@ -1,0 +1,182 @@
+<template lwc:render-mode="light">
+    <template lwc:if={open}>
+        <div class="da-backdrop" role="presentation" onclick={handleBackdropClick}>
+            <section
+                class="da-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="da-modal-title"
+                onclick={handleDialogClick}
+            >
+                <!-- Close (X) -->
+                <button
+                    type="button"
+                    class="da-close"
+                    aria-label="Close"
+                    title="Close"
+                    onclick={handleCancel}
+                    disabled={isGenerating}
+                >
+                    <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Close"></lightning-icon>
+                </button>
+
+                <!-- ── Header ── -->
+                <header class="da-header">
+                    <h1 id="da-modal-title" class="da-header__title">
+                        Generate a Knowledge Article Draft with Agentforce
+                    </h1>
+                    <template lwc:if={isSimilarityStep}>
+                        <p class="da-header__subtitle">
+                            Here are some existing articles similar to the article titled
+                            <strong>'{similaritySubtitle}'</strong>. Consider editing or attaching
+                            it to avoid duplicating articles.
+                        </p>
+                    </template>
+                </header>
+
+                <!-- ── Body ── -->
+                <div class="da-body">
+                    <!-- ▸ Step 1: form -->
+                    <template lwc:if={isFormStep}>
+                        <div class="da-form">
+                            <lightning-combobox
+                                label="Choose an Article Record Type"
+                                value={_recordType}
+                                options={recordTypeOptions}
+                                required
+                                onchange={handleRecordTypeChange}
+                                class="da-field"
+                            ></lightning-combobox>
+
+                            <lightning-input
+                                type="text"
+                                label="Give Your Article a Title"
+                                value={_title}
+                                placeholder="Enter article title"
+                                required
+                                onchange={handleTitleChange}
+                                oninput={handleTitleChange}
+                                class="da-field"
+                            ></lightning-input>
+
+                            <lightning-combobox
+                                label="Choose Article Language"
+                                value={_language}
+                                options={languageOptions}
+                                required
+                                onchange={handleLanguageChange}
+                                class="da-field"
+                            ></lightning-combobox>
+                        </div>
+                    </template>
+
+                    <!-- ▸ Step 2: similarity check -->
+                    <template lwc:elseif={isSimilarityStep}>
+                        <ul class="da-sim-list">
+                            <template for:each={displaySimilarArticles} for:item="a">
+                                <li key={a.id} class="da-sim-row">
+                                    <label class="da-sim-row__check">
+                                        <input
+                                            type="checkbox"
+                                            data-id={a.id}
+                                            checked={a.selected}
+                                            onchange={handleSimilarToggle}
+                                            aria-label="Select article"
+                                        />
+                                    </label>
+                                    <div class="da-sim-row__main">
+                                        <a href="#" class="da-sim-row__title" onclick={handleDialogClick}>{a.title}</a>
+                                        <div class="da-sim-row__meta">
+                                            <lightning-icon
+                                                icon-name="utility:knowledge_base"
+                                                size="xx-small"
+                                                alternative-text={a.source}
+                                                class="da-sim-row__icon"
+                                            ></lightning-icon>
+                                            <span class="da-sim-row__source">{a.source}</span>
+                                            <span class="da-sim-row__sep">·</span>
+                                            <span class="da-sim-row__updated">Last updated on: {a.updated}</span>
+                                            <span class={a.statusClass}>{a.status}</span>
+                                        </div>
+                                        <div class="da-sim-row__aspects">
+                                            <span class="da-sim-row__aspects-label">Similar Aspects:</span>
+                                            <template for:each={a.aspects} for:item="t">
+                                                <span key={t} class="da-aspect-tag">{t}</span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="da-sim-row__score">
+                                        <span class="da-sim-row__score-label">Similarity Score</span>
+                                        <span class="da-sim-row__score-value">{a.scoreLabel}</span>
+                                    </div>
+                                    <div class="da-sim-row__actions">
+                                        <lightning-button-icon
+                                            icon-name="utility:merge"
+                                            variant="border-filled"
+                                            size="small"
+                                            alternative-text="Merge"
+                                            title="Merge with this article"
+                                        ></lightning-button-icon>
+                                        <lightning-button-icon
+                                            icon-name="utility:archive"
+                                            variant="border-filled"
+                                            size="small"
+                                            alternative-text="Archive"
+                                            title="Archive"
+                                        ></lightning-button-icon>
+                                    </div>
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+
+                    <!-- ▸ Step 3: generating spinner -->
+                    <template lwc:elseif={isGenerating}>
+                        <div class="da-generating">
+                            <lightning-spinner
+                                alternative-text="Generating draft"
+                                size="medium"
+                                variant="brand"
+                            ></lightning-spinner>
+                            <p class="da-generating__label">Generating your article draft…</p>
+                            <p class="da-generating__subtle">Agentforce is composing the first draft from your sources.</p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- ── Footer ── -->
+                <template lwc:if={isFormStep}>
+                    <footer class="da-footer">
+                        <div class="da-progress">
+                            <span class={progressDot1Class}></span>
+                            <span class="da-progress__bar">
+                                <span class={progressBarFillClass}></span>
+                            </span>
+                            <span class={progressDot2Class}></span>
+                        </div>
+                        <div class="da-footer__actions">
+                            <lightning-button label="Cancel" variant="neutral" onclick={handleCancel}></lightning-button>
+                            <lightning-button label="Next" variant="brand" onclick={handleNext}></lightning-button>
+                        </div>
+                    </footer>
+                </template>
+
+                <template lwc:elseif={isSimilarityStep}>
+                    <footer class="da-footer">
+                        <div class="da-progress">
+                            <span class={progressDot1Class}></span>
+                            <span class="da-progress__bar">
+                                <span class={progressBarFillClass}></span>
+                            </span>
+                            <span class={progressDot2Class}></span>
+                        </div>
+                        <div class="da-footer__actions">
+                            <lightning-button label="Back" variant="neutral" onclick={handleBack}></lightning-button>
+                            <lightning-button label="Generate Draft" variant="brand" onclick={handleGenerate}></lightning-button>
+                        </div>
+                    </footer>
+                </template>
+            </section>
+        </div>
+    </template>
+</template>

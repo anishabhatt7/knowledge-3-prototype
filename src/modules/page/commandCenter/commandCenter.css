@@ -1,0 +1,918 @@
+page-command-center {
+    display: block;
+    height: 100%;
+}
+
+.cc-page {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* ── LEFT RAIL (duplicated from knowledgeHome) ─────────────────── */
+.kh-rail {
+    width: 48px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--slds-g-color-surface-1, #fff);
+    border-right: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+    padding: var(--slds-g-spacing-2, 8px) 0;
+    overflow: hidden;
+}
+
+.kh-rail--expanded {
+    width: 267px;
+}
+
+.kh-rail__top {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+}
+
+.kh-rail__bottom {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    border-top: 1px solid var(--slds-g-color-neutral-base-95, #e5e5e5);
+    padding-top: 4px;
+}
+
+.kh-rail__row {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding-inline-start: var(--slds-g-spacing-4, 16px);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+}
+
+.kh-rail__row:hover {
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+.kh-rail__row--active {
+    background-color: var(--slds-g-color-brand-base-90, #d6e6ff);
+    border-left: 2px solid var(--slds-g-color-border-accent-1, #066afe);
+    padding-inline-start: calc(var(--slds-g-spacing-4, 16px) - 2px);
+}
+
+.kh-rail__row--active .kh-rail__icon {
+    --sds-c-icon-color-foreground: var(--slds-g-color-border-accent-1, #066afe);
+}
+
+.kh-rail--expanded .kh-rail__row {
+    gap: var(--slds-g-spacing-2, 8px);
+    padding-inline-start: var(--slds-g-spacing-7, 32px);
+    padding-inline-end: var(--slds-g-spacing-6, 24px);
+}
+
+.kh-rail--expanded .kh-rail__row--active {
+    border-left-width: 4px;
+    padding-inline-start: calc(var(--slds-g-spacing-7, 32px) - 4px);
+}
+
+.kh-rail__label {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kh-rail__row--active .kh-rail__label {
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-accent-3, #022ac0);
+}
+
+.kh-rail__divider {
+    height: 0;
+    margin: var(--slds-g-spacing-2, 8px) 0;
+    border: 0;
+    border-top: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+}
+
+.kh-rail__group-header {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding-inline-start: var(--slds-g-spacing-5, 24px);
+    padding-inline-end: var(--slds-g-spacing-4, 16px);
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 16px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    text-transform: none;
+    margin-top: 4px;
+}
+
+.kh-rail:not(.kh-rail--expanded) .kh-rail__group-header,
+.kh-rail:not(.kh-rail--expanded) .kh-rail__label,
+.kh-rail:not(.kh-rail--expanded) .kh-rail__divider {
+    display: none;
+}
+
+/* ── MAIN CONTENT ──────────────────────────────────────────────── */
+.cc-main {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+    padding: var(--slds-g-spacing-6, 24px) var(--slds-g-spacing-8, 32px);
+    padding-bottom: var(--slds-g-spacing-10, 48px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-6, 24px);
+    background-color: var(--slds-g-color-surface-1, #fff);
+}
+
+.cc-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.cc-section--watchlist {
+    margin-top: var(--slds-g-spacing-6, 24px);
+    margin-bottom: var(--slds-g-spacing-7, 32px);
+}
+
+.cc-section__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-3, 20px);
+    line-height: 28px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* ── Header — Figma 42:3911 ─────────────────────────────────────
+   32px circular agent_astro icon + stacked title/subtitle, with a
+   pill-shaped Search input pinned to the right. No bottom divider —
+   the readiness card directly below provides its own visual edge. */
+.cc-section--header {
+    padding-bottom: 0;
+    border-bottom: 0 none transparent;
+    border-image: none;
+}
+
+.cc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.cc-header__left {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+    min-height: 51px;
+    padding-inline-end: var(--slds-g-spacing-3, 12px);
+}
+
+/* Standard 32px icon (medium) — agent_astro renders dark navy + white glyph
+   by default in SLDS 2; we just lock the sizing hooks. */
+.cc-header__icon {
+    --slds-c-icon-sizing: 32px;
+    --sds-c-icon-sizing-width: 32px;
+    --sds-c-icon-sizing-height: 32px;
+    --slds-c-icon-radius-border: var(--slds-g-radius-border-circle, 9999px);
+    --sds-c-icon-radius-border: var(--slds-g-radius-border-circle, 9999px);
+    flex-shrink: 0;
+    border-radius: var(--slds-g-radius-border-circle, 9999px);
+    overflow: hidden;
+}
+
+.cc-header__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cc-header__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-5, 28px);
+    line-height: 35px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cc-header__subtitle {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Search input — pill, 32px tall, leading magnifying glass.
+   Same pattern used by ui-knowledge-page-header. */
+.cc-header__search {
+    width: 280px;
+    flex-shrink: 0;
+    --sds-c-inputtext-radius-border: var(--slds-g-radius-border-circle, 9999px);
+    --sds-c-inputtext-sizing-height: 32px;
+    --sds-c-inputtext-color-border: var(--slds-g-color-border-2, #5c5c5c);
+    --sds-c-inputtext-color-border-focus: var(--slds-g-color-border-accent-1, #066afe);
+    --sds-c-inputtext-color-background: var(--slds-g-color-surface-container-1, #fff);
+    --sds-c-inputtext-spacing-inlinestart: var(--slds-g-spacing-7, 28px);
+    --sds-c-inputtext-spacing-inlineend: var(--slds-g-spacing-3, 12px);
+    --sds-c-inputtext-font-size: var(--slds-g-font-scale-base, 13px);
+}
+
+.cc-header__search lightning-input {
+    display: block;
+}
+
+.cc-header__search .slds-form-element {
+    margin: 0;
+}
+
+.cc-header__search .slds-input-has-icon .slds-input__icon,
+.cc-header__search .slds-input__icon {
+    inset-inline-start: var(--slds-g-spacing-3, 12px);
+    width: 14px;
+    height: 14px;
+    fill: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* ── AI Readiness Card — Figma 42:4090 ─────────────────────────
+   One unified surface card (no internal divider). Left column is
+   276px and left-aligned: title → donut → description → button.
+   Right column is a 2-col flex of 5 KPI tiles with thin progress
+   bars. Card padding 24px, internal column gap 48px. */
+.cc-readiness-card {
+    display: flex;
+    align-items: stretch;
+    gap: var(--slds-g-spacing-9, 48px);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    background-color: var(--slds-g-color-surface-1, #fff);
+    padding: var(--slds-g-spacing-5, 24px);
+}
+
+.cc-readiness-card__left {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 276px;
+    flex-shrink: 0;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.cc-readiness-card__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-3, 20px);
+    line-height: 28px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    white-space: nowrap;
+}
+
+/* Donut centered horizontally inside the 276px column. */
+.cc-donut-wrapper {
+    position: relative;
+    width: 138px;
+    height: 138px;
+    align-self: center;
+    margin-block: var(--slds-g-spacing-2, 8px);
+}
+
+.cc-donut-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+/* Track behind the arc — matches the ka-score__ring reference and
+   Figma 42:4103 light-tinted unfilled segment using brand-base-90. */
+.cc-donut-bg {
+    stroke: var(--slds-g-color-brand-base-90, #d6e6ff);
+}
+
+.cc-donut-fg {
+    stroke: #2e844a;
+    transition: stroke-dashoffset 600ms ease-out;
+}
+
+.cc-donut-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.cc-donut-label__value {
+    font-size: var(--slds-g-font-scale-6, 32px);
+    line-height: 40px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    letter-spacing: 0;
+}
+
+.cc-readiness-card__copy {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 17px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    /* Figma 51:4642 — clamp to 3 lines (h-[51px] / 17px line-height)
+       with ellipsis so the left column keeps its 4-row rhythm. */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Pill-shaped brand-outline lightning-button with sparkles icon.
+   Targets host-level CSS hooks since the actual <button> is in shadow DOM. */
+.cc-agentforce-btn {
+    align-self: flex-start;
+    --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
+    --sds-c-button-sizing-height: 32px;
+}
+
+/* ── Right column: 2-col grid of 5 KPI tiles ─────────────────────
+   Per Figma 42:5245 — 2-col grid with 24px gap. Tiles 1-4 fill rows
+   1 and 2; tile 5 (Conflict) sits alone on row 3 in the left column
+   (~397px wide, matching the Figma fixed width). */
+.cc-readiness-card__right {
+    flex: 1 1 0;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--slds-g-spacing-5, 24px);
+    align-content: space-between;
+}
+
+/* Each tile = "Modern KPI" tile from Figma. 4px outer padding,
+   8px gap between label / score-row / progress bar. */
+.cc-dimension {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+    padding: var(--slds-g-spacing-1, 4px);
+    min-width: 0;
+    border-radius: var(--slds-g-radius-border-4, 20px);
+}
+
+/* Tile label — info-base-20 dark navy semibold per Figma 42:5255 */
+.cc-dimension__label {
+    font-size: var(--slds-g-font-size-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-info-base-20, #032d60);
+}
+
+/* Score (Titles/font-scale-3/Regular = 20px) inline with description
+   (Body/font-scale-neg-1/Regular = 12px) — Figma 42:5257 / 42:5258 */
+.cc-dimension__score-row {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    min-width: 0;
+}
+
+.cc-dimension__score {
+    font-size: var(--slds-g-font-scale-3, 20px);
+    line-height: 28px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+    flex-shrink: 0;
+}
+
+.cc-dimension__desc {
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 17px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Progress bar — slim rectangular track (no rounded ends).
+   8px tall, surface-container-3 track, accent-1 fill. Uses flex
+   on the track so the fill stretches to the track height regardless
+   of inherited light-DOM box-sizing or default block-level styles. */
+.cc-dimension__bar-bg {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    height: 8px;
+    background-color: var(--slds-g-color-surface-container-3, #e5e5e5);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.cc-dimension__bar-fill {
+    height: 8px;
+    min-height: 8px;
+    background-color: var(--slds-g-color-accent-1, #066afe);
+    transition: width 500ms ease-out;
+    box-sizing: border-box;
+}
+
+/* ── Capability Summary Cards (SLDS 2 surface card pattern) ─────
+   Same 4-column grid, but each card is now a clean SLDS 2 elevation
+   card: white container, subtle neutral-base-95 border, soft shadow
+   that lifts on hover. The chunky 4px accent stripe was dropped — the
+   trend value carries the tone instead, in keeping with SLDS 2 cards. */
+.cc-capability-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--slds-g-spacing-4, 16px);
+    margin-bottom: var(--slds-g-spacing-5, 24px);
+}
+
+.cc-capability-card {
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+    border: 1px solid var(--slds-g-color-neutral-base-95, #e5e5e5);
+    border-color: rgba(201, 201, 201, 1);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    padding: var(--slds-g-spacing-5, 24px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+    /* Explicitly suppress any inherited shadow (SLDS 2 base styles
+       can apply a card shadow to <article> containers). */
+    box-shadow: none;
+    transition: border-color 160ms ease-out;
+    cursor: pointer;
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.cc-capability-card:hover {
+    border-color: var(--slds-g-color-neutral-base-80, #c9c9c9);
+    box-shadow: none;
+}
+
+.cc-capability-card--clickable:focus-visible {
+    outline: 2px solid var(--slds-g-color-accent-2, #0250d9);
+    outline-offset: 2px;
+}
+
+.cc-capability-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.cc-capability-card__info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-1, 4px);
+    min-width: 0;
+    flex: 1;
+}
+
+/* Match the watchlist .cc-metric-card__title styling so the
+   capability cards and watchlist cards share the same heading
+   treatment (16/22, weight 600, on-surface-2). */
+.cc-capability-card__metric {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* Big number — pinned to the bottom of the card so all four cards
+   line up regardless of how long the eyebrow / metric label runs. */
+.cc-capability-card__value {
+    margin-top: auto;
+    font-size: var(--slds-g-font-scale-6, 32px);
+    line-height: 40px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    letter-spacing: -0.01em;
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+}
+
+.cc-capability-card__trend {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 16px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.cc-capability-card__trend-number {
+    font-weight: var(--slds-g-font-weight-7, 600);
+}
+
+/* Up trend: SLDS success green for both the icon glyph and the number. */
+.cc-capability-card__trend--up .cc-capability-card__trend-icon {
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-success-base-30, #2e844a);
+}
+
+.cc-capability-card__trend--up .cc-capability-card__trend-number {
+    color: var(--slds-g-color-success-base-30, #2e844a);
+}
+
+/* Down trend: SLDS error red — future-proofs the same component if the
+   data ever flips a card to trend === 'down'. */
+.cc-capability-card__trend--down .cc-capability-card__trend-icon {
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-error-base-50, #ba0517);
+}
+
+.cc-capability-card__trend--down .cc-capability-card__trend-number {
+    color: var(--slds-g-color-error-base-50, #ba0517);
+}
+
+/* ── Watchlist ─────────────────────────────────────────────────── */
+.cc-watch-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.cc-metric-card {
+    background-color: var(--slds-g-color-surface-1, #fff);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    padding: var(--slds-g-spacing-4, 16px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.cc-metric-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.cc-metric-card__heading {
+    flex: 1;
+    min-width: 0;
+}
+
+.cc-metric-card__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.cc-metric-card__details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.cc-metric-card__value {
+    font-size: var(--slds-g-font-scale-6, 32px);
+    line-height: 40px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.cc-metric-card__delta {
+    display: flex;
+    align-items: baseline;
+    gap: var(--slds-g-spacing-2, 8px);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+}
+
+.cc-metric-card__delta-value {
+    color: var(--slds-g-color-error-1, #b60554);
+}
+
+.cc-metric-card__delta-label {
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.cc-metric-card__actions {
+    display: flex;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.cc-metric-card__cta {
+    --slds-c-button-brand-outline-text-color: var(--slds-g-color-accent-2, #0250d9);
+    --slds-c-button-brand-outline-color-border: var(--slds-g-color-accent-2, #0250d9);
+}
+
+/* ── Knowledge Updates Grid ────────────────────────────────────── */
+.cc-updates-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--slds-g-spacing-4, 16px);
+    align-items: start;
+}
+
+/* ── Actions Panel — Figma 45:10479 ─────────────────────────────
+   Single rounded card with a divided header (24px/32px padding) and
+   a compact body where each row is a 12px-radius pill stack with a
+   chevron + 32px standard icon + title/subline + brand-outline pill
+   CTA. Highlighted row uses brand-base-95 background and shows a
+   visible dismiss button. */
+.cc-actions-panel {
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    padding: 0;
+    overflow: clip;
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--slds-g-spacing-4, 16px);
+}
+
+.cc-actions-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 16px);
+    padding: var(--slds-g-spacing-5, 24px) var(--slds-g-spacing-6, 32px);
+    border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.cc-actions-panel__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-3, 20px);
+    line-height: 28px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+}
+
+.cc-actions-panel__tools {
+    display: flex;
+    gap: var(--slds-g-spacing-2, 8px);
+    flex-shrink: 0;
+}
+
+/* Round, bordered icon buttons in the header */
+.cc-actions-panel__icon-btn {
+    --slds-c-button-neutral-color-background: var(--slds-g-color-surface-container-1, #fff);
+    --slds-c-button-neutral-color-background-hover: var(--slds-g-color-surface-2, #f3f3f3);
+    --slds-c-button-neutral-color-border: var(--slds-g-color-border-2, #5c5c5c);
+    --slds-c-buttonicon-color-foreground: var(--slds-g-color-accent-2, #0250d9);
+    --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
+    --sds-c-button-sizing-width: 32px;
+    --sds-c-button-sizing-height: 32px;
+}
+
+/* ── Body ───────────────────────────────────────────────────────── */
+.cc-actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-1, 4px);
+    padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
+}
+
+.cc-action-row {
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+    border-radius: var(--slds-g-radius-border-3, 12px);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.cc-action-row--highlighted {
+    background-color: var(--slds-g-color-brand-base-95, #edf4ff);
+}
+
+/* Main row: chevron + icon + body + cta + (optional) dismiss */
+.cc-action-row__main {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    padding: var(--slds-g-spacing-3, 12px);
+}
+
+.cc-action__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: var(--slds-g-radius-border-2, 6px);
+    flex-shrink: 0;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.cc-action__toggle:hover {
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+/* Standard 32px icon — SLDS renders its colored object background */
+.cc-action__icon {
+    --slds-c-icon-sizing: 32px;
+    --sds-c-icon-sizing-width: 32px;
+    --sds-c-icon-sizing-height: 32px;
+    flex-shrink: 0;
+}
+
+.cc-action__body {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.cc-action__title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    min-width: 0;
+}
+
+.cc-action__title {
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cc-action__subline {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 19px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.cc-action__meta,
+.cc-action__sep {
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.cc-action__link {
+    color: var(--slds-g-color-accent-2, #0250d9);
+    text-decoration: none;
+}
+
+.cc-action__link:hover {
+    text-decoration: underline;
+}
+
+.cc-priority-badge {
+    flex-shrink: 0;
+    font-size: var(--slds-g-font-scale-neg-2, 10px);
+    line-height: 14px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    padding: 2px var(--slds-g-spacing-2, 8px);
+    border-radius: var(--slds-g-radius-border-circle, 9999px);
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.cc-priority-badge--high {
+    background-color: #fde7ee;
+    color: #ba0517;
+}
+
+/* Pill-shaped brand-outline lightning-button — Figma "Agentic Button - Neutral" */
+.cc-action__cta {
+    flex-shrink: 0;
+    --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
+    --sds-c-button-sizing-height: 32px;
+    --slds-c-button-brand-outline-color-border: var(--slds-g-color-border-2, #5c5c5c);
+    --slds-c-button-brand-outline-color-background: var(--slds-g-color-surface-container-1, #fff);
+    --slds-c-button-brand-outline-text-color: var(--slds-g-color-accent-2, #0250d9);
+}
+
+.cc-action__dismiss {
+    flex-shrink: 0;
+    --slds-c-buttonicon-color-foreground: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* ── Expanded row table — Figma 45:10533 ─────────────────────────
+   Bordered SLDS data-table with surface-container-2 header strip,
+   first row highlighted (brand-base-90) to call out the focused
+   article, the rest on white. Sits inset from the row icon. */
+.cc-action__detail {
+    margin: 0 var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-3, 12px) 56px;
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-3, 12px);
+    overflow: hidden;
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+}
+
+.cc-action-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+}
+
+.cc-action-table thead th {
+    background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+    text-align: left;
+    padding: var(--slds-g-spacing-2, 8px);
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    white-space: nowrap;
+}
+
+.cc-action-table tbody td {
+    padding: var(--slds-g-spacing-2, 8px);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    white-space: nowrap;
+}
+
+.cc-action-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+/* Highlight the first row (matches Figma "Cell 1" brand-base-90) */
+.cc-action-table tbody tr:first-child td {
+    background-color: var(--slds-g-color-brand-base-90, #d6e6ff);
+}
+
+.cc-action-table tbody tr:first-child .cc-action-table__title {
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.cc-action-table__link {
+    color: var(--slds-g-color-accent-2, #0250d9);
+    font-weight: var(--slds-g-font-weight-4, 400);
+}
+
+.cc-action-table__title {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cc-action-table__actions-th {
+    width: 1%;
+}
+
+.cc-action-table__action-cell {
+    text-align: right;
+}
+
+.cc-action-table__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    padding: var(--slds-g-spacing-1, 4px) var(--slds-g-spacing-2, 8px);
+    border: 0;
+    border-radius: var(--slds-g-radius-border-2, 6px);
+    background: transparent;
+    color: var(--slds-g-color-accent-2, #0250d9);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.cc-action-table__btn:hover {
+    background-color: var(--slds-g-color-brand-base-95, #edf4ff);
+}
+

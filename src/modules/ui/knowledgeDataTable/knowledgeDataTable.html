@@ -1,0 +1,15 @@
+<template lwc:render-mode="light">
+  <div class="data-table-container">
+    <lightning-datatable
+      key-field="id"
+      data={data}
+      columns={columns}
+      show-row-number-column
+      sorted-by={sortedBy}
+      sorted-direction={sortDirection}
+      default-sort-direction="asc"
+      onsort={handleSort}
+      onrowaction={handleRowAction}
+    ></lightning-datatable>
+  </div>
+</template>

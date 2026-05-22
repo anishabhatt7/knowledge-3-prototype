@@ -1,0 +1,1062 @@
+page-knowledge-agents {
+    display: block;
+    height: 100%;
+}
+
+.ka-page {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* ── LEFT RAIL (duplicated from knowledgeHome — keeps motion identical) ─ */
+.kh-rail {
+    width: 48px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--slds-g-color-surface-1, #fff);
+    border-right: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+    padding: var(--slds-g-spacing-2, 8px) 0;
+    overflow: hidden;
+}
+
+.kh-rail--expanded {
+    width: 267px;
+}
+
+.kh-rail__top {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+}
+
+.kh-rail__bottom {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    border-top: 1px solid var(--slds-g-color-neutral-base-95, #e5e5e5);
+    padding-top: 4px;
+}
+
+.kh-rail__row {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding-inline-start: var(--slds-g-spacing-4, 16px);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+}
+
+.kh-rail__row:hover {
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+.kh-rail__row--active {
+    background-color: var(--slds-g-color-brand-base-90, #d6e6ff);
+    border-left: 2px solid var(--slds-g-color-border-accent-1, #066afe);
+    padding-inline-start: calc(var(--slds-g-spacing-4, 16px) - 2px);
+}
+
+.kh-rail__row--active .kh-rail__icon {
+    --sds-c-icon-color-foreground: var(--slds-g-color-border-accent-1, #066afe);
+}
+
+.kh-rail--expanded .kh-rail__row {
+    gap: var(--slds-g-spacing-2, 8px);
+    padding-inline-start: var(--slds-g-spacing-7, 32px);
+    padding-inline-end: var(--slds-g-spacing-6, 24px);
+}
+
+.kh-rail--expanded .kh-rail__row--active {
+    border-left-width: 4px;
+    padding-inline-start: calc(var(--slds-g-spacing-7, 32px) - 4px);
+}
+
+.kh-rail__label {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kh-rail__row--active .kh-rail__label {
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-accent-3, #022ac0);
+}
+
+.kh-rail__divider {
+    height: 0;
+    margin: var(--slds-g-spacing-2, 8px) 0;
+    border: 0;
+    border-top: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+}
+
+.kh-rail__group-header {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding-inline-start: var(--slds-g-spacing-5, 24px);
+    padding-inline-end: var(--slds-g-spacing-4, 16px);
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 16px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    text-transform: none;
+    margin-top: 4px;
+}
+
+.kh-rail:not(.kh-rail--expanded) .kh-rail__group-header,
+.kh-rail:not(.kh-rail--expanded) .kh-rail__label,
+.kh-rail:not(.kh-rail--expanded) .kh-rail__divider {
+    display: none;
+}
+
+/* ── MAIN ────────────────────────────────────────────────────────── */
+.ka-main {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+    background-color: var(--slds-g-color-surface-1, #fff);
+    padding: var(--slds-g-spacing-6, 24px) var(--slds-g-spacing-7, 28px);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   LIST VIEW (Figma 78:10164)
+   ─────────────────────────────────────────────────────────────── */
+.ka-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 16px);
+    min-height: 36px;
+}
+
+.ka-page-header__left {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+    min-width: 0;
+}
+
+.ka-page-header__icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ka-page-header__icon svg {
+    display: block;
+}
+
+.ka-page-header__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-5, 28px);
+    line-height: 35px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ka-page-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    flex-shrink: 0;
+}
+
+/* SLDS2 neutral <lightning-button>. The blueprint already gives us
+   the outlined-pill look from Figma 78:10164; we just dial the
+   border-radius to fully rounded via the public styling hook so it
+   matches the toolbar's pill icon-button cluster. */
+.ka-btn-new {
+    --slds-c-button-radius-border: var(--slds-g-radius-border-circle, 9999px);
+    --sds-c-button-radius-border: var(--slds-g-radius-border-circle, 9999px);
+}
+
+/* ── Toolbar (meta + search + utility buttons) ─────────────────── */
+.ka-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    margin-top: var(--slds-g-spacing-3, 12px);
+}
+
+.ka-toolbar__meta {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ka-toolbar__controls {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    flex-shrink: 0;
+}
+
+.ka-toolbar__search {
+    width: 275px;
+    flex-shrink: 0;
+    --sds-c-inputtext-radius-border: var(--slds-g-radius-border-circle, 9999px);
+    --sds-c-inputtext-sizing-height: 32px;
+    --sds-c-inputtext-color-border: var(--slds-g-color-border-2, #5c5c5c);
+    --sds-c-inputtext-color-border-focus: var(--slds-g-color-border-accent-1, #066afe);
+    --sds-c-inputtext-color-background: var(--slds-g-color-surface-container-1, #fff);
+    --sds-c-inputtext-spacing-inlinestart: var(--slds-g-spacing-7, 28px);
+    --sds-c-inputtext-spacing-inlineend: var(--slds-g-spacing-3, 12px);
+    --sds-c-inputtext-font-size: var(--slds-g-font-scale-base, 13px);
+}
+
+.ka-toolbar__search lightning-input {
+    display: block;
+}
+
+.ka-toolbar__search .slds-form-element {
+    margin: 0;
+}
+
+.ka-toolbar__search .slds-input-has-icon .slds-input__icon,
+.ka-toolbar__search .slds-input__icon {
+    inset-inline-start: var(--slds-g-spacing-3, 12px);
+    width: 14px;
+    height: 14px;
+    fill: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ka-toolbar__icon-btn {
+    --slds-c-button-neutral-color-background: var(--slds-g-color-surface-container-1, #fff);
+    --slds-c-button-neutral-color-background-hover: var(--slds-g-color-surface-2, #f3f3f3);
+    --slds-c-button-neutral-color-background-focus: var(--slds-g-color-surface-2, #f3f3f3);
+    --slds-c-button-neutral-color-border: var(--slds-g-color-border-2, #5c5c5c);
+    --slds-c-button-neutral-color-border-hover: var(--slds-g-color-border-2, #5c5c5c);
+    --slds-c-button-neutral-color-border-focus: var(--slds-g-color-border-2, #5c5c5c);
+    --slds-c-buttonicon-color-foreground: var(--slds-g-color-on-surface-2, #3e3e3c);
+    --slds-c-buttonicon-color-foreground-hover: var(--slds-g-color-on-surface-3, #001e5b);
+    --slds-c-buttonicon-color-foreground-focus: var(--slds-g-color-on-surface-3, #001e5b);
+    --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
+    --sds-c-button-sizing-width: 32px;
+    --sds-c-button-sizing-height: 32px;
+}
+
+.ka-toolbar__pill {
+    --slds-c-button-neutral-color-background: var(--slds-g-color-surface-container-1, #fff);
+    --slds-c-button-neutral-color-background-hover: var(--slds-g-color-surface-2, #f3f3f3);
+    --slds-c-button-neutral-color-background-focus: var(--slds-g-color-surface-2, #f3f3f3);
+    --slds-c-button-neutral-color-border: var(--slds-g-color-border-2, #5c5c5c);
+    --slds-c-button-neutral-color-border-hover: var(--slds-g-color-border-2, #5c5c5c);
+    --slds-c-button-neutral-color-border-focus: var(--slds-g-color-border-2, #5c5c5c);
+    --slds-c-buttonicon-color-foreground: var(--slds-g-color-on-surface-2, #3e3e3c);
+    --slds-c-buttonicon-color-foreground-hover: var(--slds-g-color-on-surface-3, #001e5b);
+    --slds-c-buttonicon-color-foreground-focus: var(--slds-g-color-on-surface-3, #001e5b);
+    --sds-c-button-sizing-width: 32px;
+    --sds-c-button-sizing-height: 32px;
+}
+
+.ka-toolbar__pill lightning-button-icon:first-of-type {
+    --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
+}
+
+.ka-toolbar__pill lightning-button-icon:last-of-type {
+    --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   TABLE
+   Built on the SLDS2 data-table blueprint (slds-table, _bordered,
+   _cell-buffer + slds-text-title_caps headers + slds-hint-parent
+   rows). The rules below are *only* for things SLDS doesn't already
+   give us: the wrapper border, the special cell contents (avatar,
+   pills, chips, health badge), and a few minor tweaks to the SLDS
+   defaults so the design matches Figma 78:10164.
+   ─────────────────────────────────────────────────────────────── */
+.ka-table-wrap {
+    margin-top: var(--slds-g-spacing-5, 20px);
+    overflow-x: auto;
+    border-radius: var(--slds-g-radius-border-2, 4px);
+}
+
+/* SLDS table tweaks scoped to this page only. The blueprint already
+   ships padding/borders/hover; we just dial the font size down to
+   match the surrounding shell and align cells vertically. */
+.ka-table {
+    font-size: var(--slds-g-font-scale-base, 13px);
+}
+
+.ka-table th,
+.ka-table td {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* Health column header — keep the sort affordance visible without
+   overriding SLDS' built-in `slds-is-sorted` colour treatment. */
+.ka-th-health .ka-th-health__icon {
+    margin-inline-start: var(--slds-g-spacing-1, 4px);
+    --sds-c-icon-sizing-width: 12px;
+    --sds-c-icon-sizing-height: 12px;
+}
+
+/* Last column = row action chevron; keep it narrow and right-aligned. */
+.ka-th-actions,
+.ka-cell-actions {
+    width: 3.25rem;
+    text-align: right;
+}
+
+.ka-cell-name {
+    min-width: 240px;
+}
+
+.ka-cell-health {
+    text-align: center;
+    width: 96px;
+}
+
+/* Name cell: small square avatar + agent link + domain subline ---
+   mirrors the avatar block on each AutonomousAgents card in the
+   vision app so the row reads as "agent identity" not just text. */
+.ka-table__name-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+}
+
+.ka-table__avatar {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: var(--slds-g-color-accent-2, #0250d9);
+    color: var(--slds-g-color-on-accent-1, #fff);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--slds-g-font-scale-1, 14px);
+    font-weight: var(--slds-g-font-weight-7, 700);
+    line-height: 1;
+}
+
+.ka-table__name-stack {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+}
+
+.ka-table__domain {
+    font-size: var(--slds-g-font-scale-neg-2, 11px);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    margin-top: 2px;
+}
+
+/* Agent-name link — button styled as a link, no SLDS equivalent
+   we want here (lightning-button variants are too tall/heavy). */
+.ka-table__link {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-accent-2, #0250d9);
+    cursor: pointer;
+    text-align: left;
+}
+
+.ka-table__link:hover {
+    text-decoration: underline;
+    color: var(--slds-g-color-accent-3, #0b5cab);
+}
+
+/* Row action chevron is a <lightning-button-icon variant="border-filled">.
+   Round it and dial size down so it visually matches the row height. */
+.ka-row-action {
+    --slds-c-button-radius-border: var(--slds-g-radius-border-circle, 9999px);
+    --sds-c-button-radius-border: var(--slds-g-radius-border-circle, 9999px);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   DETAIL VIEW
+   ─────────────────────────────────────────────────────────────── */
+.ka-detail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-6, 24px);
+}
+
+.ka-detail__back {
+    align-self: flex-start;
+    background: none;
+    border: 0;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    cursor: pointer;
+    --slds-c-icon-sizing: 12px;
+    --sds-c-icon-sizing-width: 12px;
+    --sds-c-icon-sizing-height: 12px;
+}
+
+.ka-detail__back:hover {
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.ka-detail__header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--slds-g-spacing-5, 20px);
+}
+
+.ka-detail__avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: var(--slds-g-color-accent-2, #0250d9);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.ka-detail__title-block {
+    flex: 1;
+    min-width: 0;
+}
+
+.ka-detail__title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+    flex-wrap: wrap;
+}
+
+.ka-detail__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-5, 28px);
+    line-height: 35px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.ka-detail__domain {
+    margin: 4px 0 0;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Status pills */
+.ka-status-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 9999px;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.ka-status-badge--active {
+    background: #e1fadc;
+    color: #186b1c;
+}
+
+.ka-status-badge--learning {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.ka-status-badge--paused {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.ka-status-badge--error {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* Governance pill */
+.ka-detail__gov-tier {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 9999px;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    font-weight: 500;
+}
+
+.ka-detail__gov-tier--auto-publish {
+    background: #f3f3f3;
+    color: #4a4a4a;
+}
+
+.ka-detail__gov-tier--human-review {
+    background: #e6e6e6;
+    color: #2e2e2e;
+}
+
+.ka-detail__gov-tier--human-required {
+    background: #d4d4d4;
+    color: #1a1a1a;
+}
+
+/* Health badge */
+.ka-health {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.ka-health__value {
+    font-size: 28px;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.ka-health__label {
+    margin-top: 4px;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.ka-health--excellent { color: #166534; }
+.ka-health--healthy { color: #15803d; }
+.ka-health--attention { color: #c2410c; }
+.ka-health--risk { color: #b91c1c; }
+
+/* Detail rows / columns */
+.ka-detail-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--slds-g-spacing-5, 20px);
+}
+
+.ka-detail-row--secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ka-detail__col {
+    background: var(--slds-g-color-surface-container-1, #fff);
+    border: 1px solid var(--slds-g-color-neutral-base-90, #e5e5e5);
+    border-radius: 12px;
+    padding: var(--slds-g-spacing-5, 20px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.ka-detail__col--sources {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    gap: var(--slds-g-spacing-5, 20px);
+}
+
+.ka-detail__card {
+    background: var(--slds-g-color-surface-container-1, #fff);
+    border: 1px solid var(--slds-g-color-neutral-base-90, #e5e5e5);
+    border-radius: 12px;
+    padding: var(--slds-g-spacing-5, 20px);
+}
+
+.ka-detail__gov-card--auto-publish { background: #f9fafb; }
+.ka-detail__gov-card--human-review { background: #f3f4f6; }
+.ka-detail__gov-card--human-required { background: #e5e7eb; }
+
+.ka-detail__section-title {
+    margin: 0 0 var(--slds-g-spacing-4, 16px);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 16px;
+    font-weight: 700;
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    --slds-c-icon-sizing: 14px;
+    --sds-c-icon-sizing-width: 14px;
+    --sds-c-icon-sizing-height: 14px;
+    --sds-c-icon-color-foreground: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Activity feed */
+.ka-activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-3, 12px);
+}
+
+.ka-activity {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: var(--slds-g-spacing-3, 12px);
+    align-items: flex-start;
+}
+
+.ka-activity__icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 9999px;
+    background: var(--slds-g-color-brand-base-90, #d6e6ff);
+    color: var(--slds-g-color-accent-2, #0250d9);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    --slds-c-icon-sizing: 12px;
+    --sds-c-icon-sizing-width: 12px;
+    --sds-c-icon-sizing-height: 12px;
+    --sds-c-icon-color-foreground: currentColor;
+}
+
+.ka-activity__icon--flagged { background: #fef3c7; color: #b45309; }
+.ka-activity__icon--deprecated { background: #fee2e2; color: #b91c1c; }
+.ka-activity__icon--monitored { background: #f3f4f6; color: #6b7280; }
+.ka-activity__icon--linked { background: #ecfeff; color: #0891b2; }
+
+.ka-activity__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ka-activity__desc {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.ka-activity__entity {
+    font-size: var(--slds-g-font-scale-base, 13px);
+    color: var(--slds-g-color-accent-2, #0250d9);
+    text-decoration: none;
+}
+
+.ka-activity__entity:hover {
+    text-decoration: underline;
+}
+
+.ka-activity__time {
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Bars */
+.ka-bar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-1, 4px);
+}
+
+.ka-bar__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--slds-g-font-scale-base, 13px);
+}
+
+.ka-bar__label {
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ka-bar__value {
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    font-weight: 600;
+}
+
+.ka-bar__track {
+    width: 100%;
+    height: 8px;
+    background: var(--slds-g-color-neutral-base-95, #e5e5e5);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.ka-bar__fill {
+    height: 100%;
+    background: var(--slds-g-color-accent-2, #0250d9);
+    border-radius: 9999px;
+    transition: width 0.4s ease;
+}
+
+/* Stats list */
+.ka-stats {
+    margin-top: var(--slds-g-spacing-3, 12px);
+    padding-top: var(--slds-g-spacing-4, 16px);
+    border-top: 1px solid var(--slds-g-color-neutral-base-95, #e5e5e5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-3, 12px);
+}
+
+.ka-stats__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--slds-g-font-scale-base, 13px);
+}
+
+.ka-stats__label {
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ka-stats__value {
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    font-weight: 700;
+}
+
+/* Signals */
+.ka-signals {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-3, 12px);
+}
+
+.ka-signals__row {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+    font-size: var(--slds-g-font-scale-base, 13px);
+}
+
+.ka-signals__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ka-signals__label {
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.ka-signals__status {
+    margin-left: auto;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+}
+
+.ka-detail__gov-desc {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 20px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* Secondary detail card list rows */
+.ka-detail__card--half {
+    display: flex;
+    flex-direction: column;
+}
+
+.ka-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-3, 12px);
+}
+
+.ka-list__row {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    flex-wrap: wrap;
+}
+
+.ka-list__title {
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    font-weight: 600;
+}
+
+.ka-list__link {
+    color: var(--slds-g-color-accent-2, #0250d9);
+    text-decoration: none;
+}
+
+.ka-list__link:hover {
+    text-decoration: underline;
+}
+
+.ka-list__meta {
+    margin-left: auto;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+}
+
+.ka-list__time {
+    margin-left: auto;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+}
+
+.ka-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 9999px;
+    background: var(--slds-g-color-neutral-base-95, #e5e5e5);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    font-size: var(--slds-g-font-scale-neg-2, 11px);
+    font-weight: 600;
+}
+
+.ka-coord__status {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 9999px;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.ka-coord__status--in-sync { background: #dbeafe; color: #1d4ed8; }
+.ka-coord__status--pending { background: #f3f4f6; color: #4b5563; }
+.ka-coord__status--conflict { background: #fee2e2; color: #b91c1c; }
+
+/* Predicted needs */
+.ka-need {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-1, 4px);
+}
+
+.ka-need__head {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+}
+
+.ka-need__topic {
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    font-size: var(--slds-g-font-scale-base, 13px);
+}
+
+.ka-need__bar {
+    flex: 0 0 80px;
+    height: 6px;
+    background: var(--slds-g-color-neutral-base-95, #e5e5e5);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.ka-need__bar-fill {
+    height: 100%;
+    background: var(--slds-g-color-accent-2, #0250d9);
+    border-radius: 9999px;
+}
+
+.ka-need__due {
+    margin-left: auto;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+}
+
+.ka-need__due--soon {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+.ka-need__source {
+    margin: 0;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+}
+
+/* Feedback */
+.ka-feedback__total {
+    margin: 0 0 var(--slds-g-spacing-3, 12px);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ka-feedback__total strong {
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.ka-feedback__stack {
+    display: flex;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--slds-g-color-neutral-base-95, #e5e5e5);
+    margin-bottom: var(--slds-g-spacing-2, 8px);
+}
+
+.ka-feedback__seg--accepted { background: var(--slds-g-color-accent-2, #0250d9); }
+.ka-feedback__seg--modified { background: #9ca3af; }
+.ka-feedback__seg--rejected { background: #f87171; }
+
+.ka-feedback__rate {
+    margin: 0 0 var(--slds-g-spacing-3, 12px);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.ka-feedback__rate strong {
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.ka-feedback__trend {
+    width: 160px;
+    height: 32px;
+    display: block;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   LIST TABLE — vision-app data points
+   (governance pill, activity counts, signal chips, health score)
+   ─────────────────────────────────────────────────────────────── */
+
+/* Governance pill in the table mirrors the detail view's gov-tier
+   but is small enough to live inline in a row. */
+.ka-gov-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 9999px;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.ka-gov-pill--auto-publish {
+    background: #f3f3f3;
+    color: #4a4a4a;
+}
+
+.ka-gov-pill--human-review {
+    background: #e6e6e6;
+    color: #2e2e2e;
+}
+
+.ka-gov-pill--human-required {
+    background: #d4d4d4;
+    color: #1a1a1a;
+}
+
+/* Activity column: three "<count> label" segments separated by a
+   thin divider, matching the "47 created  132 updated  8 gaps" row
+   on the React AutonomousAgents card. */
+.ka-table-activity {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ka-table-activity__seg {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.ka-table-activity__seg strong {
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    font-weight: 600;
+    font-size: var(--slds-g-font-scale-base, 13px);
+}
+
+.ka-table-activity__seg--gaps strong {
+    color: #c2410c;
+}
+
+/* Signal sources column: small chips for each connected source
+   ("Cases", "Slack", "Docs", "GitHub", "Email"). */
+.ka-signal-chips {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ka-signal-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 9999px;
+    background: var(--slds-g-color-surface-2, #f3f3f3);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Health score chip in the rightmost data column, coloured the
+   same way the vision app's HealthScore arc indicates the bucket. */
+.ka-table-health {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    font-variant-numeric: tabular-nums;
+}
+
+.ka-table-health--excellent { background: #dcfce7; color: #166534; }
+.ka-table-health--healthy   { background: #ecfccb; color: #3f6212; }
+.ka-table-health--attention { background: #ffedd5; color: #9a3412; }
+.ka-table-health--risk      { background: #fee2e2; color: #991b1b; }
+
+/* ── Responsive — stack columns at narrow widths ─────────────── */
+@media (max-width: 1100px) {
+    .ka-detail-row,
+    .ka-detail-row--secondary {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

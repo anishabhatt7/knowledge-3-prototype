@@ -1,0 +1,89 @@
+<template lwc:render-mode="light">
+    <div class="kb-page">
+        <!-- ═══ LEFT RAIL — same shape as Knowledge Home ═══ -->
+        <nav class={railClass} aria-label="Knowledge navigation">
+            <div class="kh-rail__top">
+                <template for:each={railTopItems} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class={item.rowClass}
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+
+                <div class="kh-rail__divider" role="separator"></div>
+                <div class="kh-rail__group-header">Maintain</div>
+                <template for:each={railMaintainComputed} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class={item.rowClass}
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+
+                <div class="kh-rail__divider" role="separator"></div>
+                <div class="kh-rail__group-header">Create</div>
+                <template for:each={railCreateComputed} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class={item.rowClass}
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="kh-rail__bottom">
+                <button
+                    type="button"
+                    class="kh-rail__row kh-rail__row--collapse"
+                    aria-label={collapseAriaLabel}
+                    onclick={handleToggleRail}
+                >
+                    <lightning-icon
+                        icon-name={collapseIconName}
+                        size="x-small"
+                        alternative-text={collapseAriaLabel}
+                        class="kh-rail__icon"
+                    ></lightning-icon>
+                    <span class="kh-rail__label">Collapse</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- ═══ MAIN CONTENT — list-view header + datatable ═══ -->
+        <div class="kb-shell">
+            <ui-knowledge-page-header></ui-knowledge-page-header>
+            <ui-knowledge-data-table></ui-knowledge-data-table>
+        </div>
+    </div>
+</template>

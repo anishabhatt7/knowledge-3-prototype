@@ -1,0 +1,185 @@
+<template lwc:render-mode="light">
+    <aside class="cp">
+        <header class="cp__header">
+            <div class="cp__header-left">
+                <h2 class="cp__title">Agentforce</h2>
+                <lightning-button-icon
+                    icon-name="utility:info"
+                    variant="bare"
+                    size="x-small"
+                    alternative-text="About Agentforce"
+                    class="cp__header-info">
+                </lightning-button-icon>
+            </div>
+            <div class="cp__header-right">
+                <lightning-button-icon
+                    icon-name="utility:end_chat"
+                    variant="bare"
+                    size="small"
+                    alternative-text="End chat"
+                    class="cp__header-btn">
+                </lightning-button-icon>
+                <lightning-button-icon
+                    icon-name="utility:pinned"
+                    variant="bare"
+                    size="small"
+                    alternative-text="Pin"
+                    class="cp__header-btn">
+                </lightning-button-icon>
+                <lightning-button-icon
+                    icon-name="utility:close"
+                    variant="bare"
+                    size="small"
+                    alternative-text="Close"
+                    class="cp__header-btn"
+                    onclick={handleClose}>
+                </lightning-button-icon>
+            </div>
+        </header>
+        <div class="cp__feed">
+            <template for:each={enrichedMessages} for:item="m">
+                <div key={m.id} class={m.rowClass}>
+                    <template lwc:if={m.isAssistant}>
+                        <img src="/images/agentforce-avatar.svg"
+                             alt="Agentforce"
+                             class="cp-avatar" />
+                        <div class="cp-bubble cp-bubble_agent">
+                            <template lwc:if={m.hasText}>
+                                <p class="cp-bubble__text">{m.content}</p>
+                            </template>
+                            <template lwc:if={m.hasPreview}>
+                                <div class="cp-preview">
+                                    <div class="cp-preview__head">
+                                        <img src="./images/sparkles.svg" alt="" class="cp-preview__spark cp-sparkle-icon" />
+                                        <span class="cp-preview__title">{m.articlePreview.title}</span>
+                                        <lightning-badge label={m.articlePreview.status}
+                                            class="cp-preview__badge"></lightning-badge>
+                                        <lightning-button-icon
+                                            icon-name="utility:expand_alt"
+                                            variant="bare"
+                                            size="small"
+                                            alternative-text="Expand preview"
+                                            class="cp-preview__expand">
+                                        </lightning-button-icon>
+                                    </div>
+                                    <!-- cp-preview__fields hidden for now -->
+                                    <!--<div class="cp-preview__fields">
+                                        <div class="cp-preview__field">
+                                            <span class="cp-preview__label">Record Type:</span>
+                                            <lightning-badge label={m.previewRecordTypeLabel}
+                                                icon-name="standard:knowledge"
+                                                class="cp-field-chip cp-field-chip_purple">
+                                            </lightning-badge>
+                                        </div>
+                                        <div class="cp-preview__field">
+                                            <span class="cp-preview__label">Data Categories:</span>
+                                            <template for:each={m.previewCategories} for:item="c">
+                                                <lightning-badge key={c.key} label={c.label}
+                                                    icon-name="utility:topic2"
+                                                    class="cp-field-chip cp-field-chip_blue">
+                                                </lightning-badge>
+                                            </template>
+                                        </div>
+                                    </div>-->
+                                    <div class="cp-preview__body">
+                                        <p class="cp-preview__heading">Why Baggage Allowance Matters</p>
+                                        <p class="cp-preview__teaser">{m.articlePreview.teaser}</p>
+                                        <lightning-button
+                                            label="Preview"
+                                            variant="base"
+                                            class="cp-preview__more">
+                                        </lightning-button>
+                                    </div>
+                                </div>
+                            </template>
+                            <template lwc:if={m.hasSuggestions}>
+                                <div class="cp-suggestions">
+                                    <template for:each={m.suggestionRows} for:item="s">
+                                        <div key={s.id} class="cp-suggestion">
+                                            <div class="cp-suggestion__head">
+                                                <img src="./images/sparkles.svg" alt="" class="cp-suggestion__icon cp-sparkle-icon" />
+                                                <span class="cp-suggestion__title">{s.label}</span>
+                                            </div>
+                                            <p class="cp-suggestion__desc">{s.description}</p>
+                                            <div class="cp-suggestion__actions">
+                                                <lightning-button
+                                                    label="Apply"
+                                                    variant="brand"
+                                                    icon-name="utility:check"
+                                                    class="cp-suggestion__btn"
+                                                    data-message-id={m.id}
+                                                    data-suggestion-id={s.id}
+                                                    onclick={handleApply}>
+                                                </lightning-button>
+                                                <lightning-button
+                                                    label="Dismiss"
+                                                    variant="neutral"
+                                                    icon-name="utility:close"
+                                                    class="cp-suggestion__btn"
+                                                    data-message-id={m.id}
+                                                    data-suggestion-id={s.id}
+                                                    onclick={handleReject}>
+                                                </lightning-button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template lwc:elseif={m.isUser}>
+                        <div class="cp-bubble cp-bubble_user">
+                            <p class="cp-bubble__text">{m.content}</p>
+                        </div>
+                    </template>
+
+                    <template lwc:elseif={m.isEvent}>
+                        <lightning-icon
+                            icon-name="utility:people"
+                            size="x-small"
+                            alternative-text="Collaborators"
+                            class="cp-event__icon">
+                        </lightning-icon>
+                        <p class="cp-event__text">{m.content}</p>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <footer class="cp-composer">
+            <div class="cp-composer__inner">
+                <textarea
+                    class="cp-composer__input"
+                    placeholder="Describe your task or ask a question..."
+                    oninput={handleInput}
+                    onkeydown={handleKeydown}
+                    rows="1"></textarea>
+                <div class="cp-composer__actions">
+                    <div class="cp-composer__chips">
+                        <lightning-button-icon
+                            icon-name="utility:add"
+                            variant="border-filled"
+                            size="small"
+                            alternative-text="Attach"
+                            class="cp-composer__add">
+                        </lightning-button-icon>
+                        <button type="button" class="cp-composer__chip cp-composer__chip_brand">
+                            <lightning-icon icon-name="utility:knowledge_base" size="xx-small"></lightning-icon>
+                            <span>Enterprise Knowledge</span>
+                            <span class="cp-composer__count">+8</span>
+                        </button>
+                    </div>
+                    <lightning-button-icon
+                        icon-name="utility:send"
+                        variant="brand"
+                        size="small"
+                        alternative-text="Send"
+                        class="cp-composer__send"
+                        onclick={handleSend}>
+                    </lightning-button-icon>
+                </div>
+            </div>
+        </footer>
+    </aside>
+</template>

@@ -1,0 +1,229 @@
+<template>
+    <div class={containerClass} onclick={handleBlockSelect}
+        ondragover={handleDragOver} ondrop={handleDrop}>
+        <template lwc:if={showPromptBar}>
+            <div class="ab__prompt">
+                <div class="ab__prompt-bar">
+                    <template lwc:if={_generating}>
+                        <span class="ab__prompt-label">{_promptText}</span>
+                        <lightning-button
+                            variant="brand-outline"
+                            label="Stop"
+                            class="ab__prompt-stop"
+                            onclick={handleStop}>
+                        </lightning-button>
+                        <span class="ab__prompt-sparkle">
+                            <img src="./images/sparkles.svg" alt="" class="ab__sparkle-icon" />
+                        </span>
+                    </template>
+                    <template lwc:else>
+                        <input
+                            type="text"
+                            class="ab__prompt-input"
+                            placeholder="Enter prompt instructions..."
+                            value={_promptText}
+                            oninput={handlePromptInput}
+                            onkeydown={handlePromptKeyDown} />
+                        <button type="button" class="ab__prompt-send" aria-label="Send prompt" onclick={handlePromptSubmit}>
+                            <lightning-icon icon-name="utility:send" size="xx-small"></lightning-icon>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </template>
+        <button type="button" class="ab__drag" aria-label="Drag block" tabindex="-1"
+            draggable="true"
+            ondragstart={handleDragStart}
+            ondragend={handleDragEnd}>
+            <lightning-icon icon-name="utility:drag_and_drop" size="xx-small"></lightning-icon>
+        </button>
+        <template lwc:if={showSyncBadge}>
+            <span class="ab__sync-badge">Knowledge Block</span>
+        </template>
+        <div class="ab__content">
+            <template lwc:if={isH1}>
+                <h1 class="ab__h1 ab__editable"
+                    lwc:dom="manual"
+                    contenteditable="true"
+                    spellcheck="true"
+                    data-placeholder="Heading 1"
+                    oninput={handleInput}
+                    onkeydown={handleKeyDown}
+                    onpaste={handlePaste}></h1>
+            </template>
+            <template lwc:elseif={isH2}>
+                <h2 class="ab__h2 ab__editable"
+                    lwc:dom="manual"
+                    contenteditable="true"
+                    spellcheck="true"
+                    data-placeholder="Heading 2"
+                    oninput={handleInput}
+                    onkeydown={handleKeyDown}
+                    onpaste={handlePaste}></h2>
+            </template>
+            <template lwc:elseif={isH3}>
+                <h3 class="ab__h3 ab__editable"
+                    lwc:dom="manual"
+                    contenteditable="true"
+                    spellcheck="true"
+                    data-placeholder="Heading 3"
+                    oninput={handleInput}
+                    onkeydown={handleKeyDown}
+                    onpaste={handlePaste}></h3>
+            </template>
+            <template lwc:elseif={isLi}>
+                <div class="ab__li">
+                    <span class="ab__li-dot" aria-hidden="true"></span>
+                    <p class="ab__p ab__editable"
+                        lwc:dom="manual"
+                        contenteditable="true"
+                        spellcheck="true"
+                        data-placeholder="List item"
+                        oninput={handleInput}
+                        onkeydown={handleKeyDown}
+                        onpaste={handlePaste}></p>
+                </div>
+            </template>
+            <template lwc:elseif={isBlockquote}>
+                <blockquote class="ab__quote">
+                    <p class="ab__p ab__editable"
+                        lwc:dom="manual"
+                        contenteditable="true"
+                        spellcheck="true"
+                        data-placeholder="Quote"
+                        oninput={handleInput}
+                        onkeydown={handleKeyDown}
+                        onpaste={handlePaste}></p>
+                </blockquote>
+            </template>
+            <template lwc:elseif={isImage}>
+                <figure class="ab__image">
+                    <div class="ab__image-box">
+                        <img src={imageSrc} alt={imageAlt} class="ab__image-photo" loading="lazy" />
+                    </div>
+                    <figcaption>{imageCaption}</figcaption>
+                </figure>
+            </template>
+            <template lwc:elseif={isVideo}>
+                <div class="ab__video">
+                    <div class="ab__video-head">
+                        <lightning-icon icon-name="utility:video" size="x-small"></lightning-icon>
+                        <span class="ab__video-title">{videoCaption}</span>
+                        <lightning-icon icon-name="utility:expand_alt" size="xx-small" class="ab__video-expand"></lightning-icon>
+                    </div>
+                    <div class="ab__video-frame">
+                        <img src={videoThumbnail} alt={videoCaption} class="ab__video-thumb" loading="lazy" />
+                        <div class="ab__video-play" aria-label="Play video">
+                            <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+                                <circle cx="24" cy="24" r="24" fill="rgba(0,0,0,0.55)"/>
+                                <path d="M19 15l14 9-14 9V15z" fill="#fff"/>
+                            </svg>
+                        </div>
+                        <div class="ab__video-duration">1:42</div>
+                    </div>
+                    <div class="ab__video-scrub" aria-hidden="true">
+                        <div class="ab__video-scrub-head"></div>
+                    </div>
+                </div>
+            </template>
+            <template lwc:else>
+                <p class="ab__p ab__editable"
+                    lwc:dom="manual"
+                    contenteditable="true"
+                    spellcheck="true"
+                    data-placeholder="Type text…"
+                    oninput={handleInput}
+                    onkeydown={handleKeyDown}
+                    onpaste={handlePaste}></p>
+            </template>
+        </div>
+        <template lwc:if={_slashOpen}>
+            <div class={slashMenuClass} role="listbox" aria-label="Block type menu">
+                <div class="sm__header">Generate Output</div>
+                <template for:each={slashMenuItems} for:item="item">
+                    <div key={item.id}
+                        class={item.itemClass}
+                        role="option"
+                        data-id={item.id}
+                        aria-selected={item.isActive}
+                        onclick={handleSlashItemClick}
+                        onmouseenter={handleSlashItemMouseEnter}>
+                        <span class={item.iconClass}>
+                            <lightning-icon icon-name={item.iconName} size="xx-small"></lightning-icon>
+                        </span>
+                        <span class="sm__text">
+                            <span class="sm__label">{item.label}</span>
+                            <span class="sm__desc">{item.description}</span>
+                        </span>
+                    </div>
+                </template>
+            </div>
+        </template>
+        <button type="button" class="ab__ai" aria-label="Edit with AI" tabindex="-1"
+            onclick={handleAiClick}>
+            <img src="./images/sparkles.svg" alt="" class="ab__sparkle-icon" />
+        </button>
+        <template lwc:if={showConvertButton}>
+            <button type="button" class="ab__convert" aria-label="Convert to Knowledge Block" tabindex="-1"
+                title="Convert to Knowledge Block"
+                onclick={handleConvertClick}>
+                <lightning-icon icon-name="utility:link" size="xx-small"></lightning-icon>
+            </button>
+        </template>
+        <template lwc:if={_activeSuggestion}>
+            <div class={_activeSuggestion.popoverClass}
+                style={_activeSuggestion.style}
+                role="dialog"
+                aria-label="AI suggestion"
+                onmouseenter={handlePopoverEnter}
+                onmouseleave={handlePopoverLeave}
+                onclick={handlePopoverEnter}>
+                <div class="ai-popover__header">
+                    <span class="ai-popover__type">
+                        <lightning-icon
+                            icon-name="utility:sparkles"
+                            size="xx-small"
+                            alternative-text="AI suggestion"
+                            class="ai-popover__brand-icon">
+                        </lightning-icon>
+                        <span class="ai-popover__dot" aria-hidden="true"></span>
+                        <span class="ai-popover__type-label">{_activeSuggestion.label}</span>
+                    </span>
+                    <lightning-button-icon
+                        icon-name="utility:close"
+                        variant="bare"
+                        size="x-small"
+                        alternative-text="Close suggestion card"
+                        class="ai-popover__close"
+                        onclick={handleSuggestionClose}>
+                    </lightning-button-icon>
+                </div>
+                <div class="ai-popover__diff">
+                    <div class="ai-popover__diff-block ai-popover__diff-block_from">
+                        <span class="ai-popover__diff-label">Current</span>
+                        <p class="ai-popover__from">{_activeSuggestion.original}</p>
+                    </div>
+                    <div class="ai-popover__diff-block ai-popover__diff-block_to">
+                        <span class="ai-popover__diff-label">Suggested rewrite</span>
+                        <p class="ai-popover__to">{_activeSuggestion.replacement}</p>
+                    </div>
+                </div>
+                <p class="ai-popover__explanation">{_activeSuggestion.explanation}</p>
+                <div class="ai-popover__actions">
+                    <lightning-button
+                        label="Dismiss"
+                        variant="neutral"
+                        class="ai-popover__btn"
+                        onclick={handleSuggestionDismiss}>
+                    </lightning-button>
+                    <lightning-button
+                        label="Accept"
+                        variant="brand"
+                        class="ai-popover__btn ai-popover__btn_accept"
+                        onclick={handleSuggestionAccept}>
+                    </lightning-button>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

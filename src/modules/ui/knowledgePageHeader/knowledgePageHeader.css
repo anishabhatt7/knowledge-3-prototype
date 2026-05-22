@@ -1,0 +1,243 @@
+/* Host selector retargeted from main-knowledge-page-header. */
+ui-knowledge-page-header {
+  display: block;
+}
+
+.page-header {
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+  padding: var(--slds-g-spacing-4, 16px);
+}
+
+.page-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-header-title-section {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-3, 12px);
+  flex: 1;
+  min-width: 0;
+  padding-inline-end: var(--slds-g-spacing-3, 12px);
+  min-height: 51px;
+}
+
+.page-header-custom-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Entity icon (standard:knowledge) sized to 32px ───── */
+.page-header-entity-icon {
+  --slds-c-icon-sizing: 32px;
+  --sds-c-icon-sizing-width: 32px;
+  --sds-c-icon-sizing-height: 32px;
+  flex-shrink: 0;
+}
+
+.title-text-section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.page-header-entity-name {
+  font-size: var(--slds-g-font-scale-base, 13px);
+  line-height: 18px;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Title + pin button row */
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-3, 12px);
+  min-width: 0;
+}
+
+.page-header-title {
+  font-size: var(--slds-g-font-scale-5, 28px);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  line-height: 35px;
+  color: var(--slds-g-color-on-surface-3, #001e5b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+/* Pin button next to title — round, bordered, dark icon */
+.ph-pin-btn {
+  --slds-c-button-neutral-color-background: var(--slds-g-color-surface-container-1, #fff);
+  --slds-c-button-neutral-color-background-hover: var(--slds-g-color-surface-2, #f3f3f3);
+  --slds-c-button-neutral-color-background-focus: var(--slds-g-color-surface-2, #f3f3f3);
+  --slds-c-button-neutral-color-border: var(--slds-g-color-border-2, #5c5c5c);
+  --slds-c-button-neutral-color-border-hover: var(--slds-g-color-border-2, #5c5c5c);
+  --slds-c-button-neutral-color-border-focus: var(--slds-g-color-border-2, #5c5c5c);
+  --slds-c-buttonicon-color-foreground: var(--slds-g-color-on-surface-2, #3e3e3c);
+  --slds-c-buttonicon-color-foreground-hover: var(--slds-g-color-on-surface-3, #001e5b);
+  --slds-c-buttonicon-color-foreground-focus: var(--slds-g-color-on-surface-3, #001e5b);
+  --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
+  --sds-c-button-sizing-width: 32px;
+  --sds-c-button-sizing-height: 32px;
+  flex-shrink: 0;
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  flex-shrink: 0;
+}
+
+/* ── Pill-style button group (rounded ends, blue text) ──
+   Targets the lightning-button host elements via CSS custom
+   properties since the buttons live inside shadow DOM. */
+.ph-pill-group {
+  --slds-c-button-neutral-text-color: var(--slds-g-color-accent-2, #0250d9);
+  --slds-c-button-neutral-text-color-hover: var(--slds-g-color-accent-3, #0b5cab);
+  --slds-c-button-neutral-color-border: var(--slds-g-color-border-2, #5c5c5c);
+  --slds-c-button-neutral-color-border-hover: var(--slds-g-color-border-2, #5c5c5c);
+  --slds-c-button-neutral-color-background: var(--slds-g-color-surface-container-1, #fff);
+  --slds-c-button-neutral-color-background-hover: var(--slds-g-color-surface-2, #f3f3f3);
+  --sds-c-button-sizing-height: 32px;
+  --sds-c-button-font-weight: var(--slds-g-font-weight-6, 700);
+}
+
+/* Round only the very ends of the pill group (works for any child type) */
+.ph-pill-group > :first-child {
+  --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
+}
+
+.ph-pill-group > :last-child {
+  --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
+}
+
+/* Trailing chevron menu styling so it matches the rest of the pill */
+.ph-pill-group lightning-button-menu {
+  --slds-c-button-neutral-text-color: var(--slds-g-color-accent-2, #0250d9);
+  --slds-c-button-neutral-color-border: var(--slds-g-color-border-2, #5c5c5c);
+  --slds-c-button-neutral-color-background: var(--slds-g-color-surface-container-1, #fff);
+  --sds-c-button-sizing-height: 32px;
+}
+
+/* Gap is created by .page-header-actions; pill groups themselves are flush */
+.ph-pill-group--new,
+.ph-pill-group--actions {
+  display: inline-flex;
+}
+
+/* ── Bottom row ──────────────────────────────────────────── */
+.page-header-bottom-row {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-1, 4px);
+  margin-top: var(--slds-g-spacing-3, 12px);
+}
+
+.page-header-meta {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--slds-g-font-scale-base, 13px);
+  line-height: 18px;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.page-header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  flex-shrink: 0;
+}
+
+/* Search input — pill-shaped, 32px tall, with magnifying glass icon on the left.
+   Targets lightning-input via SLDS CSS custom properties since the actual <input>
+   lives inside the component's shadow DOM. */
+.page-header-search {
+  width: 275px;
+  flex-shrink: 0;
+  --sds-c-inputtext-radius-border: var(--slds-g-radius-border-circle, 9999px);
+  --sds-c-inputtext-sizing-height: 32px;
+  --sds-c-inputtext-color-border: var(--slds-g-color-border-2, #5c5c5c);
+  --sds-c-inputtext-color-border-focus: var(--slds-g-color-border-accent-1, #066afe);
+  --sds-c-inputtext-color-background: var(--slds-g-color-surface-container-1, #fff);
+  --sds-c-inputtext-spacing-inlinestart: var(--slds-g-spacing-7, 28px);
+  --sds-c-inputtext-spacing-inlineend: var(--slds-g-spacing-3, 12px);
+  --sds-c-inputtext-font-size: var(--slds-g-font-scale-base, 13px);
+}
+
+.page-header-search lightning-input {
+  display: block;
+}
+
+.page-header-search .slds-form-element {
+  margin: 0;
+}
+
+.page-header-search .slds-input-has-icon .slds-input__icon,
+.page-header-search .slds-input__icon {
+  inset-inline-start: var(--slds-g-spacing-3, 12px);
+  width: 14px;
+  height: 14px;
+  fill: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* ── Round icon buttons ──────────────────────────────────── */
+.ph-icon-btn {
+  --slds-c-button-neutral-color-background: var(--slds-g-color-surface-container-1, #fff);
+  --slds-c-button-neutral-color-background-hover: var(--slds-g-color-surface-2, #f3f3f3);
+  --slds-c-button-neutral-color-background-focus: var(--slds-g-color-surface-2, #f3f3f3);
+  --slds-c-button-neutral-color-border: var(--slds-g-color-border-2, #5c5c5c);
+  --slds-c-button-neutral-color-border-hover: var(--slds-g-color-border-2, #5c5c5c);
+  --slds-c-button-neutral-color-border-focus: var(--slds-g-color-border-2, #5c5c5c);
+  --slds-c-buttonicon-color-foreground: var(--slds-g-color-on-surface-2, #3e3e3c);
+  --slds-c-buttonicon-color-foreground-hover: var(--slds-g-color-on-surface-3, #001e5b);
+  --slds-c-buttonicon-color-foreground-focus: var(--slds-g-color-on-surface-3, #001e5b);
+  --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
+  --sds-c-button-sizing-width: 32px;
+  --sds-c-button-sizing-height: 32px;
+}
+
+/* ── Right pill group (chart + filter) ──────────────────── */
+.ph-pill-icon-group {
+  --slds-c-button-neutral-color-background: var(--slds-g-color-surface-container-1, #fff);
+  --slds-c-button-neutral-color-background-hover: var(--slds-g-color-surface-2, #f3f3f3);
+  --slds-c-button-neutral-color-background-focus: var(--slds-g-color-surface-2, #f3f3f3);
+  --slds-c-button-neutral-color-border: var(--slds-g-color-border-2, #5c5c5c);
+  --slds-c-button-neutral-color-border-hover: var(--slds-g-color-border-2, #5c5c5c);
+  --slds-c-button-neutral-color-border-focus: var(--slds-g-color-border-2, #5c5c5c);
+  --slds-c-buttonicon-color-foreground: var(--slds-g-color-on-surface-2, #3e3e3c);
+  --slds-c-buttonicon-color-foreground-hover: var(--slds-g-color-on-surface-3, #001e5b);
+  --slds-c-buttonicon-color-foreground-focus: var(--slds-g-color-on-surface-3, #001e5b);
+  --sds-c-button-sizing-width: 32px;
+  --sds-c-button-sizing-height: 32px;
+}
+
+.ph-pill-icon-group lightning-button-icon:first-of-type {
+  --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
+}
+
+.ph-pill-icon-group lightning-button-icon:last-of-type {
+  --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
+}

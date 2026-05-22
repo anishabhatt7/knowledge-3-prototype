@@ -1,0 +1,10 @@
+<template lwc:render-mode="light">
+    <template for:each={cursorRows} for:item="c">
+        <div key={c.id} class={c.rootClass} data-cc-id={c.id}>
+            <div class="cc-pill">
+                <span class="cc-pill__name">{c.name}</span>
+            </div>
+            <div class="cc-caret"></div>
+        </div>
+    </template>
+</template>

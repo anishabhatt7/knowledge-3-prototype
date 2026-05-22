@@ -1,0 +1,316 @@
+<template lwc:render-mode="light">
+    <div class="hg-page">
+        <!-- ═══ LEFT RAIL — same as Knowledge Home ═══ -->
+        <nav class={railClass} aria-label="Knowledge navigation">
+            <div class="kh-rail__top">
+                <template for:each={railTopItems} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class={item.rowClass}
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+
+                <div class="kh-rail__divider" role="separator"></div>
+                <div class="kh-rail__group-header">Maintain</div>
+                <template for:each={railMaintainComputed} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class={item.rowClass}
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+
+                <div class="kh-rail__divider" role="separator"></div>
+                <div class="kh-rail__group-header">Create</div>
+                <template for:each={railCreate} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class="kh-rail__row"
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="kh-rail__bottom">
+                <button
+                    type="button"
+                    class="kh-rail__row kh-rail__row--collapse"
+                    aria-label={collapseAriaLabel}
+                    onclick={handleToggleRail}
+                >
+                    <lightning-icon
+                        icon-name={collapseIconName}
+                        size="x-small"
+                        alternative-text={collapseAriaLabel}
+                        class="kh-rail__icon"
+                    ></lightning-icon>
+                    <span class="kh-rail__label">Collapse</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- ═══ MAIN CONTENT ═══ -->
+        <div class="hg-shell">
+            <!-- Header bar -->
+            <header class="hg-header">
+            <div class="hg-header__left">
+                <span class="hg-header__icon" aria-hidden="true">
+                    <lightning-icon icon-name="standard:lightning_usage" size="medium" alternative-text=""></lightning-icon>
+                </span>
+                <div class="hg-header__title-block">
+                    <h1 class="hg-header__title">Healing Graph</h1>
+                    <span class="hg-header__stats">{statsLabel}</span>
+                </div>
+            </div>
+            <div class="hg-header__right">
+                <button type="button" class={healthBtnClass} onclick={handleToggleHealthBar}>
+                    <lightning-icon icon-name="utility:heart" size="xx-small" alternative-text=""></lightning-icon>
+                    <span>Health</span>
+                </button>
+                <lightning-combobox
+                    class="hg-combobox"
+                    variant="label-hidden"
+                    label="Filter by status"
+                    name="healing-filter"
+                    value={_healingFilter}
+                    options={healingComboboxOptions}
+                    onchange={handleHealingFilterChange}
+                ></lightning-combobox>
+            </div>
+        </header>
+
+        <!-- Health domain bar -->
+        <template lwc:if={_showHealthBar}>
+            <div class="hg-health-bar">
+                <button type="button" class={allDomainBtnClass} onclick={handleDomainAllClick}>
+                    <span class="hg-domain-chip__label">All</span>
+                </button>
+                <template for:each={healthDomainsComputed} for:item="dom">
+                    <button key={dom.domain} type="button" class={dom.chipClass} data-domain={dom.domain} onclick={handleDomainClick}>
+                        <span class="hg-health-ring" data-score={dom.healthScore}></span>
+                        <span class="hg-domain-chip__info">
+                            <span class="hg-domain-chip__label">{dom.domain}</span>
+                            <span class="hg-domain-chip__meta">{dom.contradictionCount} conflicts &middot; {dom.orphanCount} orphans</span>
+                        </span>
+                    </button>
+                </template>
+            </div>
+        </template>
+
+        <!-- Capability filter panel -->
+        <template lwc:if={_showFilters}>
+            <div class="hg-filter-panel">
+                <div class="hg-filter-panel__head">
+                    <span class="hg-filter-panel__title">Capabilities</span>
+                    <template lwc:if={activeFilterCount}>
+                        <button type="button" class="hg-filter-panel__clear" onclick={handleClearFilters}>Clear all</button>
+                    </template>
+                </div>
+                <div class="hg-filter-panel__list">
+                    <template for:each={capabilityFilterItems} for:item="cap">
+                        <button key={cap.key} type="button" class={cap.rowClass} data-cap={cap.key} onclick={handleToggleCapability}>
+                            <span class="hg-cap-dot" style={cap.dotStyle}></span>
+                            <span class="hg-cap-label">{cap.label}</span>
+                            <span class="hg-cap-count">{cap.count}</span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- Legend -->
+        <div class="hg-legend">
+            <template for:each={legendCapabilities} for:item="cap">
+                <div key={cap.key} class="hg-legend__item">
+                    <span class="hg-legend__dot" style={cap.dotStyle}></span>
+                    <span class="hg-legend__text">{cap.label}</span>
+                </div>
+            </template>
+            <span class="hg-legend__sep"></span>
+            <div class="hg-legend__item">
+                <span class="hg-legend__conflict-line"></span>
+                <span class="hg-legend__text">Conflict</span>
+            </div>
+            <div class="hg-legend__item">
+                <span class="hg-legend__ring hg-legend__ring--healed"></span>
+                <span class="hg-legend__text">Healed</span>
+            </div>
+            <div class="hg-legend__item">
+                <span class="hg-legend__ring hg-legend__ring--pending"></span>
+                <span class="hg-legend__text">Pending</span>
+            </div>
+            <div class="hg-legend__item">
+                <span class="hg-legend__ring hg-legend__ring--escalated"></span>
+                <span class="hg-legend__text">Escalated</span>
+            </div>
+        </div>
+
+        <!-- Hovered node tooltip -->
+        <template lwc:if={showTooltip}>
+            <div class="hg-tooltip">
+                <div class="hg-tooltip__head">
+                    <span class="hg-tooltip__dot" style={tooltipDotStyle}></span>
+                    <span class="hg-tooltip__name">{_hoveredInfo.label}</span>
+                </div>
+                <div class="hg-tooltip__meta">
+                    <span>{_hoveredInfo.type}</span>
+                    <span>&middot;</span>
+                    <span>{_hoveredInfo.capLabel}</span>
+                    <span>&middot;</span>
+                    <span>{_hoveredInfo.connectionCount} connections</span>
+                </div>
+                <template lwc:if={_hoveredInfo.inContradiction}>
+                    <div class="hg-tooltip__warn">Active contradiction</div>
+                </template>
+                <template lwc:if={_hoveredInfo.healingCount}>
+                    <div class="hg-tooltip__heal">{_hoveredInfo.healingCount} healing action(s)</div>
+                </template>
+            </div>
+        </template>
+
+        <!-- SVG canvas -->
+        <svg class="hg-svg"></svg>
+
+        <!-- Detail side panel -->
+        <template lwc:if={hasSelection}>
+            <aside class="hg-panel">
+                <div class="hg-panel__header">
+                    <h2 class="hg-panel__title">{panelTitle}</h2>
+                    <button type="button" class="hg-panel__close" onclick={handleClosePanel}>
+                        <lightning-icon icon-name="utility:close" size="xx-small" alternative-text="Close"></lightning-icon>
+                    </button>
+                </div>
+                <div class="hg-panel__body">
+                    <!-- Contradiction detail -->
+                    <template lwc:if={isContradictionSelected}>
+                        <div class="hg-contra">
+                            <div class="hg-contra__head">
+                                <span class="hg-contra__domain">{_selectedElement.data.domain}</span>
+                                <span class={contraSeverityClass}>{_selectedElement.data.severity}</span>
+                            </div>
+                            <div class="hg-contra__claims">
+                                <div class="hg-contra__claim hg-contra__claim--a">
+                                    <p class="hg-contra__claim-title">{_selectedElement.data.entityA.title}</p>
+                                    <p class="hg-contra__claim-text">{_selectedElement.data.entityA.claim}</p>
+                                </div>
+                                <div class="hg-contra__vs"><span>vs</span></div>
+                                <div class="hg-contra__claim hg-contra__claim--b">
+                                    <p class="hg-contra__claim-title">{_selectedElement.data.entityB.title}</p>
+                                    <p class="hg-contra__claim-text">{_selectedElement.data.entityB.claim}</p>
+                                </div>
+                            </div>
+                            <div class="hg-contra__resolutions">
+                                <p class="hg-contra__resolution-label">Suggested Resolutions</p>
+                                <template for:each={contraResolutionsComputed} for:item="res">
+                                    <div key={res.key} class="hg-contra__resolution-item">
+                                        <p class="hg-contra__resolution-article">{res.articleTitle}</p>
+                                        <p class="hg-contra__resolution-text">{res.text}</p>
+                                        <button type="button" class="hg-contra__review-btn" data-title={res.articleTitle} onclick={handleApproveDraftArticle}>
+                                            <lightning-icon icon-name="utility:sparkles" size="xx-small" alternative-text=""></lightning-icon>
+                                            <span>Approve Draft</span>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                            <p class="hg-contra__time">Detected {contraDetectedTime}</p>
+                            <div class="hg-contra__actions">
+                                <lightning-button variant="brand" label="Approve All Drafts" icon-name="utility:sparkles" class="hg-contra__btn" onclick={handleApproveDraftContra}></lightning-button>
+                                <lightning-button variant="neutral" label="Ignore" class="hg-contra__btn"></lightning-button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Node healing detail -->
+                    <template lwc:if={isNodeHealingSelected}>
+                        <div class="hg-healing">
+                            <template lwc:if={_selectedElement.node}>
+                                <div class="hg-healing__node-info">
+                                    <span class="hg-healing__node-dot" style={healingNodeDotStyle}></span>
+                                    <span class="hg-healing__node-label">{_selectedElement.node.label}</span>
+                                    <span class="hg-healing__node-type">{_selectedElement.node.type}</span>
+                                </div>
+                            </template>
+                            <div class="hg-healing__toolbar">
+                                <p class="hg-healing__count">{healingActionCountLabel}</p>
+                                <lightning-button variant="brand" label="Approve All Drafts" icon-name="utility:sparkles" size="small" onclick={handleApproveAllDrafts}></lightning-button>
+                            </div>
+                            <div class="hg-healing__list">
+                                <template for:each={sortedHealingActions} for:item="action">
+                                    <div key={action.id} class="hg-healing__item">
+                                        <div class="hg-healing__item-head" data-action-id={action.id} onclick={handleToggleAction}>
+                                            <lightning-icon icon-name={action.chevronIcon} size="xx-small" alternative-text="" class="hg-healing__chevron"></lightning-icon>
+                                            <div class="hg-healing__item-info">
+                                                <p class="hg-healing__item-title">{action.entityTitle}</p>
+                                                <div class="hg-healing__badges">
+                                                    <span class={action.issueClass}>{action.issueType}</span>
+                                                    <span class={action.actionClass}>{action.actionType}</span>
+                                                    <span class="hg-healing__time">{action.timeLabel}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <template lwc:if={action.isExpanded}>
+                                            <div class="hg-healing__detail">
+                                                <p class="hg-healing__desc">{action.description}</p>
+                                                <div class="hg-diff">
+                                                    <div class="hg-diff__before">
+                                                        <span class="hg-diff__label">Before</span>
+                                                        <p class="hg-diff__text">{action.before}</p>
+                                                    </div>
+                                                    <div class="hg-diff__after">
+                                                        <span class="hg-diff__label">After</span>
+                                                        <p class="hg-diff__text">{action.after}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="hg-healing__meta">
+                                                    <span>Trigger: {action.triggerSource}</span>
+                                                    <template lwc:if={action.reviewedBy}>
+                                                        <span>Reviewed by: {action.reviewedBy}</span>
+                                                    </template>
+                                                </div>
+                                                <div class="hg-healing__item-actions">
+                                                    <lightning-button variant="brand" label="Approve Draft" icon-name="utility:sparkles" size="small" data-title={action.entityTitle} onclick={handleApproveDraftAction}></lightning-button>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </aside>
+        </template>
+        </div>
+    </div>
+</template>

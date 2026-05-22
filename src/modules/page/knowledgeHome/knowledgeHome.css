@@ -1,0 +1,542 @@
+/* ═══ Knowledge Home — Figma fZeGfZbW…/Explorations#443-50479 ═══════
+   Typography uses the SLDS 2 type ramp via design tokens
+   (`--slds-g-font-scale-*`, `--slds-g-font-weight-*`) with sensible
+   px / numeric fallbacks so the page still renders correctly when
+   slds-plus.css hasn't loaded a particular variable. */
+
+page-knowledge-home {
+    display: block;
+    height: 100%;
+    background-color: var(--slds-g-color-surface-1, #fff);
+}
+
+.kh-shell {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    background-color: var(--slds-g-color-surface-1, #fff);
+    /* Inherit the SLDS 2 base font everywhere (SF Pro on Apple,
+       Salesforce Sans elsewhere) so descendant components default
+       to the design-system type stack. */
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* ── LEFT RAIL ─────────────────────────────────────────────────── */
+.kh-rail {
+    width: 48px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--slds-g-color-surface-1, #fff);
+    border-right: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+    padding: var(--slds-g-spacing-2, 8px) 0;
+    overflow: hidden;
+    /* width is animated by GSAP — no CSS transition. */
+}
+
+.kh-rail--expanded {
+    width: 267px;
+}
+
+.kh-rail__top {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+}
+
+.kh-rail__bottom {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    border-top: 1px solid var(--slds-g-color-neutral-base-95, #e5e5e5);
+    padding-top: 4px;
+}
+
+.kh-rail__row {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding-inline-start: var(--slds-g-spacing-4, 16px);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+}
+
+.kh-rail__row:hover {
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+.kh-rail__row--active {
+    background-color: var(--slds-g-color-brand-base-90, #d6e6ff);
+    border-left: 2px solid var(--slds-g-color-border-accent-1, #066afe);
+    padding-inline-start: calc(var(--slds-g-spacing-4, 16px) - 2px);
+}
+
+.kh-rail__row--active .kh-rail__icon {
+    --sds-c-icon-color-foreground: var(--slds-g-color-border-accent-1, #066afe);
+}
+
+.kh-rail--expanded .kh-rail__row {
+    gap: var(--slds-g-spacing-2, 8px);
+    padding-inline-start: var(--slds-g-spacing-7, 32px);
+    padding-inline-end: var(--slds-g-spacing-6, 24px);
+}
+
+.kh-rail--expanded .kh-rail__row--active {
+    border-left-width: 4px;
+    padding-inline-start: calc(var(--slds-g-spacing-7, 32px) - 4px);
+}
+
+.kh-rail__label {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kh-rail__row--active .kh-rail__label {
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-accent-3, #022ac0);
+}
+
+.kh-rail__divider {
+    height: 0;
+    margin: var(--slds-g-spacing-2, 8px) 0;
+    border: 0;
+    border-top: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+}
+
+.kh-rail__group-header {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding-inline-start: var(--slds-g-spacing-5, 24px);
+    padding-inline-end: var(--slds-g-spacing-4, 16px);
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 16px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    text-transform: none;
+    margin-top: 4px;
+}
+
+.kh-rail:not(.kh-rail--expanded) .kh-rail__group-header,
+.kh-rail:not(.kh-rail--expanded) .kh-rail__label,
+.kh-rail:not(.kh-rail--expanded) .kh-rail__divider {
+    display: none;
+}
+
+/* ── MAIN CONTENT — Figma "Main { p-8; gap-10 }" ──────────────── */
+.kh-main {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+    padding: var(--slds-g-spacing-8, 32px);
+    padding-bottom: var(--slds-g-spacing-10, 48px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-8, 32px);
+    background-color: var(--slds-g-color-surface-1, #fff);
+}
+
+.kh-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+/* "Titles/font-scale-3/Semibold" — 20/28, weight 590. */
+.kh-section__title {
+    margin: 0;
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-3, 20px);
+    line-height: 28px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    letter-spacing: 0;
+}
+
+.kh-section__head-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+/* "Body/font-scale-1/Regular" — 14/19. */
+.kh-section__link {
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 19px;
+    color: var(--slds-g-color-accent-2, #0250d9);
+    font-weight: var(--slds-g-font-weight-4, 400);
+    text-decoration: none;
+}
+
+.kh-section__link:hover {
+    text-decoration: underline;
+}
+
+/* ── Quick Actions — Figma 443:50481 ─────────────────────────── */
+.kh-quick-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+/* All three cards share a soft lavender surface; only the icon-circle
+   tone (purple / green / blue) differs. */
+.kh-quick-card {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+    padding: var(--slds-g-spacing-4, 16px);
+    border-radius: var(--slds-g-radius-border-3, 12px);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-align: left;
+    background-color: #f3eaff;
+    min-height: 74px;
+    transition: transform 120ms ease-out, box-shadow 160ms ease-out, background-color 120ms ease-out;
+}
+
+.kh-quick-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    background-color: #ecddff;
+}
+
+.kh-quick-card:focus-visible {
+    outline: 2px solid var(--slds-g-color-accent-2, #0250d9);
+    outline-offset: 2px;
+}
+
+.kh-quick-card__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Glyphs are tinted white via SLDS hooks so any utility:* glyph
+   reads cleanly against the colored circle. We zero-out the SLDS
+   per-icon themed background (e.g. .slds-icon-utility-einstein paints
+   a cobalt square by default) so OUR circle shows through. */
+.kh-quick-card__icon lightning-icon {
+    --sds-c-icon-color-foreground: #fff;
+    --sds-c-icon-color-foreground-default: #fff;
+    --sds-c-icon-color-background: transparent;
+    --slds-c-icon-color-background: transparent;
+    background: transparent !important;
+    border-radius: 0;
+    padding: 0;
+}
+
+.kh-quick-card__icon lightning-icon .slds-icon_container,
+.kh-quick-card__icon lightning-icon [class*='slds-icon-utility-'] {
+    background: transparent !important;
+    border-radius: 0;
+    padding: 0;
+}
+
+.kh-quick-card__icon svg {
+    fill: #fff !important;
+    width: 22px;
+    height: 22px;
+}
+
+.kh-quick-card__icon--agentic { background-color: #6c47ff; }
+.kh-quick-card__icon--green   { background-color: #03a059; }
+.kh-quick-card__icon--blue    { background-color: #1589ee; }
+
+.kh-quick-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+/* "Body/font-scale-2/Semibold" — 16/22, weight 590. */
+.kh-quick-card__title {
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* "Body/font-scale-base/Regular" — 13/18. */
+.kh-quick-card__desc {
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* ── My Watchlist tiles — Figma 443:51178 ───────────────────── */
+.kh-watch-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.kh-metric-card {
+    background-color: var(--slds-g-color-surface-1, #fff);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    padding: var(--slds-g-spacing-4, 16px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.kh-metric-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.kh-metric-card__heading {
+    flex: 1;
+    min-width: 0;
+}
+
+/* "Body/font-scale-2/Semibold" — 16/22, weight 590. */
+.kh-metric-card__title {
+    margin: 0;
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* "Body/font-scale-neg-1/Regular" — 12/17. */
+.kh-metric-card__cadence {
+    margin: var(--slds-g-spacing-1, 4px) 0 0;
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 17px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.kh-metric-card__details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+/* "Titles/font-scale-6/Regular" — 32/40, weight 400. */
+.kh-metric-card__value {
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-6, 32px);
+    line-height: 40px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.kh-metric-card__delta {
+    display: flex;
+    align-items: baseline;
+    gap: var(--slds-g-spacing-2, 8px);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 17px;
+}
+
+.kh-metric-card__delta-value {
+    font-family: inherit;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-error-1, #b60554);
+}
+
+.kh-metric-card__delta-label {
+    font-family: inherit;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.kh-metric-card__actions {
+    display: flex;
+    gap: var(--slds-g-spacing-2, 8px);
+    align-items: flex-start;
+}
+
+/* Surface the SLDS 2 brand-outline style; sized small to fit the
+   Figma "Go to …" pill. */
+.kh-metric-card__cta {
+    --slds-c-button-brand-outline-text-color: var(--slds-g-color-accent-2, #0250d9);
+    --slds-c-button-brand-outline-color-border: var(--slds-g-color-accent-2, #0250d9);
+}
+
+/* ── Recently Accessed — Figma 443:50483 ─────────────────────── */
+.kh-recent-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.kh-recent-card {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+    padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+    background-color: var(--slds-g-color-surface-1, #fff);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-3, 12px);
+}
+
+/* Saturated violet-50 surface with a large white knowledge-book
+   glyph — uses the SLDS 2 palette token so the tile theme tracks
+   the design system instead of a hand-picked hex. */
+.kh-recent-card__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background-color: var(--slds-g-color-palette-violet-50, #54275a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.kh-recent-card__icon lightning-icon {
+    --sds-c-icon-color-foreground: #fff;
+    --sds-c-icon-color-foreground-default: #fff;
+    --sds-c-icon-color-background: transparent;
+    --slds-c-icon-color-background: transparent;
+    background: transparent !important;
+    border-radius: 0;
+    padding: 0;
+    /* Override the implicit `size="small"` (24px) sizing so the
+       glyph fills more of the 48px tile per Figma. */
+    width: 36px !important;
+    height: 36px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kh-recent-card__icon lightning-icon .slds-icon_container,
+.kh-recent-card__icon lightning-icon [class*='slds-icon-standard-'] {
+    background: transparent !important;
+    border-radius: 0;
+    padding: 0;
+    width: 36px !important;
+    height: 36px !important;
+}
+
+/* Glyph fills ~75% of the 48px tile so the icon reads more like
+   the bold lozenges in the Figma reference. */
+.kh-recent-card__icon svg {
+    fill: #fff !important;
+    width: 36px !important;
+    height: 36px !important;
+}
+
+.kh-recent-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+/* "Body/font-scale-2/Semibold" — 16/22 (matches Figma title size). */
+.kh-recent-card__title {
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* "Body/font-scale-base/Regular" — 13/18. */
+.kh-recent-card__sub {
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* ── Templates — Figma 443:50484 ─────────────────────────────── */
+.kh-templates-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--slds-g-spacing-4, 16px);
+    align-items: stretch;
+}
+
+.kh-template-card {
+    padding: var(--slds-g-spacing-4, 16px);
+    background-color: var(--slds-g-color-surface-1, #fff);
+    border: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-3, 12px);
+}
+
+/* The "selected" template carries the darker neutral-base-70 border
+   used in Figma to indicate the user's last/active selection. */
+.kh-template-card--selected {
+    border-color: var(--slds-g-color-neutral-base-70, #aeaeae);
+}
+
+.kh-template-card__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+/* "Body/font-scale-2/Semibold" — 16/22. */
+.kh-template-card__title {
+    margin: 0;
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* "Body/font-scale-base/Regular" — 13/18. */
+.kh-template-card__body {
+    margin: 0;
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.kh-template-card__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+    margin-top: auto;
+}
+
+/* "View Details" is a base (text-only) button — surface the SLDS 2
+   accent color and align the button-text vertically with the brand-
+   outline "Select" pill next to it. */
+.kh-template-card__cta--base {
+    --slds-c-button-text-color: var(--slds-g-color-accent-2, #0250d9);
+}

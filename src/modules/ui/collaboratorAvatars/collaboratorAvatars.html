@@ -1,0 +1,18 @@
+<template lwc:render-mode="light">
+    <div class="cca-row" aria-label="Live collaborators">
+        <template for:each={avatarRows} for:item="a">
+            <div key={a.id}
+                 class={a.rootClass}
+                 data-cca-id={a.id}
+                 title={a.name}
+                 aria-label={a.name}>
+                <span class="cca-avatar__initials">{a.initials}</span>
+            </div>
+        </template>
+        <template lwc:if={hasExtra}>
+            <div class="cca-extra" title={extraTitle} aria-label={extraTitle}>
+                <span class="cca-extra__text">+{extraCount}</span>
+            </div>
+        </template>
+    </div>
+</template>

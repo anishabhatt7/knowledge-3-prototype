@@ -1,0 +1,66 @@
+/* Collaborator avatar stack — Figma DVS frame 1:99544.
+   Three colored initial-circles overlap with a small "+N" extras chip.
+   GSAP pops each item in with a back-out scale on mount. */
+
+ui-collaborator-avatars {
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.cca-row {
+    display: inline-flex;
+    align-items: center;
+}
+
+.cca-avatar,
+.cca-extra {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--slds-g-radius-border-circle, 9999px);
+    border: 2px solid var(--slds-g-color-surface-container-1, #ffffff);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(3, 35, 77, 0.12);
+    box-sizing: border-box;
+    will-change: transform, opacity;
+    margin-left: -8px;
+    flex-shrink: 0;
+}
+
+.cca-row > :first-child {
+    margin-left: 0;
+}
+
+.cca-avatar {
+    --cca-color: #4f46e5;
+    background: var(--cca-color);
+    color: var(--slds-g-color-on-accent-1, #ffffff);
+}
+
+.cca-avatar_pink   { --cca-color: #d62d8e; }
+.cca-avatar_teal   { --cca-color: #0e9488; }
+.cca-avatar_amber  { --cca-color: #d97706; }
+.cca-avatar_indigo { --cca-color: #4f46e5; }
+
+.cca-avatar__initials {
+    color: var(--slds-g-color-on-accent-1, #ffffff);
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Segoe UI', system-ui, sans-serif);
+    font-size: 10px;
+    font-weight: var(--slds-g-font-weight-7, 600);
+    line-height: 14px;
+    letter-spacing: 0.2px;
+}
+
+.cca-extra {
+    background: var(--slds-g-color-surface-container-2, #f3f3f3);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.cca-extra__text {
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Segoe UI', system-ui, sans-serif);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    font-weight: var(--slds-g-font-weight-7, 600);
+    line-height: 14px;
+}

@@ -1,0 +1,839 @@
+:host {
+    display: block;
+}
+
+.ab {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    margin: 0 0 4px;
+    padding: 4px 0;
+    border-radius: 6px;
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Segoe UI', system-ui, sans-serif);
+    color: var(--slds-g-color-on-surface-2, #181818);
+    cursor: pointer;
+}
+
+.ab:hover {
+    background: var(--slds-g-color-surface-container-2, #f8f8f8);
+}
+
+/* ─── Selected state (Figma 54:49233) ─────────────────────────── */
+.ab_selected {
+    background: var(--slds-g-color-brand-base-95, #edf4ff);
+}
+
+.ab_selected:hover {
+    background: var(--slds-g-color-brand-base-95, #edf4ff);
+}
+
+.ab_selected .ab__drag,
+.ab_selected .ab__ai {
+    opacity: 1;
+}
+
+/* ─── Generating state ────────────────────────────────────────── */
+.ab_generating {
+    background: var(--slds-g-color-brand-base-95, #edf4ff);
+}
+
+.ab_generating .ab__drag,
+.ab_generating .ab__ai {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ab__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.ab__drag,
+.ab__ai {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 120ms ease, background 120ms ease;
+    flex-shrink: 0;
+    padding: 0;
+    margin-top: 2px;
+}
+
+.ab:hover .ab__drag,
+.ab:hover .ab__ai {
+    opacity: 1;
+}
+
+.ab__drag {
+    cursor: grab;
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-1, #9e9e9e);
+}
+
+.ab__drag:hover {
+    background: var(--slds-g-color-surface-container-2, #e5e5e5);
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-2, #5c5c5c);
+}
+
+.ab__ai {
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+.ab__ai:hover {
+    background: var(--slds-g-color-brand-base-95, #edf4ff);
+}
+
+.ab__convert {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 120ms ease, background 120ms ease;
+    flex-shrink: 0;
+    padding: 0;
+    margin-top: 2px;
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+.ab__convert:hover {
+    background: var(--slds-g-color-brand-base-95, #edf4ff);
+}
+
+.ab:hover .ab__convert,
+.ab_selected .ab__convert {
+    opacity: 1;
+}
+
+.ab_generating .ab__convert {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ab_video {
+    max-width: 560px;
+    margin-bottom: 24px;
+}
+
+.ab_image {
+    margin-bottom: 24px;
+}
+
+.ab_h2 + .ab_p,
+.ab_h3 + .ab_p {
+    margin-top: 4px;
+}
+
+.ab__editable {
+    outline: none;
+    cursor: text;
+    min-height: 1.25em;
+    border-radius: 4px;
+}
+
+.ab__editable:empty::before {
+    content: attr(data-placeholder);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.ab_new {
+    animation: ab-pop 0.6s ease-out;
+    background: #f4faff;
+    padding: 4px 8px;
+    border-left: 3px solid var(--slds-g-color-accent-1, #066afe);
+}
+
+@keyframes ab-pop {
+    from {
+        opacity: 0.2;
+        transform: translateY(-4px);
+        box-shadow: 0 0 0 3px rgba(6, 106, 254, 0.15);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        box-shadow: 0 0 0 0 rgba(6, 106, 254, 0);
+    }
+}
+
+.ab__h1 { font-size: 24px; font-weight: 700; line-height: 1.3; margin: 0 0 12px; letter-spacing: -0.01em; }
+.ab__h2 { font-size: 18px; font-weight: 700; line-height: 1.35; margin: 0 0 8px; letter-spacing: -0.005em; }
+.ab__h3 { font-size: 15px; font-weight: 600; line-height: 1.4; margin: 0 0 6px; }
+.ab__p  { font-size: 14px; line-height: 1.55; margin: 0; color: var(--slds-g-color-on-surface-2, #181818); }
+
+.ab_h1 { margin-top: 0; }
+.ab_h2 { margin-top: 12px; }
+.ab_h3 { margin-top: 8px; }
+
+.ab__li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.ab__li-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--slds-g-color-on-surface-1, #5c5c5c);
+    flex-shrink: 0;
+    margin-top: 9px;
+}
+
+.ab__quote {
+    border-left: 4px solid var(--slds-g-color-border-accent-1, #066afe);
+    padding: 8px 14px;
+    background: var(--slds-g-color-brand-base-95, #edf4ff);
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    margin: 0;
+}
+
+/* Image */
+.ab__image {
+    margin: 0;
+    border: 1px solid var(--slds-g-color-border-1, #e5e5e5);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--slds-g-color-surface-container-2, #f3f3f3);
+    max-width: 720px;
+}
+
+.ab__image-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    overflow: hidden;
+}
+
+.ab__image-photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: cover;
+}
+
+.ab__image figcaption {
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    border-top: 1px solid var(--slds-g-color-border-1, #e5e5e5);
+}
+
+/* Video */
+.ab__video {
+    border: 1px solid var(--slds-g-color-border-1, #e5e5e5);
+    border-radius: 8px;
+    background: #2e2e2e;
+    overflow: hidden;
+    color: #ffffff;
+}
+
+.ab__video-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: #3a3a3a;
+    font-size: 12px;
+    font-weight: 600;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+.ab__video-head lightning-icon {
+    --sds-c-icon-color-foreground-default: #ffffff;
+}
+
+.ab__video-title {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ab__video-expand {
+    opacity: 0.8;
+}
+
+.ab__video-frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #000;
+}
+
+.ab__video-thumb {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ab__video-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+    transition: transform 120ms ease;
+}
+
+.ab__video-play:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.ab__video-duration {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    padding: 2px 6px;
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 3px;
+    letter-spacing: 0.02em;
+}
+
+.ab__video-scrub {
+    position: relative;
+    height: 3px;
+    background: #e5e5e5;
+    margin: 0;
+}
+
+.ab__video-scrub::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 30%;
+    background: #c24141;
+}
+
+.ab__video-scrub-head {
+    position: absolute;
+    left: 30%;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #c24141;
+    transform: translateX(-50%);
+}
+
+/* ─── Inline AI prompt bar (Figma 76:48730) ───────────────────── */
+.ab__prompt {
+    position: absolute;
+    top: -48px;
+    left: 24px;
+    right: 24px;
+    height: 42px;
+    z-index: 10;
+    will-change: transform, opacity;
+}
+
+.ab__prompt-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    height: 100%;
+    background: #ffffff;
+    border: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+    border-radius: 8px;
+    box-shadow:
+        0 0 10px 0 rgba(0, 0, 0, 0.12),
+        0 7px 7px 0 rgba(0, 0, 0, 0.12),
+        0 -1px 3px 0 rgba(0, 0, 0, 0.07);
+}
+
+.ab__prompt-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    line-height: 18px;
+    font-family: inherit;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    background: transparent;
+    min-width: 0;
+}
+
+.ab__prompt-input::placeholder {
+    color: var(--slds-g-color-on-surface-1, #9e9e9e);
+}
+
+.ab__prompt-send {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    border-radius: 4px;
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+.ab__prompt-send:hover {
+    background: var(--slds-g-color-brand-base-95, #edf4ff);
+}
+
+.ab__prompt-label {
+    flex: 1;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.ab__prompt-stop {
+    flex-shrink: 0;
+}
+
+.ab__prompt-sparkle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+    animation: ab-sparkle-pulse 1s ease-in-out infinite;
+}
+
+@keyframes ab-sparkle-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* ─── Text shimmer (Figma 76:50600) ───────────────────────────── */
+.ab_generating .ab__editable,
+.ab_generating .ab__h1,
+.ab_generating .ab__h2,
+.ab_generating .ab__h3,
+.ab_generating .ab__p,
+.ab_generating .ab__li,
+.ab_generating .ab__quote {
+    background: linear-gradient(
+        90deg,
+        #2e2e2e 0%,
+        #2e2e2e 40%,
+        #bd82ff 48%,
+        #89c0ff 50%,
+        #ffffff 52%,
+        #89c0ff 54%,
+        #bd82ff 58%,
+        #2e2e2e 66%,
+        #2e2e2e 100%
+    );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: ab-text-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes ab-text-shimmer {
+    0%   { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+.ab__sparkle-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* ─── Slash command menu (Figma 851:102774) ──────────────────── */
+.sm {
+    position: absolute;
+    top: 100%;
+    left: 24px;
+    z-index: 20;
+    min-width: 320px;
+    max-width: 340px;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    box-shadow:
+        0 0 2.9px rgba(0, 0, 0, 0.09),
+        0 2.8px 2.9px rgba(0, 0, 0, 0.09),
+        0 -1px 1.2px rgba(0, 0, 0, 0.04);
+    padding: 4px 0;
+    overflow: hidden;
+    will-change: transform, opacity;
+    margin-top: 4px;
+}
+
+.sm_above {
+    top: auto;
+    bottom: 100%;
+    margin-top: 0;
+    margin-bottom: 4px;
+}
+
+.sm__header {
+    padding: 8px 12px 4px;
+    font-size: 13px;
+    font-weight: 590;
+    line-height: 18px;
+    color: var(--slds-g-color-accent-3, #032d60);
+}
+
+.sm__row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 80ms ease;
+    border-radius: 0;
+}
+
+.sm__row:hover,
+.sm__row_active {
+    background: var(--slds-g-color-brand-base-95, #edf4ff);
+}
+
+.sm__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    --sds-c-icon-color-foreground-default: #ffffff;
+}
+
+.sm__icon_ai {
+    background: linear-gradient(135deg, #bd82ff 0%, #5b6afc 100%);
+}
+
+.sm__icon_image {
+    background: #fe5c30;
+}
+
+.sm__icon_video {
+    background: #4b9dd7;
+}
+
+.sm__icon_flow {
+    background: #985cf1;
+}
+
+.sm__icon_block {
+    background: #032d60;
+}
+
+.sm__text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.sm__label {
+    font-size: 13px;
+    font-weight: 590;
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-2, #181818);
+}
+
+.sm__desc {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ─── Synced Knowledge Block group (Figma 1:92944) ──────────── */
+.ab_sync::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    border-left: 1px dashed var(--slds-g-color-on-surface-1, #939393);
+    border-right: 1px dashed var(--slds-g-color-on-surface-1, #939393);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.ab_sync-first {
+    margin-bottom: 0;
+}
+
+.ab_sync-first::before {
+    top: -3px;
+    bottom: 0;
+    border-top: 1px dashed var(--slds-g-color-on-surface-1, #939393);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.ab_sync-middle {
+    margin-bottom: 0;
+}
+
+.ab_sync-middle::before {
+    top: 0;
+    bottom: 0;
+}
+
+.ab_sync-last::before {
+    top: 0;
+    bottom: -3px;
+    border-bottom: 1px dashed var(--slds-g-color-on-surface-1, #939393);
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.ab_sync-only::before {
+    top: -3px;
+    bottom: -3px;
+    border-top: 1px dashed var(--slds-g-color-on-surface-1, #939393);
+    border-bottom: 1px dashed var(--slds-g-color-on-surface-1, #939393);
+    border-radius: 4px;
+}
+
+.ab__sync-badge {
+    position: absolute;
+    top: -3px;
+    right: 20px;
+    padding: 2px 6px;
+    background: var(--slds-g-color-on-surface-1, #5c5c5c);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 14px;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* ─── Inline AI suggestions (Grammarly-style) ────────────────────
+   Per-type modifiers set --ai-suggest-color. The default state shows a
+   faded straight underline (color-mix lowers the alpha on the type
+   color); hover swaps to the full-strength color so the suggestion
+   "pops" only when the user is actively considering it. */
+.ai-suggest {
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-thickness: 1.5px;
+    text-decoration-skip-ink: none;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(
+        in srgb,
+        var(--ai-suggest-color, currentColor) 32%,
+        transparent
+    );
+    cursor: help;
+    border-radius: 2px;
+    padding: 0 1px;
+    transition:
+        text-decoration-color 140ms ease-out,
+        background-color 120ms ease-out;
+}
+
+.ai-suggest:hover {
+    text-decoration-color: var(--ai-suggest-color, currentColor);
+    background-color: color-mix(
+        in srgb,
+        var(--ai-suggest-color, currentColor) 8%,
+        transparent
+    );
+}
+
+.ai-suggest_spelling     { --ai-suggest-color: var(--slds-g-color-error-base-50, #ba0517); }
+.ai-suggest_grammar      { --ai-suggest-color: var(--slds-g-color-warning-base-50, #ca8501); }
+.ai-suggest_readability  { --ai-suggest-color: var(--slds-g-color-accent-2, #0250d9); }
+.ai-suggest_tone         { --ai-suggest-color: #5867e8; }
+
+/* SLDS 2 card-style popover: surface-1 fill, radius-3, spacing-4 padding,
+   base font family + scale tokens throughout. Border is replaced by an
+   elevated shadow so the card "floats" above the article body. Width is
+   roomy enough for sentence-length suggestions to read comfortably. */
+.ai-popover {
+    position: absolute;
+    z-index: 50;
+    width: 400px;
+    max-width: calc(100vw - 32px);
+    background-color: var(--slds-g-color-surface-1, #fff);
+    border: none;
+    border-radius: var(--slds-g-radius-border-3, 12px);
+    box-shadow:
+        0 12px 32px rgba(0, 0, 0, 0.16),
+        0 4px 12px rgba(0, 0, 0, 0.10);
+    padding: var(--slds-g-spacing-4, 16px);
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 1.45;
+    color: var(--slds-g-color-on-surface-1, #181818);
+    cursor: default;
+    animation: ai-popover-in 140ms ease-out both;
+}
+
+/* Suppress the brand-blue border / focus ring on the Accept button.
+   SLDS-2 styling hooks override the underlying lightning-button styles
+   without piercing its shadow DOM. */
+.ai-popover__btn_accept {
+    --slds-c-button-brand-color-border: transparent;
+    --slds-c-button-brand-color-border-hover: transparent;
+    --slds-c-button-brand-color-border-focus: transparent;
+    --slds-c-button-brand-color-border-active: transparent;
+    --slds-c-button-brand-shadow-focus: none;
+    --slds-c-button-shadow-focus: none;
+}
+
+@keyframes ai-popover-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.ai-popover__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--slds-g-spacing-2, 8px);
+}
+
+.ai-popover__type {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    font-size: var(--slds-g-font-scale-neg-2, 11px);
+    font-weight: var(--slds-g-font-weight-7, 600);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--slds-g-color-on-surface-2, #444);
+}
+
+.ai-popover__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.ai-popover_spelling     .ai-popover__dot { background: var(--slds-g-color-error-base-50, #ba0517); }
+.ai-popover_grammar      .ai-popover__dot { background: var(--slds-g-color-warning-base-50, #ca8501); }
+.ai-popover_readability  .ai-popover__dot { background: var(--slds-g-color-accent-2, #0250d9); }
+.ai-popover_tone         .ai-popover__dot { background: #5867e8; }
+
+.ai-popover__brand-icon {
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-accent-2, #0250d9);
+    opacity: 0.9;
+    /* Sit slightly closer to the type-color dot than the default flex gap. */
+    margin-right: 2px;
+}
+
+/* Bare close button anchored top-right of the popover. Hides the card
+   without marking the suggestion as dismissed. */
+.ai-popover__close {
+    --slds-c-button-icon-color-foreground: var(--slds-g-color-on-surface-2, #444);
+    --slds-c-button-icon-color-foreground-hover: var(--slds-g-color-on-surface-1, #181818);
+    --slds-c-button-icon-radius-border: 4px;
+    margin-left: var(--slds-g-spacing-2, 8px);
+    flex-shrink: 0;
+}
+
+/* Stacked labeled diff so sentence-length rewrites stay legible. */
+.ai-popover__diff {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+    margin: var(--slds-g-spacing-1, 4px) 0 var(--slds-g-spacing-3, 12px);
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+}
+
+.ai-popover__diff-block {
+    padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+}
+
+.ai-popover__diff-block_from {
+    background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.ai-popover__diff-block_to {
+    background-color: var(--slds-g-color-success-base-90, #ecfaf2);
+}
+
+.ai-popover__diff-label {
+    display: block;
+    margin-bottom: var(--slds-g-spacing-1, 4px);
+    font-size: var(--slds-g-font-scale-neg-2, 11px);
+    font-weight: var(--slds-g-font-weight-7, 600);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--slds-g-color-on-surface-2, #444);
+}
+
+.ai-popover__from {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 1.5;
+    color: var(--slds-g-color-on-surface-2, #444);
+    text-decoration: line-through;
+    text-decoration-color: var(--slds-g-color-on-surface-3, #747474);
+    text-decoration-thickness: 1px;
+    word-break: break-word;
+}
+
+.ai-popover__to {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 1.5;
+    font-weight: var(--slds-g-font-weight-7, 600);
+    color: var(--slds-g-color-success-base-30, #2e844a);
+    word-break: break-word;
+}
+
+.ai-popover__explanation {
+    margin: 0 0 var(--slds-g-spacing-3, 12px);
+    color: var(--slds-g-color-on-surface-2, #444);
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 1.5;
+}
+
+.ai-popover__actions {
+    display: flex;
+    gap: var(--slds-g-spacing-2, 8px);
+    justify-content: flex-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ai-popover { animation: none; }
+    .ai-suggest { transition: none; }
+}

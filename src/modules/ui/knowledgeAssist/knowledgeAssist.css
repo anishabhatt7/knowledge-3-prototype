@@ -1,0 +1,668 @@
+ui-knowledge-assist {
+    display: block;
+    height: 100%;
+    min-height: 0;
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Segoe UI', system-ui, sans-serif);
+}
+
+/* ─── Outer aside (rail + nested card) ─────────────────────────── */
+.ka-panel {
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    border-radius: 20px;
+    padding: 8px;
+    display: flex;
+    grid-template-columns: 44px 1fr;
+    gap: 8px;
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Collapsed state — rail-only shell (Figma 1:92800):
+   56px wide, 16px radius, single column that only renders the rail. */
+.ka-panel_collapsed {
+    grid-template-columns: 40px;
+    border-radius: 16px;
+    padding: 8px 8px var(--slds-g-spacing-4, 16px);
+    margin-bottom: var(--slds-g-spacing-4, 16px);
+    width: 56px;
+    max-width: 56px;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    gap: 0;
+}
+
+.ka-panel_collapsed .ka-rail {
+    padding: 12px 4px 4px;
+    gap: 16px;
+    width: 40px;
+    margin-bottom: var(--slds-g-spacing-4, 16px);
+    align-items: center;
+}
+
+/* In collapsed mode every rail button shows the accent pill so the
+   rail reads as a single blue-filled navigation strip, matching Figma. */
+.ka-panel_collapsed .ka-rail__btn {
+    background: var(--slds-g-color-brand-base-95, #eef4ff);
+}
+
+.ka-panel_collapsed .ka-rail__btn lightning-icon {
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+.ka-panel_collapsed .ka-rail__btn:hover {
+    background: var(--slds-g-color-brand-base-90, #d6e6ff);
+}
+
+/* ─── Rail ─────────────────────────────────────────────────────── */
+.ka-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+    padding: 12px 4px 4px;
+}
+
+.ka-rail__btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s ease;
+}
+
+.ka-rail__btn:hover {
+    background: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.ka-rail__btn_active {
+    background: var(--slds-g-color-brand-base-95, #eef4ff);
+}
+
+.ka-rail__btn_active:hover {
+    background: var(--slds-g-color-brand-base-95, #eef4ff);
+}
+
+.ka-rail__btn lightning-icon {
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ka-rail__btn_active lightning-icon {
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+/* ─── Inner card ───────────────────────────────────────────────── */
+.ka-card {
+    border: 1px solid var(--slds-g-color-border-inverse-1, #f3f3f3);
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    flex: 1;
+    min-width: 0;
+    will-change: opacity, transform;
+}
+
+.ka-panel_collapsed .ka-card {
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ka-card,
+    .ka-panel,
+    .ka-rail__btn {
+        transition: none !important;
+    }
+}
+
+.ka-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.ka-card__title {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    margin: 0;
+}
+
+/* ─── Section block ────────────────────────────────────────────── */
+.ka-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ka-section__title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 22px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    margin: 0;
+}
+
+/* ─── Article health score donut ───────────────────────────────── */
+.ka-score {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.ka-score__ring {
+    position: relative;
+    width: 138px;
+    height: 138px;
+    border-radius: 50%;
+    /* bg is injected via inline style */
+    transform: scaleX(-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ka-score__ring::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+}
+
+.ka-score__inner {
+    position: relative;
+    font-family: 'Instrument Sans', var(--slds-g-font-family-base, 'SF Pro', system-ui, sans-serif);
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 40px;
+    transform: scaleX(-1);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.ka-score__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ka-score__block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ka-score__value {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.ka-score__value_delta {
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.ka-score__caption {
+    font-size: 12px;
+    line-height: 17px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* ─── Contact reason card ──────────────────────────────────────── */
+.ka-reason {
+    border: 1px solid #d9d9d9;
+    border-radius: 10px;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ka-reason__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.ka-reason__label {
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    color: #242424;
+}
+
+.ka-reason__note {
+    margin: 0;
+    font-family: 'Segoe UI', var(--slds-g-font-family-base, 'SF Pro', system-ui, sans-serif);
+    font-size: 13px;
+    line-height: 20px;
+    color: #444444;
+}
+
+/* ─── Chip ─────────────────────────────────────────────────────── */
+.ka-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 999px;
+    font-size: 12px;
+    line-height: 17px;
+}
+
+.ka-chip_standard {
+    background: #f3f3f3;
+    border: 1px solid #e5e5e5;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    padding: 2px 4px 2px 4px;
+}
+
+.ka-chip__text {
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* ─── Divider ──────────────────────────────────────────────────── */
+.ka-divider {
+    border: none;
+    border-top: 1px solid var(--slds-g-color-neutral-base-90, #e5e5e5);
+    margin: 0;
+}
+
+/* ─── Smart suggests ───────────────────────────────────────────── */
+.ka-section_suggests {
+    gap: 16px;
+}
+
+.ka-suggests__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    z-index: 2;
+}
+
+.ka-suggest {
+    background: #f1f3fb;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 291px;
+    border: none;
+}
+
+.ka-suggest__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ka-suggest__icon {
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+    flex-shrink: 0;
+}
+
+.ka-suggest__title {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 19px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ka-badge-best {
+    flex-shrink: 0;
+}
+
+.ka-suggest__desc {
+    font-size: 12px;
+    line-height: 17px;
+    color: #444444;
+    margin: 0;
+}
+
+.ka-suggest__metrics {
+    display: flex;
+    gap: 16px;
+    margin-top: 4px;
+}
+
+.ka-metric {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    gap: 0;
+}
+
+.ka-metric__value {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 22px;
+    color: #181818;
+}
+
+.ka-metric__label {
+    font-size: 10px;
+    line-height: 14px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ka-suggest__actions {
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.ka-suggest__status {
+    display: flex;
+    margin-top: 4px;
+}
+
+.ka-badge-updated {
+    --sds-c-badge-color-background: var(--slds-g-color-brand-base-95, #edf4ff);
+    --sds-c-badge-text-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+/* ─── Empty placeholder for non-metrics rail tabs ──────────────── */
+.ka-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 48px 16px;
+    text-align: center;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.ka-empty p {
+    margin: 0;
+}
+
+/* ─── Sources tab — Knowledge Block library ──────────────────── */
+.ka-section_sources {
+    gap: 12px;
+}
+
+.ka-sources__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ka-sources__count {
+    font-size: 12px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ka-sources__desc {
+    margin: 0;
+    font-size: 12px;
+    line-height: 17px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ka-sources__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--slds-g-color-surface-container-2, #f3f3f3);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.ka-sources__search-icon {
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-1, #9e9e9e);
+    flex-shrink: 0;
+}
+
+.ka-sources__search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    min-width: 0;
+}
+
+.ka-sources__search-input::placeholder {
+    color: var(--slds-g-color-on-surface-1, #9e9e9e);
+}
+
+.ka-sources__list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    max-height: 400px;
+    padding-bottom: 10px;
+}
+
+.ka-sources__empty {
+    padding: 32px 16px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ka-sources__empty p {
+    margin: 0;
+}
+
+/* ─── Knowledge Block card (Figma 1:89401) ────────────────────── */
+.ka-kb-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--slds-g-color-brand-base-95, #eef4ff);
+    border-radius: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.ka-kb-card__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ka-kb-card__title {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 590;
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.ka-kb-card__desc {
+    margin: 0;
+    font-size: 12px;
+    line-height: 17px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.ka-badge-inserted {
+    --sds-c-badge-color-background: var(--slds-g-color-brand-base-95, #edf4ff);
+    --sds-c-badge-text-color: var(--slds-g-color-accent-1, #066afe);
+    align-self: flex-start;
+}
+
+/* ─── TOC tab — knowledge base table of contents ───────────────── */
+.ka-section_toc {
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+    /* Pull horizontally beyond the .ka-card padding so the row's accent
+       stripe and selected-state background can run flush to the panel's
+       inner edges, matching the Figma frame. */
+    margin: 0 -16px -16px;
+}
+
+/* The section heading and search sit inset 16px so they line up with
+   the rest of the card content; only the row list uses the full edge-to-
+   edge width to host the selected-state stripe. */
+.ka-toc__heading {
+    margin: 0 16px;
+}
+
+.ka-toc__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 16px;
+    padding: 6px 10px;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: 8px;
+}
+
+.ka-toc__search-icon {
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-1, #5c5c5c);
+    flex-shrink: 0;
+}
+
+.ka-toc__search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    line-height: 18px;
+    font-family: inherit;
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    min-width: 0;
+}
+
+.ka-toc__search-input::placeholder {
+    color: var(--slds-g-color-on-surface-1, #9e9e9e);
+}
+
+.ka-toc__list {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0 12px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.ka-toc__item {
+    margin: 0;
+    padding: 0;
+}
+
+/* Row button — chevron + label. The selected variant paints an inset
+   accent stripe on the left so the row width never shifts when selection
+   moves between siblings. */
+.ka-toc__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px 6px 16px;
+    border: none;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    transition: background 0.12s ease;
+}
+
+.ka-toc__row:hover {
+    background: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.ka-toc__row:focus-visible {
+    outline: 2px solid var(--slds-g-color-accent-1, #066afe);
+    outline-offset: -2px;
+}
+
+.ka-toc__row_d0 { padding-left: 16px; }
+.ka-toc__row_d1 { padding-left: 32px; }
+.ka-toc__row_d2 { padding-left: 48px; }
+.ka-toc__row_d3 { padding-left: 64px; }
+
+.ka-toc__row_selected {
+    background: var(--slds-g-color-brand-base-90, #d6e6ff);
+    box-shadow: inset 4px 0 0 0 var(--slds-g-color-accent-1, #066afe);
+}
+
+.ka-toc__row_selected:hover {
+    background: var(--slds-g-color-brand-base-90, #d6e6ff);
+}
+
+.ka-toc__chevron {
+    display: inline-flex;
+    align-items: flex-start;
+    flex-shrink: 0;
+    width: 14px;
+    padding-top: 3px;
+}
+
+.ka-toc__chevron-icon {
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+.ka-toc__label {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    line-height: 18px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.ka-toc__empty {
+    list-style: none;
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    font-size: 13px;
+    line-height: 18px;
+}
+
+.ka-toc__empty p {
+    margin: 0;
+}

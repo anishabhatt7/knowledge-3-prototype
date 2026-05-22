@@ -1,0 +1,151 @@
+page-knowledge-base {
+    display: block;
+    height: 100%;
+}
+
+/* ── Page layout: rail + list-view shell side-by-side ──────────── */
+.kb-page {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* ── LEFT RAIL — duplicated from healingGraph / knowledgeHome ───── */
+.kh-rail {
+    width: 48px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--slds-g-color-surface-1, #fff);
+    border-right: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+    padding: var(--slds-g-spacing-2, 8px) 0;
+    overflow: hidden;
+}
+
+.kh-rail--expanded {
+    width: 267px;
+}
+
+.kh-rail__top {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+}
+
+.kh-rail__bottom {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    border-top: 1px solid var(--slds-g-color-neutral-base-95, #e5e5e5);
+    padding-top: 4px;
+}
+
+.kh-rail__row {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding-inline-start: var(--slds-g-spacing-4, 16px);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+}
+
+.kh-rail__row:hover {
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+.kh-rail__row--active {
+    background-color: var(--slds-g-color-brand-base-90, #d6e6ff);
+    border-left: 2px solid var(--slds-g-color-border-accent-1, #066afe);
+    padding-inline-start: calc(var(--slds-g-spacing-4, 16px) - 2px);
+}
+
+.kh-rail__row--active .kh-rail__icon {
+    --sds-c-icon-color-foreground: var(--slds-g-color-border-accent-1, #066afe);
+}
+
+.kh-rail--expanded .kh-rail__row {
+    gap: var(--slds-g-spacing-2, 8px);
+    padding-inline-start: var(--slds-g-spacing-7, 32px);
+    padding-inline-end: var(--slds-g-spacing-6, 24px);
+}
+
+.kh-rail--expanded .kh-rail__row--active {
+    border-left-width: 4px;
+    padding-inline-start: calc(var(--slds-g-spacing-7, 32px) - 4px);
+}
+
+.kh-rail__label {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kh-rail__row--active .kh-rail__label {
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-accent-3, #022ac0);
+}
+
+.kh-rail__divider {
+    height: 0;
+    margin: var(--slds-g-spacing-2, 8px) 0;
+    border: 0;
+    border-top: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+}
+
+.kh-rail__group-header {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    padding-inline-start: var(--slds-g-spacing-5, 24px);
+    padding-inline-end: var(--slds-g-spacing-4, 16px);
+    font-family: inherit;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 16px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    text-transform: none;
+    margin-top: 4px;
+}
+
+.kh-rail:not(.kh-rail--expanded) .kh-rail__group-header,
+.kh-rail:not(.kh-rail--expanded) .kh-rail__label,
+.kh-rail:not(.kh-rail--expanded) .kh-rail__divider {
+    display: none;
+}
+
+/* ── LIST-VIEW SHELL ──────────────────────────────────────────── */
+/* Page header sits flush at the top; the data-table fills the
+   remainder of the column and scrolls internally. The grey surface
+   token shows through behind the page header per Flow 1 / Flow 2. */
+.kb-shell {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+.kb-shell > ui-knowledge-page-header {
+    flex-shrink: 0;
+}
+
+.kb-shell > ui-knowledge-data-table {
+    flex: 1;
+    min-height: 0;
+}

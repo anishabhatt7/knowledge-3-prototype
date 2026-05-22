@@ -1,0 +1,172 @@
+<template lwc:render-mode="light">
+    <button type="button" class={animationToggleClass} onclick={handleAnimationToggle} title={animationToggleLabel}>
+        <span class="ra-anim-toggle__track">
+            <span class="ra-anim-toggle__thumb"></span>
+        </span>
+    </button>
+    <div class={shellClass}>
+        <template lwc:if={showAssistPanel}>
+            <div class={assistPanelClass}>
+                <ui-knowledge-assist
+                    health={health}
+                    suggests={suggests}
+                    knowledge-blocks={knowledgeBlockLibrary}
+                    inserted-block-ids={insertedBlockIds}
+                    toc-tree={knowledgeToc}
+                    current-article-id={article.id}
+                    collapsed={isAssistCollapsed}
+                    onclose={handleAssistClose}
+                    onexpand={handleAssistExpand}
+                    onupdateall={handleUpdateAll}
+                    onapplysuggestion={handleApplySuggestion}
+                    oninsertblock={handleInsertBlock}>
+                </ui-knowledge-assist>
+            </div>
+        </template>
+        <template lwc:else>
+            <button type="button" class="ra-reopen ra-reopen_left" onclick={handleAssistOpen}>
+                <lightning-icon icon-name="utility:einstein" size="xx-small"></lightning-icon>
+                <span>Knowledge Assist</span>
+            </button>
+        </template>
+
+        <main class={mainClass}>
+            <div class="ra-article">
+                <header class="ra-article__head">
+                    <div class="ra-article__title-row">
+                        <h1 class="ra-article__title"
+                            contenteditable="true"
+                            spellcheck="false"
+                            oninput={handleTitleInput}
+                            onkeydown={handleTitleKeyDown}>{article.title}</h1>
+                        <lightning-badge
+                            label={statusLabel}
+                            icon-name="utility:list"
+                            class="ra-status">
+                        </lightning-badge>
+                        <template lwc:if={showCollaborators}>
+                            <ui-collaborator-avatars
+                                collaborators={activeCollaborators}
+                                extra-count={extraCollaboratorCount}
+                                class="ra-collab-heads">
+                            </ui-collaborator-avatars>
+                        </template>
+                        <lightning-button-group class="ra-history-group">
+                            <lightning-button-icon
+                                icon-name="utility:undo"
+                                variant="border-filled"
+                                alternative-text="Undo"
+                                onclick={handleUndo}>
+                            </lightning-button-icon>
+                            <lightning-button-icon
+                                icon-name="utility:redo"
+                                variant="border-filled"
+                                alternative-text="Redo"
+                                onclick={handleRedo}>
+                            </lightning-button-icon>
+                        </lightning-button-group>
+                        <lightning-button-group class="ra-save-group">
+                            <lightning-button
+                                label="Save"
+                                variant="neutral"
+                                class="ra-save"
+                                onclick={handleSave}>
+                            </lightning-button>
+                            <lightning-button-menu
+                                icon-name="utility:down"
+                                variant="border-filled"
+                                menu-alignment="right"
+                                alternative-text="More save options"
+                                class="ra-save-menu"
+                                onselect={handleSaveMenuSelect}>
+                                <lightning-menu-item value="submit-for-approval" label="Submit for Approval"></lightning-menu-item>
+                                <lightning-menu-item value="invite-collaborators" label="Invite Collaborators"></lightning-menu-item>
+                                <lightning-menu-item value="edit-sources" label="Edit Sources"></lightning-menu-item>
+                                <lightning-menu-item value="add-translations" label="Add Translations"></lightning-menu-item>
+                            </lightning-button-menu>
+                        </lightning-button-group>
+                    </div>
+                    <div class="ra-article__fields">
+                        <div class="ra-field">
+                            <span class="ra-field__label">Record Type:</span>
+                            <lightning-pill
+                                label={recordTypeLabel}
+                                class="ra-pill ra-pill_record"
+                                onremove={handleIgnorePillRemove}>
+                                <lightning-icon
+                                    icon-name="standard:knowledge"
+                                    size="xx-small"
+                                    alternative-text="Record type">
+                                </lightning-icon>
+                            </lightning-pill>
+                        </div>
+                        <div class="ra-field">
+                            <span class="ra-field__label">Data Categories:</span>
+                            <template for:each={dataCategoryList} for:item="c">
+                                <lightning-pill
+                                    key={c.key}
+                                    label={c.label}
+                                    class="ra-pill ra-pill_category"
+                                    onremove={handleIgnorePillRemove}>
+                                    <lightning-icon
+                                        icon-name="standard:topic2"
+                                        size="xx-small"
+                                        alternative-text="Data category">
+                                    </lightning-icon>
+                                </lightning-pill>
+                            </template>
+                        </div>
+                        <div class="ra-field">
+                            <span class="ra-field__label">Audience:</span>
+                            <template for:each={audienceList} for:item="a">
+                                <lightning-pill
+                                    key={a.key}
+                                    label={a.label}
+                                    class="ra-pill ra-pill_audience"
+                                    onremove={handleIgnorePillRemove}>
+                                    <lightning-icon
+                                        icon-name="standard:user"
+                                        size="xx-small"
+                                        alternative-text="Audience">
+                                    </lightning-icon>
+                                </lightning-pill>
+                            </template>
+                        </div>
+                    </div>
+                </header>
+                <div class="ra-article__body"
+                    onblockchange={handleBlockChange}
+                    onblockremove={handleBlockRemove}
+                    onblockkeydown={handleBlockKeyDown}
+                    onblockpaste={handleBlockPaste}
+                    onblockaiedit={handleBlockAiEdit}
+                    onblockselect={handleBlockSelect}
+                    onblockpromptopen={handleBlockPromptOpen}
+                    onblockpromptclose={handleBlockPromptClose}
+                    onblockconvertrequest={handleBlockConvertRequest}
+                    onblockdragstart={handleBlockDragStart}
+                    onblockdragover={handleBlockDragOver}
+                    onblockdrop={handleBlockDrop}
+                    onblockdragend={handleBlockDragEnd}
+                    onslashinsertblock={handleSlashInsertBlock}
+                    onslashcommand={handleSlashCommand}>
+                    <template for:each={enrichedBlocks} for:item="b" for:index="i">
+                        <ui-article-block key={b.id} block={b} index={i} data-id={b.id} selected={b.isSelected}></ui-article-block>
+                    </template>
+                    <template lwc:if={showCollaborators}>
+                        <ui-collaborator-cursors collaborators={activeCollaborators}></ui-collaborator-cursors>
+                    </template>
+                </div>
+            </div>
+        </main>
+
+        <div class={chatPanelClass}>
+            <ui-chat-panel
+                messages={chatMessages}
+                onsend={handleChatSend}
+                onapplyaction={handleApplyChatAction}
+                onrejectaction={handleRejectChatAction}>
+            </ui-chat-panel>
+        </div>
+    </div>
+</template>

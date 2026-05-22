@@ -1,0 +1,48 @@
+<template>
+    <lightning-modal-header label="Create Knowledge Block"></lightning-modal-header>
+    <lightning-modal-body>
+        <div class="cb-body">
+            <p class="cb-desc">Give this knowledge block a title and description so you can find and reuse it across articles.</p>
+            <template lwc:if={contentPreview}>
+                <div class="cb-preview">
+                    <span class="cb-preview__label">Block content</span>
+                    <p class="cb-preview__text">{contentPreview}</p>
+                </div>
+            </template>
+            <div class="cb-field">
+                <label class="cb-label" for="cb-title">Title <span class="cb-required">*</span></label>
+                <input
+                    id="cb-title"
+                    type="text"
+                    class="cb-input"
+                    placeholder="e.g., Terms and Conditions"
+                    value={_title}
+                    oninput={handleTitleInput}
+                    onkeydown={handleTitleKeyDown} />
+            </div>
+            <div class="cb-field">
+                <label class="cb-label" for="cb-desc">Description (optional)</label>
+                <textarea
+                    id="cb-desc"
+                    class="cb-textarea"
+                    placeholder="Brief description of what this knowledge block contains..."
+                    rows="3"
+                    oninput={handleDescriptionInput}>{_description}</textarea>
+            </div>
+        </div>
+    </lightning-modal-body>
+    <lightning-modal-footer>
+        <lightning-button
+            label="Cancel"
+            variant="neutral"
+            onclick={handleCancel}>
+        </lightning-button>
+        <lightning-button
+            label="Create Knowledge Block"
+            variant="brand"
+            disabled={isConfirmDisabled}
+            onclick={handleConfirm}
+            class="slds-m-left_x-small">
+        </lightning-button>
+    </lightning-modal-footer>
+</template>

@@ -1,0 +1,344 @@
+<template lwc:render-mode="light">
+    <div class="cc-page">
+        <!-- ═══ LEFT RAIL ═══ -->
+        <nav class={railClass} aria-label="Knowledge navigation">
+            <div class="kh-rail__top">
+                <template for:each={railTopItems} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class={item.rowClass}
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+
+                <div class="kh-rail__divider" role="separator"></div>
+                <div class="kh-rail__group-header">Maintain</div>
+                <template for:each={railMaintainComputed} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class={item.rowClass}
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+
+                <div class="kh-rail__divider" role="separator"></div>
+                <div class="kh-rail__group-header">Create</div>
+                <template for:each={railCreate} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class="kh-rail__row"
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="kh-rail__bottom">
+                <button
+                    type="button"
+                    class="kh-rail__row kh-rail__row--collapse"
+                    aria-label={collapseAriaLabel}
+                    onclick={handleToggleRail}
+                >
+                    <lightning-icon
+                        icon-name={collapseIconName}
+                        size="x-small"
+                        alternative-text={collapseAriaLabel}
+                        class="kh-rail__icon"
+                    ></lightning-icon>
+                    <span class="kh-rail__label">Collapse</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- ═══ MAIN CONTENT ═══ -->
+        <main class="cc-main">
+            <!-- Header — matches Figma 42:3911 (Command Center / Header) -->
+            <section class="cc-section cc-section--header">
+                <div class="cc-header">
+                    <div class="cc-header__left">
+                        <lightning-icon
+                            icon-name="standard:agent_astro"
+                            size="medium"
+                            alternative-text="Command Center"
+                            class="cc-header__icon"
+                        ></lightning-icon>
+                        <div class="cc-header__text">
+                            <h1 class="cc-header__title">Command Center</h1>
+                            <p class="cc-header__subtitle">Unified view of decisions, expertise, and organizational knowledge</p>
+                        </div>
+                    </div>
+                    <div class="cc-header__search">
+                        <lightning-input
+                            type="search"
+                            placeholder="Search…"
+                            variant="label-hidden"
+                            label="Search"
+                        ></lightning-input>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Readiness Card — matches Figma 42:4090 (Metric Card) -->
+            <section class="cc-section">
+                <div class="cc-readiness-card">
+                    <div class="cc-readiness-card__left">
+                        <h2 class="cc-readiness-card__title">Knowledge AI Readiness</h2>
+                        <div class="cc-donut-wrapper">
+                            <svg class="cc-donut-svg" viewBox="0 0 160 160">
+                                <circle
+                                    class="cc-donut-bg"
+                                    cx="80"
+                                    cy="80"
+                                    r="70"
+                                    fill="none"
+                                    stroke-width="14"
+                                ></circle>
+                                <circle
+                                    class="cc-donut-fg"
+                                    cx="80"
+                                    cy="80"
+                                    r="70"
+                                    fill="none"
+                                    stroke-width="14"
+                                    stroke-dasharray={donutDasharray}
+                                    stroke-dashoffset={donutDashoffset}
+                                    stroke-linecap="round"
+                                ></circle>
+                            </svg>
+                            <div class="cc-donut-label">
+                                <span class="cc-donut-label__value">{readinessOverall}</span>
+                            </div>
+                        </div>
+                        <p class="cc-readiness-card__copy">
+                            Improving the articles with targeted walkthroughs and richer content will help users resolve issues faster and reduce support case volume.
+                        </p>
+                        <lightning-button
+                            variant="brand-outline"
+                            label="Ask Agentforce"
+                            icon-name="utility:sparkles"
+                            class="cc-agentforce-btn"
+                        ></lightning-button>
+                    </div>
+                    <div class="cc-readiness-card__right">
+                        <template for:each={dimensionsComputed} for:item="dim">
+                            <div key={dim.key} class="cc-dimension">
+                                <span class="cc-dimension__label">{dim.label}</span>
+                                <div class="cc-dimension__score-row">
+                                    <span class="cc-dimension__score">{dim.score}%</span>
+                                    <span class="cc-dimension__desc">{dim.description}</span>
+                                </div>
+                                <div class="cc-dimension__bar-bg">
+                                    <div class="cc-dimension__bar-fill" style={dim.barStyle}></div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Capability Summary Cards -->
+            <section class="cc-section">
+                <div class="cc-capability-row">
+                    <template for:each={capabilitySummariesComputed} for:item="cap">
+                        <article key={cap.key}
+                            class={cap.cardClass}
+                            data-key={cap.key}
+                            role={cap.cardRole}
+                            tabindex={cap.cardTabIndex}
+                            aria-label={cap.cardAriaLabel}
+                            onclick={handleCapabilityClick}
+                            onkeydown={handleCapabilityKeyDown}>
+                            <div class="cc-capability-card__top">
+                                <div class="cc-capability-card__info">
+                                    <p class="cc-capability-card__metric">{cap.metric}</p>
+                                </div>
+                            </div>
+                            <div class="cc-capability-card__value">{cap.metricValue}</div>
+                            <div class={cap.trendClass}>
+                                <lightning-icon icon-name={cap.trendIcon} size="xx-small" alternative-text="" class="cc-capability-card__trend-icon"></lightning-icon>
+                                <span class="cc-capability-card__trend-number">{cap.trendNumber}</span>
+                                <span class="cc-capability-card__trend-label">{cap.trendLabel}</span>
+                            </div>
+                        </article>
+                    </template>
+                </div>
+            </section>
+
+            <!-- My Watchlist -->
+            <section class="cc-section cc-section--watchlist">
+                <h2 class="cc-section__title">Knowledge Metrics</h2>
+                <div class="cc-watch-row">
+                    <template for:each={watchlist} for:item="w">
+                        <article key={w.id} class="cc-metric-card">
+                            <header class="cc-metric-card__header">
+                                <div class="cc-metric-card__heading">
+                                    <h3 class="cc-metric-card__title">{w.title}</h3>
+                                </div>
+                                <lightning-button-icon
+                                    icon-name="utility:down"
+                                    variant="border-filled"
+                                    size="x-small"
+                                    alternative-text="Filter"
+                                ></lightning-button-icon>
+                            </header>
+                            <div class="cc-metric-card__details">
+                                <div class="cc-metric-card__value">{w.value}</div>
+                                <div class="cc-metric-card__delta">
+                                    <span class="cc-metric-card__delta-value">{w.delta}</span>
+                                    <span class="cc-metric-card__delta-label">period vs period</span>
+                                </div>
+                            </div>
+                            <div class="cc-metric-card__actions">
+                                <lightning-button
+                                    variant="brand-outline"
+                                    label={w.footerLink}
+                                    icon-name="utility:sparkles"
+                                    class="cc-metric-card__cta"
+                                ></lightning-button>
+                            </div>
+                        </article>
+                    </template>
+                </div>
+            </section>
+
+            <!-- Knowledge Updates -->
+            <section class="cc-section">
+                <div class="cc-updates-grid">
+                    <!-- Actions for you — matches Figma 45:10479 -->
+                    <div class="cc-actions-panel">
+                        <header class="cc-actions-panel__header">
+                            <h3 class="cc-actions-panel__title">Knowledge Actions for you</h3>
+                            <div class="cc-actions-panel__tools">
+                                <lightning-button-icon
+                                    icon-name="utility:filterList"
+                                    variant="border-filled"
+                                    size="medium"
+                                    alternative-text="Filter"
+                                    class="cc-actions-panel__icon-btn"
+                                ></lightning-button-icon>
+                                <lightning-button-icon
+                                    icon-name="utility:refresh"
+                                    variant="border-filled"
+                                    size="medium"
+                                    alternative-text="Refresh"
+                                    class="cc-actions-panel__icon-btn"
+                                ></lightning-button-icon>
+                            </div>
+                        </header>
+                        <div class="cc-actions-list">
+                            <template for:each={actionItemsComputed} for:item="action">
+                                <div key={action.id} class={action.rowClass}>
+                                    <div class="cc-action-row__main">
+                                        <button type="button" class="cc-action__toggle" data-id={action.id} onclick={handleToggleAction}>
+                                            <lightning-icon icon-name={action.chevronIcon} size="xx-small" alternative-text="Toggle"></lightning-icon>
+                                        </button>
+                                        <lightning-icon
+                                            icon-name={action.icon}
+                                            size="medium"
+                                            class="cc-action__icon"
+                                            alternative-text=""
+                                        ></lightning-icon>
+                                        <div class="cc-action__body">
+                                            <div class="cc-action__title-row">
+                                                <span class="cc-action__title">{action.title}</span>
+                                                <template lwc:if={action.hasPriority}>
+                                                    <span class={action.priorityBadgeClass}>{action.priorityLabel}</span>
+                                                </template>
+                                            </div>
+                                            <div class="cc-action__subline">
+                                                <span class="cc-action__meta">{action.timestamp}</span>
+                                                <span class="cc-action__sep">&bull;</span>
+                                                <a href="#" class="cc-action__link">{action.domain}</a>
+                                            </div>
+                                        </div>
+                                        <lightning-button
+                                            variant="brand-outline"
+                                            label={action.ctaLabel}
+                                            icon-name="utility:sparkles"
+                                            class="cc-action__cta"
+                                        ></lightning-button>
+                                        <template lwc:if={action.highlighted}>
+                                            <lightning-button-icon
+                                                icon-name="utility:close"
+                                                variant="bare"
+                                                size="small"
+                                                alternative-text="Dismiss"
+                                                class="cc-action__dismiss"
+                                            ></lightning-button-icon>
+                                        </template>
+                                    </div>
+                                    <template lwc:if={action.showTable}>
+                                        <div class="cc-action__detail">
+                                            <table class="cc-action-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Article Number</th>
+                                                        <th>Article Title</th>
+                                                        <th>Views</th>
+                                                        <th>Viewers</th>
+                                                        <th>Linked Cases</th>
+                                                        <th>Last Modified Date</th>
+                                                        <th class="cc-action-table__actions-th"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template for:each={action.tableData} for:item="row">
+                                                        <tr key={row.articleNumber}>
+                                                            <td class="cc-action-table__link">{row.articleNumber}</td>
+                                                            <td class="cc-action-table__title">{row.articleTitle}</td>
+                                                            <td>{row.views}</td>
+                                                            <td>{row.viewers}</td>
+                                                            <td>{row.linkedCases}</td>
+                                                            <td>{row.lastModified}</td>
+                                                            <td class="cc-action-table__action-cell">
+                                                                <button type="button" class="cc-action-table__btn" data-title={row.articleTitle} onclick={handleReviewDraft}>
+                                                                    <lightning-icon icon-name="utility:sparkles" size="xx-small" alternative-text=""></lightning-icon>
+                                                                    <span>Review Draft</span>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+    </div>
+</template>
