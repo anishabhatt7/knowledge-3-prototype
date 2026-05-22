@@ -41,7 +41,7 @@
       </div>
       <div class="kb-article__actions">
         <lightning-button label="Follow" icon-name="utility:add" icon-position="left" variant="neutral"></lightning-button>
-        <lightning-button label="Edit" variant="neutral"></lightning-button>
+        <lightning-button label="Edit" variant="neutral" onclick={handleEditClick}></lightning-button>
         <lightning-button label="Assign" variant="neutral"></lightning-button>
         <lightning-button label="Publish" variant="neutral"></lightning-button>
         <lightning-button-icon icon-name="utility:down" variant="border-filled" alternative-text="More actions"></lightning-button-icon>
@@ -309,6 +309,179 @@
 
         <footer class="slds-modal__footer">
           <lightning-button label="Close" onclick={handleCloseModal}></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <!-- Edit Modal with AI Guided Author Panel -->
+  <template if:true={isEditModalOpen}>
+    <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open slds-modal_large">
+      <div class="slds-modal__container kb-edit-modal">
+        <button class="slds-button slds-button_icon slds-modal__close" onclick={handleEditClose} title="Close">
+          <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+        </button>
+
+        <header class="slds-modal__header">
+          <h2 class="slds-modal__title slds-hyphenate">Edit {editTitle}</h2>
+        </header>
+
+        <div class="slds-modal__content kb-edit-modal__content">
+          <div class="kb-edit-modal__required-info">
+            <span class="slds-text-color_destructive">*</span> = Required Information
+          </div>
+
+          <div class="kb-edit-modal__layout">
+            <!-- Left: Edit Form (60%) -->
+            <div class="kb-edit-modal__form">
+
+              <!-- Information Section -->
+              <div class="kb-edit-section">
+                <div class="kb-edit-section__header">Information</div>
+                <div class="kb-edit-section__body">
+                  <lightning-input
+                    type="text"
+                    label="Title"
+                    required
+                    value={editTitle}
+                    onchange={handleTitleChange}
+                    class="slds-m-bottom_medium">
+                  </lightning-input>
+
+                  <lightning-textarea
+                    label="Summary"
+                    field-level-help="A brief summary used for search results"
+                    value={editSummary}
+                    onchange={handleSummaryChange}
+                    class="slds-m-bottom_medium">
+                  </lightning-textarea>
+                </div>
+              </div>
+
+              <!-- Details Section -->
+              <div class="kb-edit-section">
+                <div class="kb-edit-section__header">Details</div>
+                <div class="kb-edit-section__body">
+                  <div class="kb-edit-rte-label">Details</div>
+                  <div class="kb-edit-rte">
+                    <div class="kb-edit-rte__toolbar">
+                      <span class="kb-edit-rte__menu">File</span>
+                      <span class="kb-edit-rte__menu">Edit</span>
+                      <span class="kb-edit-rte__menu">Insert</span>
+                      <span class="kb-edit-rte__menu">View</span>
+                      <span class="kb-edit-rte__menu">Format</span>
+                      <span class="kb-edit-rte__menu">Table</span>
+                      <span class="kb-edit-rte__menu">Tools</span>
+                      <span class="kb-edit-rte__menu">Help</span>
+                    </div>
+                    <lightning-textarea
+                      variant="label-hidden"
+                      label="Details"
+                      value={editDetails}
+                      onchange={handleDetailsChange}
+                      class="kb-edit-rte__textarea">
+                    </lightning-textarea>
+                  </div>
+
+                  <div class="kb-edit-rte-label slds-m-top_medium">Internal Comments</div>
+                  <div class="kb-edit-rte">
+                    <div class="kb-edit-rte__toolbar">
+                      <span class="kb-edit-rte__menu">File</span>
+                      <span class="kb-edit-rte__menu">Edit</span>
+                      <span class="kb-edit-rte__menu">Insert</span>
+                      <span class="kb-edit-rte__menu">View</span>
+                      <span class="kb-edit-rte__menu">Format</span>
+                      <span class="kb-edit-rte__menu">Table</span>
+                      <span class="kb-edit-rte__menu">Tools</span>
+                      <span class="kb-edit-rte__menu">Help</span>
+                    </div>
+                    <lightning-textarea
+                      variant="label-hidden"
+                      label="Internal Comments"
+                      value={editInternalComments}
+                      onchange={handleInternalCommentsChange}
+                      class="kb-edit-rte__textarea kb-edit-rte__textarea--small">
+                    </lightning-textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: AI Guided Author Panel (40%) -->
+            <aside class="kb-edit-modal__ai-panel">
+              <div class="kb-ai-panel__header">
+                <lightning-icon icon-name="utility:einstein" size="small" variant="inverse"></lightning-icon>
+                <span>AI Guided Author</span>
+              </div>
+
+              <div class="kb-ai-panel__body">
+                <!-- RAG Score -->
+                <div class={editRagScoreClass}>
+                  <div class="kb-ai-score__label">RAG Score</div>
+                  <div class="kb-ai-score__value">{editScoreDisplay}</div>
+                  <div class="kb-ai-score__sublabel">{editScoreLabel}</div>
+                </div>
+
+                <!-- Structure Checks -->
+                <div class="kb-ai-panel__section">
+                  <div class="kb-ai-panel__section-title">Structure Checks</div>
+                  <ul class="kb-ai-checks">
+                    <template for:each={editStructureChecks} for:item="check">
+                      <li key={check.key} class="kb-ai-checks__item">
+                        <lightning-icon
+                          icon-name={check.iconName}
+                          size="x-small"
+                          variant={check.variant}>
+                        </lightning-icon>
+                        <span>{check.label}</span>
+                      </li>
+                    </template>
+                  </ul>
+                </div>
+
+                <!-- Issues Found -->
+                <template if:true={editHasViolations}>
+                  <div class="kb-ai-panel__section">
+                    <div class="kb-ai-panel__section-title">Issues Found</div>
+                    <ul class="kb-ai-issues">
+                      <template for:each={editViolations} for:item="violation" for:index="idx">
+                        <li key={violation.message} class="kb-ai-issues__item">
+                          <lightning-icon
+                            icon-name="utility:warning"
+                            size="x-small"
+                            variant="warning">
+                          </lightning-icon>
+                          <div>
+                            <div class="kb-ai-issues__message">{violation.message}</div>
+                            <template if:true={violation.suggestion}>
+                              <div class="kb-ai-issues__suggestion">→ {violation.suggestion}</div>
+                            </template>
+                          </div>
+                        </li>
+                      </template>
+                    </ul>
+                  </div>
+                </template>
+
+                <!-- Writing Tips -->
+                <div class="kb-ai-panel__section">
+                  <div class="kb-ai-panel__section-title">Writing Tips</div>
+                  <ul class="kb-ai-tips">
+                    <template for:each={editWritingTips} for:item="tip">
+                      <li key={tip} class="kb-ai-tips__item">{tip}</li>
+                    </template>
+                  </ul>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+
+        <footer class="slds-modal__footer">
+          <lightning-button label="Cancel" onclick={handleEditClose}></lightning-button>
+          <lightning-button label="Save & New" class="slds-m-left_x-small"></lightning-button>
+          <lightning-button label="Save" variant="brand" onclick={handleEditSave} class="slds-m-left_x-small"></lightning-button>
         </footer>
       </div>
     </section>
