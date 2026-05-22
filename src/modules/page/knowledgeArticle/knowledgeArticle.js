@@ -221,9 +221,10 @@ export default class KnowledgeArticle extends LightningElement {
   }
 
   handleDashboardClick() {
-    // Open dashboard in a new browser window so it appears as a separate full-page view
+    // Open dashboard in a new browser window so it appears as a separate full-page view.
+    // Filename includes "index" so the vite-plugin-lwc HTML alias regex skips it.
     window.open(
-      './dashboard.html',
+      './dashboard-index.html',
       'kb-dashboard',
       'width=1400,height=900,resizable=yes,scrollbars=yes'
     );

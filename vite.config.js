@@ -62,7 +62,7 @@ export default defineConfig({
       enableDynamicComponents: true,
       exclude: [
         path.resolve('./index.html'),
-        path.resolve('./dashboard.html'),
+        path.resolve('./dashboard-index.html'),
         /loading\.css/,
         path.resolve('./src/build/generated'),
         // Global SLDS from node_modules (new URL in slds-loader.js) must not pass through LWC:
@@ -78,7 +78,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve('./index.html'),
-        dashboard: path.resolve('./dashboard.html'),
+        dashboard: path.resolve('./dashboard-index.html'),
       },
       onwarn(warning, defaultHandler) {
         if (isLightningBaseComponentsLwcRollupWarning(warning)) return;
