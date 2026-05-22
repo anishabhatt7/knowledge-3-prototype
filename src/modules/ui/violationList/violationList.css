@@ -1,0 +1,15 @@
+.violation-card {
+  padding: 0.75rem;
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
+.violation-card:has(lightning-icon[variant="error"]) {
+  border-left-color: rgb(194, 57, 52);
+  background-color: rgba(194, 57, 52, 0.05);
+}
+
+.violation-card:has(lightning-icon[variant="warning"]) {
+  border-left-color: rgb(255, 183, 93);
+  background-color: rgba(255, 183, 93, 0.05);
+}

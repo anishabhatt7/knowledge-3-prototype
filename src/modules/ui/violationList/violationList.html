@@ -1,0 +1,45 @@
+<template>
+  <div class="violation-list">
+    <template if:true={hasViolations}>
+      <template for:each={enrichedViolations} for:item="violation">
+        <div key={violation.type} class="violation-card slds-box slds-m-bottom_small">
+          <div class="slds-grid slds-grid_vertical-align-start">
+            <div class="slds-col slds-size_1-of-12">
+              <lightning-icon
+                icon-name={violation.iconName}
+                size="x-small"
+                variant={violation.variant}
+              ></lightning-icon>
+            </div>
+            <div class="slds-col slds-size_11-of-12">
+              <div class="slds-text-body_regular slds-m-bottom_xx-small">
+                {violation.message}
+              </div>
+              <div if:true={violation.detail} class="slds-text-body_small slds-text-color_weak slds-m-bottom_xx-small">
+                {violation.detail}
+              </div>
+              <div class="slds-text-body_small slds-text-color_success">
+                → {violation.suggestion}
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </template>
+    <template if:false={hasViolations}>
+      <div class="slds-text-align_center slds-p-vertical_medium">
+        <lightning-icon
+          icon-name="utility:success"
+          size="small"
+          variant="success"
+        ></lightning-icon>
+        <div class="slds-text-heading_small slds-m-top_small">
+          No violations found
+        </div>
+        <div class="slds-text-body_small slds-text-color_weak">
+          This article follows RAG authoring guidelines
+        </div>
+      </div>
+    </template>
+  </div>
+</template>
