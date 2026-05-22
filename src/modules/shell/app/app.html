@@ -1,89 +1,50 @@
 <template>
   <div class="app-container">
-    <header class="slds-global-header_container">
-      <div class="slds-global-header slds-grid slds-grid_align-spread">
-        <div class="slds-global-header__item">
-          <div class="slds-text-heading_medium">AI Ready Knowledge Prototype</div>
+    <!-- SF Global Header -->
+    <header class="sf-global-header">
+      <div class="sf-global-header__inner">
+        <div class="sf-global-header__logo">
+          <lightning-icon icon-name="standard:knowledge" size="small" alternative-text="Salesforce"></lightning-icon>
+        </div>
+        <div class="sf-global-header__search">
+          <lightning-input type="search" variant="label-hidden" placeholder="Search..." class="sf-search"></lightning-input>
+        </div>
+        <div class="sf-global-header__actions">
+          <lightning-icon icon-name="utility:smiley_and_people" size="small" alternative-text="People"></lightning-icon>
+          <lightning-icon icon-name="utility:favorite" size="small" alternative-text="Favorites"></lightning-icon>
+          <lightning-icon icon-name="utility:add" size="small" alternative-text="Add"></lightning-icon>
+          <lightning-icon icon-name="utility:notification" size="small" alternative-text="Notifications"></lightning-icon>
+          <lightning-icon icon-name="utility:question_mark" size="small" alternative-text="Help"></lightning-icon>
+          <lightning-icon icon-name="utility:setup" size="small" alternative-text="Setup"></lightning-icon>
+          <div class="sf-avatar"></div>
         </div>
       </div>
     </header>
 
-    <div class="slds-tabs_default">
-      <ul class="slds-tabs_default__nav" role="tablist">
-        <li
-          class={analyzerTabClass}
-          title="Article Analyzer"
-          role="presentation"
-          onclick={handleTabClick}
-          data-tab="articleAnalyzer"
-        >
-          <a class="slds-tabs_default__link" role="tab" tabindex="0" aria-selected={isAnalyzerActive}>
-            Article Analyzer
-          </a>
-        </li>
-        <li
-          class={authorTabClass}
-          title="Guided Author"
-          role="presentation"
-          onclick={handleTabClick}
-          data-tab="guidedAuthor"
-        >
-          <a class="slds-tabs_default__link" role="tab" tabindex="-1" aria-selected={isAuthorActive}>
-            Guided Author
-          </a>
-        </li>
-        <li
-          class={metadataTabClass}
-          title="Metadata Suggester"
-          role="presentation"
-          onclick={handleTabClick}
-          data-tab="metadataSuggester"
-        >
-          <a class="slds-tabs_default__link" role="tab" tabindex="-1" aria-selected={isMetadataActive}>
-            Metadata
-          </a>
-        </li>
-        <li
-          class={enrichmentTabClass}
-          title="Enrichment Preview"
-          role="presentation"
-          onclick={handleTabClick}
-          data-tab="enrichmentPreview"
-        >
-          <a class="slds-tabs_default__link" role="tab" tabindex="-1" aria-selected={isEnrichmentActive}>
-            Enrichment
-          </a>
-        </li>
-        <li
-          class={dashboardTabClass}
-          title="Health Dashboard"
-          role="presentation"
-          onclick={handleTabClick}
-          data-tab="healthDashboard"
-        >
-          <a class="slds-tabs_default__link" role="tab" tabindex="-1" aria-selected={isDashboardActive}>
-            Dashboard
-          </a>
-        </li>
-      </ul>
-
-      <div class="slds-tabs_default__content" role="tabpanel">
-        <template if:true={isAnalyzerActive}>
-          <page-article-analyzer onnavigate={handleNavigate}></page-article-analyzer>
-        </template>
-        <template if:true={isAuthorActive}>
-          <page-guided-author onnavigate={handleNavigate}></page-guided-author>
-        </template>
-        <template if:true={isMetadataActive}>
-          <page-metadata-suggester onnavigate={handleNavigate}></page-metadata-suggester>
-        </template>
-        <template if:true={isEnrichmentActive}>
-          <page-enrichment-preview onnavigate={handleNavigate}></page-enrichment-preview>
-        </template>
-        <template if:true={isDashboardActive}>
-          <page-health-dashboard onnavigate={handleNavigate}></page-health-dashboard>
-        </template>
+    <!-- App Nav Bar -->
+    <nav class="sf-app-nav">
+      <div class="sf-app-nav__inner">
+        <div class="sf-app-nav__app">
+          <lightning-icon icon-name="utility:apps" size="x-small" alternative-text="Apps"></lightning-icon>
+          <span class="sf-app-nav__app-name">Q Branch</span>
+        </div>
+        <ul class="sf-app-nav__tabs">
+          <li class="sf-app-nav__tab">Q Home</li>
+          <li class="sf-app-nav__tab">Demo Wizard</li>
+          <li class="sf-app-nav__tab">Demo Tools</li>
+          <li class="sf-app-nav__tab">Demo Components</li>
+          <li class="sf-app-nav__tab sf-app-nav__tab--active">
+            <lightning-icon icon-name="utility:knowledge_smart_link" size="xx-small" alternative-text="Knowledge"></lightning-icon>
+            <span class="sf-app-nav__tab-label">Frequently asked questions about...</span>
+            <lightning-icon icon-name="utility:close" size="xx-small" alternative-text="Close tab"></lightning-icon>
+          </li>
+        </ul>
       </div>
-    </div>
+    </nav>
+
+    <!-- Page Content -->
+    <main class="sf-page-content">
+      <page-knowledge-article></page-knowledge-article>
+    </main>
   </div>
 </template>

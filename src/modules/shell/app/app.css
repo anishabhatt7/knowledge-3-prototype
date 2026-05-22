@@ -1,14 +1,116 @@
 .app-container {
   min-height: 100vh;
   background-color: var(--slds-g-color-neutral-base-95, #f3f3f3);
+  font-family: 'Salesforce Sans', Arial, sans-serif;
 }
 
-.slds-global-header_container {
-  background-color: var(--slds-g-color-brand-base-10, #032d60);
-  color: white;
-  padding: 1rem 1.5rem;
+/* SF Global Header */
+.sf-global-header {
+  background-color: var(--slds-g-color-surface-1, #ffffff);
+  border-bottom: 1px solid var(--slds-g-color-border-base-1, #d8dde6);
+  height: 50px;
 }
 
-.slds-tabs_default__content {
-  padding: 1.5rem;
+.sf-global-header__inner {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 1rem;
+  gap: 1rem;
+}
+
+.sf-global-header__logo {
+  display: flex;
+  align-items: center;
+}
+
+.sf-global-header__search {
+  flex: 1;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.sf-search {
+  width: 100%;
+}
+
+.sf-global-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+}
+
+.sf-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--slds-g-color-brand-base-10, #16325c);
+}
+
+/* App Nav */
+.sf-app-nav {
+  background-color: var(--slds-g-color-surface-1, #ffffff);
+  border-bottom: 1px solid var(--slds-g-color-border-base-1, #d8dde6);
+  height: 48px;
+}
+
+.sf-app-nav__inner {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 1rem;
+  gap: 1.5rem;
+}
+
+.sf-app-nav__app {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: var(--slds-g-font-scale-1, 1.125rem);
+  padding-right: 1rem;
+  border-right: 1px solid var(--slds-g-color-border-base-1, #d8dde6);
+  height: 100%;
+}
+
+.sf-app-nav__app-name {
+  color: var(--slds-g-color-brand-base-10, #16325c);
+}
+
+.sf-app-nav__tabs {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 1.5rem;
+}
+
+.sf-app-nav__tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 100%;
+  font-size: var(--slds-g-font-scale-neg-1, 0.875rem);
+  color: var(--slds-g-color-on-surface-1, #181818);
+  cursor: pointer;
+  padding: 0 0.25rem;
+  border-bottom: 3px solid transparent;
+}
+
+.sf-app-nav__tab--active {
+  border-bottom-color: var(--slds-g-color-accent-1, #1b96ff);
+  color: var(--slds-g-color-accent-1, #1b96ff);
+  font-style: italic;
+}
+
+.sf-app-nav__tab-label {
+  white-space: nowrap;
+}
+
+/* Page Content */
+.sf-page-content {
+  background-color: var(--slds-g-color-neutral-base-95, #f3f3f3);
 }
