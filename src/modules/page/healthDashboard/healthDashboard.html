@@ -1,0 +1,126 @@
+<template>
+  <div class="dashboard-container">
+    <lightning-card title="Knowledge Base Health Dashboard" icon-name="utility:metrics">
+      <div class="slds-p-around_medium">
+
+        <!-- Top Metrics -->
+        <div class="slds-grid slds-wrap slds-gutters_small slds-m-bottom_large">
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+            <ui-score-card
+              title="Total Articles"
+              value="12,400"
+              subtitle="Across all products"
+              status="neutral"
+              icon-name="utility:knowledge_base"
+            ></ui-score-card>
+          </div>
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+            <ui-score-card
+              title="Metadata Coverage"
+              value="68%"
+              subtitle="Target: 80%"
+              status="warning"
+              icon-name="utility:checkin"
+            ></ui-score-card>
+          </div>
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+            <ui-score-card
+              title="Avg RAG Score"
+              value="74/100"
+              subtitle="Needs Improvement"
+              status="warning"
+              icon-name="utility:metrics"
+            ></ui-score-card>
+          </div>
+        </div>
+
+        <!-- Fix Queue -->
+        <lightning-card title="Fix Queue" icon-name="utility:warning" class="slds-m-bottom_large">
+          <div class="slds-p-around_medium">
+            <div class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
+              Articles ranked by priority score (combined RAG quality + metadata completeness)
+            </div>
+
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+              <thead>
+                <tr class="slds-line-height_reset">
+                  <th class="slds-text-title_caps">Title</th>
+                  <th class="slds-text-title_caps">Product</th>
+                  <th class="slds-text-title_caps">RAG Score</th>
+                  <th class="slds-text-title_caps">Metadata</th>
+                  <th class="slds-text-title_caps">Priority</th>
+                  <th class="slds-text-title_caps">Updated</th>
+                  <th class="slds-text-title_caps">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={fixQueueRows} for:item="row">
+                  <tr key={row.id} class={row.rowClass}>
+                    <td class="slds-text-body_regular">{row.title}</td>
+                    <td>{row.product}</td>
+                    <td>
+                      <span class={row.ragScoreClass}>{row.ragScore}</span>
+                    </td>
+                    <td>{row.metadataDisplay}</td>
+                    <td>
+                      <span class={row.priorityBadgeClass}>{row.priorityIcon} {row.priority}</span>
+                    </td>
+                    <td class="slds-text-body_small">{row.lastUpdated}</td>
+                    <td>
+                      <lightning-button
+                        label={row.actionLabel}
+                        variant="neutral"
+                        size="small"
+                        data-id={row.id}
+                        onclick={handleFixArticle}
+                      ></lightning-button>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </lightning-card>
+
+        <!-- Distribution Charts -->
+        <div class="slds-grid slds-wrap slds-gutters_medium">
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+            <lightning-card title="Metadata Completeness Distribution">
+              <div class="slds-p-around_medium">
+                <template for:each={metadataDistribution} for:item="bar">
+                  <div key={bar.label} class="slds-m-bottom_small">
+                    <div class="slds-grid slds-grid_align-spread slds-m-bottom_xx-small">
+                      <span class="slds-text-body_small">{bar.label}</span>
+                      <span class="slds-text-body_small slds-text-color_weak">{bar.count} articles</span>
+                    </div>
+                    <div class="bar-bg">
+                      <div class="bar-fill" style={bar.style}></div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </lightning-card>
+          </div>
+
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+            <lightning-card title="RAG Score Distribution">
+              <div class="slds-p-around_medium">
+                <template for:each={ragDistribution} for:item="bar">
+                  <div key={bar.label} class="slds-m-bottom_small">
+                    <div class="slds-grid slds-grid_align-spread slds-m-bottom_xx-small">
+                      <span class="slds-text-body_small">{bar.label}</span>
+                      <span class="slds-text-body_small slds-text-color_weak">{bar.count} articles</span>
+                    </div>
+                    <div class="bar-bg">
+                      <div class={bar.fillClass} style={bar.style}></div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </lightning-card>
+          </div>
+        </div>
+      </div>
+    </lightning-card>
+  </div>
+</template>
