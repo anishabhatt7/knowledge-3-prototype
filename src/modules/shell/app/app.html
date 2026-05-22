@@ -72,16 +72,16 @@
           <page-article-analyzer onnavigate={handleNavigate}></page-article-analyzer>
         </template>
         <template if:true={isAuthorActive}>
-          <div class="slds-text-heading_medium slds-p-around_medium">Guided Author - Coming Soon</div>
+          <page-guided-author onnavigate={handleNavigate}></page-guided-author>
         </template>
         <template if:true={isMetadataActive}>
-          <div class="slds-text-heading_medium slds-p-around_medium">Metadata Suggester - Coming Soon</div>
+          <page-metadata-suggester onnavigate={handleNavigate}></page-metadata-suggester>
         </template>
         <template if:true={isEnrichmentActive}>
-          <div class="slds-text-heading_medium slds-p-around_medium">Enrichment Preview - Coming Soon</div>
+          <page-enrichment-preview onnavigate={handleNavigate}></page-enrichment-preview>
         </template>
         <template if:true={isDashboardActive}>
-          <div class="slds-text-heading_medium slds-p-around_medium">Health Dashboard - Coming Soon</div>
+          <page-health-dashboard onnavigate={handleNavigate}></page-health-dashboard>
         </template>
       </div>
     </div>
