@@ -1,0 +1,33 @@
+.confidence-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.confidence-high {
+  background-color: rgba(75, 202, 129, 0.2);
+  color: rgb(11, 95, 45);
+}
+
+.confidence-medium {
+  background-color: rgba(255, 183, 93, 0.2);
+  color: rgb(130, 75, 0);
+}
+
+.confidence-low {
+  background-color: rgba(194, 57, 52, 0.2);
+  color: rgb(130, 11, 8);
+}
+
+.size-small {
+  font-size: 0.625rem;
+  padding: 0.0625rem 0.375rem;
+}
+
+.size-large {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+}
