@@ -53,4 +53,10 @@ export const routes = [
         title: 'Knowledge Agents | Knowledge',
         navHighlight: 'knowledge',
     },
+    {
+        path: '/knowledge-blocks',
+        component: 'page-knowledge-blocks',
+        title: 'Knowledge Blocks | Knowledge',
+        navHighlight: 'knowledge',
+    },
 ];

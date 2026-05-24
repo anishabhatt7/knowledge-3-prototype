@@ -1,0 +1,4460 @@
+/* Component host: gray neutral surround behind the outer Card. In LWC the
+   host MUST be targeted via `:host` — a bare tag selector inside a component
+   stylesheet is scoped to descendants and does not apply to the host.
+   Also targeted via the tag name as a safety net: in LWC light-DOM render
+   mode the host element is in the same tree as the parent, so the tag-name
+   selector applies and matches the same styles. Without this, the host
+   element defaults to display:block with intrinsic height — content overflows
+   the viewport and the page-level docked footer falls below the fold. */
+:host,
+main-new-knowledge-modal {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  pointer-events: auto;
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+  padding: var(--slds-g-spacing-4, 16px);
+  box-sizing: border-box;
+}
+
+/* Full-page wrapper styled as the outer Card from Figma 7545:131500:
+   white rounded container with an elevation shadow that holds header,
+   body and the docked form footer. The 20px (radius-border-4) corner
+   radius matches the Figma outer ⚡ Card so the docked footer below
+   inherits rounded bottom-left / bottom-right corners via overflow
+   clipping — no separate radius on the footer needed. */
+.nk-page {
+  flex: 1;
+  min-height: 0;
+  min-width: 1376px;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+  border-radius: var(--slds-g-radius-border-4, 1.25rem);
+  overflow: hidden;
+}
+
+/* ── Page header: now the Card header (white, no separator) ───── */
+
+.nk-page-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--slds-g-spacing-4, 16px);
+  margin: 0;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  min-height: 56px;
+  box-sizing: border-box;
+}
+
+.nk-page-header__left {
+  /* Flow 2: meta is hidden, so the column layout collapses to just the title
+     row. Keep flex: 1 so the title fills available width before the action
+     buttons on the right. */
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+  gap: 4px;
+}
+
+.nk-article-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-3, 12px);
+  flex: 1;
+  min-width: 0;
+}
+
+/* Figma 7719:165917 — simple "New Knowledge Article" h1 in page header.
+   SLDS 2 Titles/font-scale-3/Regular: 20/28, weight 400. */
+.nk-page-header__title {
+  font-size: var(--slds-g-font-scale-3, 1.25rem);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  line-height: 1.75rem;
+  color: var(--slds-g-color-on-surface-3, #03234d);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* "Check Similar Articles" pill: rounded, brand outline */
+.nk-check-similar-btn {
+  flex-shrink: 0;
+  --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
+  --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
+  --sds-c-button-sizing-height: 32px;
+}
+
+.nk-article-title {
+  flex: 1;
+  min-width: 120px;
+  max-width: 600px;
+  /* Figma --slds-g-font-scale-5 → 28px / 35px line-height */
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 35px;
+  color: var(--slds-g-color-on-surface-3, #03234d);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  font-family: inherit;
+}
+
+.nk-article-title:focus {
+  border-bottom: 1px solid var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-title-edit-icon {
+  /* Flow 2 (Figma 7545:131500) Card header has no inline edit pencil */
+  display: none;
+}
+
+.nk-article-meta {
+  /* Flow 2 (Figma 7545:131500) Card header omits the meta line */
+  display: none;
+}
+
+/* "Next" / "Check Similar Articles" pill button: rounded, outline */
+.nk-next-btn {
+  flex-shrink: 0;
+  --slds-c-button-radius-border: 100px;
+}
+
+/* Header actions group (Step 2: Back + Save as Draft) */
+.nk-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* Save as Draft button group: button + chevron */
+.nk-save-draft-group {
+  display: flex;
+  align-items: center;
+}
+
+.nk-save-draft-btn {
+  --slds-c-button-radius-border-end-end: 0;
+  --slds-c-button-radius-border-start-end: 0;
+  --slds-c-button-radius-border: 100px 0 0 100px;
+}
+
+.nk-save-draft-chevron {
+  --slds-c-button-radius-border-end-start: 0;
+  --slds-c-button-radius-border-start-start: 0;
+  --slds-c-button-radius-border: 0 100px 100px 0;
+  border-left: none;
+}
+
+/* ── Gray body: stepper + content row ────────────────────────── */
+
+.nk-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+  pointer-events: auto;
+}
+
+/* ── Progress stepper (Figma: 304×16, centered, dots + bar) ──── */
+
+/* In-body stepper is hidden in v2 — the docked footer carries the stepper. */
+.nk-body > .nk-stepper {
+  display: none;
+}
+
+.nk-stepper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  width: 304px;
+  margin: 8px auto 16px;
+  gap: 2px;
+}
+
+/* 16×16 indicator dot — inactive: small 8×8 gray filled dot centered */
+.nk-stepper__dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: transparent;
+  border: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nk-stepper__dot::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--slds-g-color-neutral-base-80, #c9c9c9);
+}
+
+/* Active dot: blue ring (16×16 blue circle with 8×8 white center) */
+.nk-stepper__dot--active {
+  background-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-stepper__dot--active::after {
+  background-color: #fff;
+}
+
+/* Completed dot: solid blue circle with white check mark */
+.nk-stepper__dot--completed {
+  background-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-stepper__dot--completed::after {
+  content: '✓';
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background-color: transparent;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Connecting bar: fills remaining space, 2px tall, gray */
+.nk-stepper__bar {
+  flex: 1;
+  height: 2px;
+  background-color: var(--slds-g-color-neutral-base-80, #c9c9c9);
+}
+
+/* Filled bar: blue when step 1 is completed */
+.nk-stepper__bar--filled {
+  background-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+/* ── Content row: resources panel + card ──────────────────────── */
+
+.nk-content-row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  padding: 0 16px;
+  margin: 0;
+  background-color: #fff;
+  gap: 16px;
+  pointer-events: auto;
+  /* Defensive: ensure the row can't bleed past .nk-page when a tall child
+     (RTE editor, sources list) wants more height than the viewport offers —
+     keeps the scroll inside .nk-card__body, not on the page. */
+  overflow: hidden;
+}
+
+/* Resources panel: shared styles.
+   Figma 7719:165917 — the panel is a single Card. Styled as an SLDS 2
+   Nested Card: surface-container-1 fill, border-1 outline, radius-border-4
+   (matches the outer page card's corner radius for a unified look). No
+   shadow — nested cards rely on border + surface contrast for separation. */
+.nk-resources-panel {
+  flex-shrink: 0;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  border-radius: var(--slds-g-radius-border-4, 1.25rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.nk-resources-panel__toggle {
+  color: var(--slds-g-color-accent-1, #066afe);
+}
+
+/* Collapsed: 48px, icon at top */
+.nk-resources-panel--collapsed {
+  width: 48px;
+  align-items: center;
+  padding-top: 12px;
+}
+
+/* Expanded: 320px, full-height panel (Figma: Knowledge Content)
+ * overflow: visible so Notebook AI overflow menus are not clipped; z-index so the
+ * menu overlays the adjacent main card when it extends past the panel edge. */
+.nk-resources-panel--expanded {
+  width: 320px;
+  overflow: visible;
+  position: relative;
+  z-index: 5;
+}
+
+/* Expanded header: title + collapse arrow.
+   Figma 7719:165922 — Card header is 56px tall, font-scale-3 Regular title. */
+.nk-rp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+  min-height: 56px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.nk-rp-header__title {
+  /* Titles/font-scale-3/Regular: 20/28, weight 400 */
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.75rem;
+  color: var(--slds-g-color-on-surface-3, #03234d);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tabs: Blocks | Notebook AI */
+.nk-rp-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+  padding: 0 var(--slds-g-spacing-4, 16px);
+  border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.nk-rp-tab {
+  padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-weight: 590;
+  line-height: 1.125rem;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.nk-rp-tab:hover {
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.nk-rp-tab[aria-selected="true"] {
+  color: var(--slds-g-color-accent-1, #066afe);
+  border-bottom-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-rp-tab:focus {
+  outline: 2px solid var(--slds-g-color-accent-1, #066afe);
+  outline-offset: 2px;
+}
+
+/* Search bar — Figma 7719:165922 has a magnifying-glass icon on the left
+   inside a 32px-tall input with 1px gray border and pill radius. */
+.nk-rp-search {
+  padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+  flex-shrink: 0;
+}
+
+.nk-rp-search__field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nk-rp-search__icon {
+  position: absolute;
+  left: var(--slds-g-spacing-2, 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  --slds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-1, #5c5c5c);
+  --sds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-rp-search-input {
+  width: 100%;
+  height: 32px;
+  /* Leading padding clears the magnifying-glass icon (8 + 16 + 8). */
+  padding: 0 var(--slds-g-spacing-2, 8px) 0 var(--slds-g-spacing-8, 32px);
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  line-height: 1.125rem;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  border-radius: var(--slds-g-radius-border-2, 4px);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.nk-rp-search-input::placeholder {
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-rp-search-input:focus {
+  outline: none;
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+
+/* Article list: scrollable */
+.nk-rp-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.nk-rp-panel--hidden {
+  display: none;
+}
+
+.nk-rp-empty {
+  padding: var(--slds-g-spacing-4, 16px);
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  margin: 0;
+}
+
+/* ── Notebook AI Panel ─────────────────────────────────────── */
+
+.nk-rp-notebook {
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  min-height: 0;
+}
+
+/* Zero state: centered card container */
+.nk-nb-zero-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--slds-g-spacing-4, 16px);
+}
+
+.nk-nb-zero-state__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--slds-g-spacing-3, 12px);
+  padding: var(--slds-g-spacing-6, 24px) var(--slds-g-spacing-5, 20px);
+  border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  width: 100%;
+  text-align: center;
+}
+
+.nk-nb-zero-state__icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--slds-g-radius-border-circle, 50%);
+  background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-nb-zero-state__heading {
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-weight: 590;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  margin: 0;
+}
+
+.nk-nb-zero-state__body {
+  font-size: var(--slds-g-font-size-1, 0.75rem);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Sources list (after sources have been added) */
+.nk-nb-sources {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Toolbar: + button and Generate Content ── */
+.nk-nb-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+  flex-shrink: 0;
+}
+
+/* ── Select all sources row ── */
+.nk-nb-select-all {
+  padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-4, 16px);
+  flex-shrink: 0;
+}
+
+.nk-nb-select-all__label {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  cursor: pointer;
+  user-select: none;
+}
+
+.nk-nb-select-all__text {
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* ── Shared checkbox ── */
+.nk-nb-checkbox {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--slds-g-color-accent-1, #066afe);
+  border-radius: 2px;
+}
+
+/* ── Divider ── */
+.nk-nb-divider {
+  border: none;
+  border-top: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* ── Section headers (MY RESOURCES / ENTERPRISE RESOURCES) ── */
+.nk-nb-section {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding-bottom: var(--slds-g-spacing-3, 12px);
+}
+
+.nk-nb-section__header {
+  padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-1, 4px);
+  font-size: var(--slds-g-font-size-1, 0.75rem);
+  font-weight: 590;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Source rows: no dividers within a section ── */
+.nk-nb-source-row {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  padding: 10px 16px 10px var(--slds-g-spacing-4, 16px);
+}
+
+.nk-nb-source-row--selected {
+  background-color: #eef5ff;
+}
+
+.nk-nb-source-row__check-label {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.nk-nb-source-row__icon {
+  flex-shrink: 0;
+}
+
+.nk-nb-source-row__name {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-weight: 400;
+  color: var(--slds-g-color-accent-1, #066afe);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nk-nb-source-row__chevron {
+  flex-shrink: 0;
+  color: var(--slds-g-color-accent-1, #066afe);
+}
+
+
+/* Generated Content accordion: pinned to bottom */
+.nk-nb-generated {
+  border-top: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  flex-shrink: 0;
+}
+
+.nk-nb-generated__header {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  width: 100%;
+  padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+  padding-bottom: var(--slds-g-spacing-2, 8px);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.nk-nb-generated__header:hover .nk-nb-generated__title {
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.nk-nb-generated__header:focus {
+  outline: 2px solid var(--slds-g-color-accent-1, #066afe);
+  outline-offset: -2px;
+}
+
+.nk-nb-generated__chevron {
+  flex-shrink: 0;
+  color: var(--slds-r-color-brand-40);
+  --slds-c-icon-color-foreground: var(--slds-r-color-brand-40);
+}
+
+span.nk-nb-generated__title {
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-weight: var(--slds-g-font-weight-7, 700);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background-clip: unset;
+  -webkit-background-clip: unset;
+}
+
+.nk-nb-generated__body {
+  padding: 4px var(--slds-g-spacing-4, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+.nk-nb-generated__empty-msg {
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  margin: 0;
+}
+
+/* Spinner */
+.nk-nb-generated__spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--slds-g-spacing-3, 12px);
+  padding: var(--slds-g-spacing-4, 16px) 0;
+  position: relative;
+  min-height: 64px;
+}
+
+.nk-nb-generated__spinner-label {
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  margin: 0;
+  margin-top: var(--slds-g-spacing-6, 32px);
+}
+
+.nk-nb-generated__error {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  padding: var(--slds-g-spacing-3, 12px);
+  border-radius: var(--slds-g-radius-border-2, 4px);
+  background-color: #fff1f1;
+  color: var(--slds-g-color-error-1, #ba0517);
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+}
+
+/*
+ * Figma node 6838:707773 — Row 6 exact implementation
+ * Outer row: flex, gap-8px, items-start, pl-0, pr-0, py-6px, white bg
+ */
+.nk-nb-generated__row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 6px 0;
+  background-color: var(--slds-g-color-surface-container-1, #ffffff);
+  overflow: visible;
+  width: 100%;
+}
+
+/* Left column: flex-1, flex-col, gap-8px */
+.nk-nb-generated__col {
+  flex: 1 0 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Inner row: text container (flex-1) + dropdown button side-by-side, gap-8px, items-start */
+.nk-nb-generated__inner-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Text Container: flex-1, flex-col, gap-4px, overflow-clip */
+.nk-nb-generated__content {
+  flex: 1 0 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+/* Title: 13px, accent blue, 18px line-height, single line, truncated — Figma "📝 Text Link" */
+.nk-nb-generated__title {
+  font-size: 13px;
+  font-weight: var(--slds-g-font-weight-4, 400);
+  line-height: 18px;
+  color: var(--slds-g-color-accent-2, #0250d9);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  margin: 0;
+}
+
+/* Description: 12px, #2e2e2e, 17px line-height, max 2 lines, truncated */
+.nk-nb-generated__text {
+  font-size: var(--slds-g-font-scale-neg-1, 0.75rem);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  line-height: 17px;
+  max-height: 34px;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  width: 100%;
+  margin: 0;
+}
+
+/*
+ * Meta row: flex, items-start, gap-0, w-full
+ * Sources group + bullet items inline
+ */
+.nk-nb-generated__meta {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+}
+
+/* "N Sources" group: flex, gap-4px, items-center, shrink-0 */
+.nk-nb-generated__meta-sources {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  color: #747474;
+}
+
+/* "N Sources" label text */
+.nk-nb-generated__meta-text {
+  font-size: var(--slds-g-font-size-base, 0.75rem);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  line-height: 17px;
+  color: #747474;
+  white-space: nowrap;
+}
+
+/* Bullet list for length + tone — Figma uses <ul><li class="list-disc ms-18px"> */
+.nk-nb-generated__meta-bullets {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 0;
+}
+
+.nk-nb-generated__meta-bullet {
+  font-size: var(--slds-g-font-size-base, 0.75rem);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  line-height: 17px;
+  color: #747474;
+  white-space: nowrap;
+  padding-left: 18px;
+  position: relative;
+}
+
+.nk-nb-generated__meta-bullet::before {
+  content: '•';
+  position: absolute;
+  left: 6px;
+  color: #747474;
+}
+
+/* Overflow button + dropdown — positioned relative to the button */
+.nk-nb-generated__overflow {
+  flex-shrink: 0;
+  position: relative;
+  align-self: flex-start;
+}
+
+/* Fixed + top/left from JS so the menu stacks above the docked utility bar (later sibling in app). */
+.nk-nb-generated__overflow-menu {
+  position: fixed;
+  z-index: 11000;
+  min-width: 160px;
+  background-color: var(--slds-g-color-surface-container-1, #ffffff);
+  border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  border-radius: var(--slds-g-radius-border-3, 8px);
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.06), 0 3px 3px rgba(0, 0, 0, 0.08), 0 0 5px rgba(0, 0, 0, 0.08);
+  overflow: visible;
+}
+
+.nk-nb-generated__overflow-item {
+  display: block;
+  width: 100%;
+  padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.nk-nb-generated__overflow-item:hover {
+  background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.nk-nb-generated__overflow-item:focus {
+  outline: 2px solid var(--slds-g-color-accent-1, #066afe);
+  outline-offset: -2px;
+}
+
+/* Individual article row — Figma 7719:165922 list-item.
+   Title is a font-scale-1 Semibold blue link, description is font-scale-neg-1
+   regular gray (truncated to 2 lines). 1px divider above each item. */
+.nk-rp-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+  border-top: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  gap: var(--slds-g-spacing-3, 12px);
+}
+
+.nk-rp-item__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-1, 4px);
+  min-width: 0;
+  flex: 1;
+}
+
+.nk-rp-item__title {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-base, 0.8125rem);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  line-height: var(--slds-g-font-lineheight-base, 1.125rem);
+  color: var(--slds-g-color-accent-1, #066afe);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.nk-rp-item__description {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-base, 0.8125rem);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  line-height: var(--slds-g-font-lineheight-base, 1.125rem);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Circular bordered "+" button (Figma: round blue-outlined icon button).
+   lightning-button-icon picks up the SLDS button-icon styling hooks below;
+   the hooks cascade into the synthetic shadow DOM and round the inner button. */
+.nk-rp-item__add {
+  flex-shrink: 0;
+  --slds-c-button-radius-border: 50%;
+  --sds-c-button-radius-border: 50%;
+  --slds-c-button-icon-radius-border: 50%;
+  --sds-c-button-icon-radius-border: 50%;
+  --slds-c-button-color-border: var(--slds-g-color-accent-1, #066afe);
+  --slds-c-button-icon-color-border: var(--slds-g-color-accent-1, #066afe);
+  --slds-c-button-text-color: var(--slds-g-color-accent-1, #066afe);
+  --slds-c-button-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+  border-radius: 50%;
+}
+
+/* Card: fills remaining width, left-aligned (Figma: w=1344, NOT centered) */
+.nk-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  pointer-events: auto;
+}
+
+.nk-main--split {
+  flex-direction: row;
+  gap: var(--slds-g-spacing-4, 16px);
+  overflow: hidden;
+}
+
+.nk-main--split .nk-card {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Content Editor card: SLDS 2 Nested Card pattern.
+   surface-container-1 fill, border-1 outline, radius-border-3 (one step
+   down from the outer card's radius-border-4). No shadow — nested cards
+   rely on border + surface contrast for separation. */
+.nk-card {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  /* Match the Suggested Placement card border (Figma --dt_color-otl-ter)
+     so the two side-by-side cards on Step 3 read as a matched pair. */
+  border: 1px solid rgba(94, 93, 96, 0.13);
+  border-radius: 20px;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+/* Card header */
+.nk-card__header {
+  flex-shrink: 0;
+  padding: var(--slds-g-spacing-4, 16px);
+}
+
+/* SLDS 2 Titles/font-scale-3/Regular: 20/28, weight 400. */
+.nk-card__title {
+  font-size: var(--slds-g-font-scale-3, 1.25rem);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  line-height: 1.75rem;
+  color: var(--slds-g-color-on-surface-3, #03234d);
+  margin: 0;
+}
+
+/* Card body: scrollable; pointer-events so children are selectable in browser tools */
+.nk-card__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-6, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-3, 12px);
+  pointer-events: auto;
+}
+
+/* ── Section ─────────────────────────────────────────────────── */
+
+.nk-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-2, 8px);
+}
+
+/* Step 1: sections take their natural height. The .nk-card__body has
+   overflow-y: auto and is responsible for scrolling when the form
+   content (Details RTE + Internal Comments + other fields) exceeds the
+   card height. We deliberately do NOT shrink the section to fit. */
+.nk-card__body:not(.nk-card__body--form) .nk-section {
+  flex: 0 0 auto;
+}
+
+/* SLDS 2 Expandable Section header (Figma 7558:194870 — non-
+   collapsible variant): solid neutral-95 pill at 32px tall with an
+   8px corner radius. The `--banner` modifier used by the Step 3
+   metadata sections (Information / Properties / Channel /
+   Assignment / Translations) is intentionally a no-op so all section
+   headers in the modal share the same SLDS 2 styling. */
+.nk-section__header {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 var(--slds-g-spacing-3, 12px);
+  background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  flex-shrink: 0;
+}
+
+/* Section banner — grey gradient strip used as the section divider on
+   Step 3 (Metadata) per Figma 7555:111894. Spans the full card width. */
+.nk-section__title {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-2, 1rem);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  line-height: 1.375rem;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.nk-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-3, 12px);
+}
+
+.nk-card__body:not(.nk-card__body--form) .nk-section__body {
+  flex: 0 0 auto;
+}
+
+.nk-field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-1, 4px);
+  flex-shrink: 0;
+}
+
+/* Details field: takes its natural height (RTE menubar + toolbar + editor
+   min-height + wordcount). When the field is taller than the card body
+   has room for, the .nk-card__body scroll container handles overflow. */
+.nk-field-wrap--stretch {
+  flex: 0 0 auto;
+}
+
+/* Details RTE: comfortable default editing area. The card body scroll
+   takes over once total form height exceeds the available card height. */
+.nk-field-wrap--stretch .nk-rte__editor {
+  min-height: 400px;
+}
+
+/* Internal Comments field: natural height */
+.nk-field-wrap--comments {
+  flex: 0 0 auto;
+}
+
+.nk-field-wrap--comments .nk-rte {
+  min-height: 240px;
+}
+
+.nk-field-label {
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-weight: 590;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  line-height: 1.125rem;
+  flex-shrink: 0;
+}
+
+.nk-field-label--required {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.nk-req-mark {
+  color: var(--slds-g-color-status-error-1, #c23934);
+  text-decoration: none;
+  font-style: normal;
+  font-size: var(--slds-g-font-size-neg-1, 0.75rem);
+}
+
+/* ── Rich text editor ────────────────────────────────────────── */
+
+.nk-rte {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Menubar: white bg, 48px tall, tab-style menu items */
+.nk-rte__menubar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 48px;
+  padding: 4px 8px;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  flex-shrink: 0;
+}
+
+/* Menu tab items: 59px × 40px, 14px Semibold */
+.nk-rte__menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 59px;
+  height: 40px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 590;
+  letter-spacing: -0.014em;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background: none;
+  border: none;
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  cursor: pointer;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.nk-rte__menu-btn:hover {
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+/* Expand button pushed to the right end of the menubar */
+.nk-rte__menubar-expand {
+  margin-left: auto;
+}
+
+/* Toolbar: gray bg, 48px tall, 8px padding, circular bordered buttons */
+.nk-rte__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 48px;
+  padding: 8px;
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+  border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+/* Base toolbar button: 32×32, no border by default (within groups) */
+.nk-rte__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  transition: background-color 0.1s;
+  flex-shrink: 0;
+}
+
+/* Standalone circular bordered button (expand, insert/new) */
+.nk-rte__btn--bordered {
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: 9999px;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+}
+
+.nk-rte__btn--bordered:hover {
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+/* Connected pill button group (Figma: ⚡ Button Group) */
+.nk-rte__btn-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: 9999px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.nk-rte__btn-group .nk-rte__btn {
+  border: none;
+  border-right: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: 0;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+}
+
+.nk-rte__btn-group .nk-rte__btn:last-child {
+  border-right: none;
+}
+
+.nk-rte__btn-group .nk-rte__btn:hover {
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+/* Legacy group (kept for compatibility) */
+.nk-rte__group {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.nk-rte__sep {
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background-color: var(--slds-g-color-border-1, #c9c9c9);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* Paragraph/Heading combobox: 127px × 32px */
+.nk-rte__select {
+  width: 127px;
+  height: 32px;
+  padding: 0 4px;
+  font-size: 0.8125rem;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Editor area wrapper: relative container for popover positioning */
+.nk-rte__editor-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Editor area: fills available space and can shrink so the card body scroll
+   container clips overflow internally instead of pushing the page taller. */
+.nk-rte__editor {
+  flex: 1 1 auto;
+  min-height: 160px;
+  padding: var(--slds-g-spacing-3, 12px);
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  line-height: 1.5;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  outline: none;
+  overflow-y: auto;
+  cursor: text;
+}
+
+.nk-rte__editor:focus {
+  box-shadow: inset 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+
+/* ── Selection popover (Figma: pill with delete + add icons) ────── */
+
+.nk-selection-popover {
+  position: absolute;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border-radius: 100px;
+  box-shadow: var(--slds-g-shadow-3, 0 2px 8px rgba(0, 0, 0, 0.16));
+  pointer-events: auto;
+  transform: translateX(-50%);
+}
+
+.nk-selection-popover__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--slds-g-color-accent-1, #066afe);
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.nk-selection-popover__btn:hover {
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+  box-shadow: 0 0 0 2px rgba(6, 106, 254, 0.15);
+}
+
+/* Knowledge block inserted in the editor (Figma: dashed border box) */
+.nk-rte__editor .nk-knowledge-block {
+  border: 1px dashed var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  padding: 12px 16px;
+  margin: 12px 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  cursor: default;
+  user-select: text;
+}
+
+.nk-rte__editor .nk-knowledge-block ul {
+  margin: 4px 0 8px 8px;
+  padding-left: 16px;
+}
+
+/* SLDS 2 hover tooltip for knowledge blocks (Figma 7654:148071).
+   Rendered at the component root with position: fixed. JS clamps the
+   inline top/left to the .nk-rte__editor's viewport rect so the
+   tooltip can't escape the editor pane on scroll or near-edge hover.
+   The caret (`::after`) is positioned by the JS via the
+   --nk-kb-caret-x custom property so it tracks the block's horizontal
+   center even after horizontal clamping. */
+.nk-kb-tooltip {
+  position: fixed;
+  z-index: 9100;
+  margin: 0;
+  padding: 6px 12px;
+  max-width: none;
+  min-width: 0;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: 12px;
+  font-weight: var(--slds-g-font-weight-4, 400);
+  line-height: 16px;
+  color: var(--slds-g-color-on-surface-inverse-1, #fff);
+  background-color: var(--slds-g-color-surface-inverse-1, #032d60);
+  border: none;
+  border-radius: var(--slds-g-radius-border-1, 4px);
+  box-shadow:
+    0 -1px 2px 0 rgba(0, 0, 0, 0.10),
+    0 5px 5px 0 rgba(0, 0, 0, 0.10),
+    0 0 7px 0 rgba(0, 0, 0, 0.06);
+  text-align: center;
+  pointer-events: none;
+  opacity: 1;
+  white-space: nowrap;
+  --nk-kb-caret-x: 50%;
+}
+
+.nk-kb-tooltip__body {
+  display: inline-block;
+  color: inherit;
+  font: inherit;
+}
+
+/* Caret / nubbin — a 12×6 triangle drawn with border tricks. */
+.nk-kb-tooltip::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  left: var(--nk-kb-caret-x, 50%);
+  transform: translateX(-50%);
+  border-style: solid;
+}
+
+/* Tooltip is above the block → caret hangs off the bottom, points down. */
+.nk-kb-tooltip--top::after {
+  bottom: -6px;
+  border-width: 6px 6px 0 6px;
+  border-color: var(--slds-g-color-surface-inverse-1, #032d60) transparent transparent transparent;
+}
+
+/* Tooltip is below the block → caret sits on top, points up. */
+.nk-kb-tooltip--bottom::after {
+  top: -6px;
+  border-width: 0 6px 6px 6px;
+  border-color: transparent transparent var(--slds-g-color-surface-inverse-1, #032d60) transparent;
+}
+
+.nk-rte__editor .nk-knowledge-block li {
+  margin-bottom: 2px;
+  list-style-type: disc;
+}
+
+.nk-rte__editor .nk-created-block-boundary {
+  display: inline-block;
+  vertical-align: top;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 1px dashed var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-2, 4px);
+  padding: 2px 6px;
+  margin: 2px 0;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  position: relative;
+  cursor: default;
+  user-select: text;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.nk-rte__wordcount {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 6px 16px;
+  font-size: var(--slds-g-font-size-neg-1, 0.75rem);
+  line-height: 1.125rem;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+  border-top: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  flex-shrink: 0;
+}
+
+/* ── Create a Block panel (right side card, Figma 6685:374409) ── */
+
+/* Modal backdrop for Create a Block */
+.nk-create-block-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nk-create-block {
+  width: 800px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border-radius: var(--slds-g-radius-border-4, 12px);
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+}
+
+.nk-create-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+  gap: var(--slds-g-spacing-2, 8px);
+  flex-shrink: 0;
+}
+
+.nk-create-block__close {
+  flex-shrink: 0;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.nk-create-block__close:hover {
+  color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.nk-create-block__title {
+  font-size: var(--slds-g-font-size-5, 1.25rem);
+  font-weight: 400;
+  line-height: 1.75rem;
+  color: var(--slds-g-color-on-surface-3, #001e5b);
+  margin: 0;
+}
+
+.nk-create-block__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-4, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nk-create-block__selected-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nk-create-block__selected-label {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-neg-1, 12px);
+  font-weight: 600;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.nk-create-block__selected-textarea {
+  width: 100%;
+  min-height: 100px;
+  max-height: 200px;
+  padding: 8px;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: var(--slds-g-radius-border-2, 4px);
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background: var(--slds-g-color-surface-container-2, #f3f3f3);
+  resize: none;
+  box-sizing: border-box;
+}
+
+.nk-create-block__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--slds-g-color-border-1, #dddbda);
+  flex-shrink: 0;
+}
+
+/* Collapsible section headers in modal */
+.nk-cb-section__header--collapsible {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nk-cb-section__header--collapsible:hover {
+  opacity: 0.8;
+}
+
+.nk-cb-section__chevron {
+  flex-shrink: 0;
+  transition: transform 0.15s;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-cb-section__chevron--down {
+  transform: rotate(0deg);
+}
+
+.nk-cb-section__chevron--right {
+  transform: rotate(-90deg);
+}
+
+/* Text input for modal sections */
+.nk-cb-text-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: var(--slds-g-radius-border-2, 4px);
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  box-sizing: border-box;
+}
+.nk-cb-text-input:focus {
+  outline: none;
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+
+/* Modal data category lookup */
+.nk-modal-datacat-wrap {
+  position: relative;
+}
+.nk-modal-datacat-search {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: var(--slds-g-radius-border-2, 4px);
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  box-sizing: border-box;
+}
+.nk-modal-datacat-search:focus {
+  outline: none;
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+.nk-modal-datacat-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.16);
+  z-index: 9100;
+}
+.nk-modal-datacat-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Modal audience search */
+.nk-modal-audience-search-wrap {
+  position: relative;
+}
+.nk-modal-audience-search {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: var(--slds-g-radius-border-2, 4px);
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  box-sizing: border-box;
+}
+.nk-modal-audience-search:focus {
+  outline: none;
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+.nk-modal-audience-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.16);
+  z-index: 9100;
+}
+.nk-modal-audience-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Modal translations content */
+.nk-modal-translations-content {
+  margin-top: 8px;
+}
+.nk-modal-tr-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.nk-create-block__section-title {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5rem;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  margin: 0;
+}
+
+/* Figma: Expandable section (Settings, Translations, Audience Visibility) */
+.nk-cb-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-2, 8px);
+}
+
+.nk-cb-section__header {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  height: 32px;
+  padding: 0 var(--slds-g-spacing-2, 8px);
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  flex-shrink: 0;
+}
+
+/* Collapsible accordion: clickable header button */
+.nk-cb-section__header--btn {
+  width: 100%;
+  border: none;
+  background: var(--slds-g-color-surface-2, #f3f3f3);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  transition: background-color 0.15s;
+}
+
+.nk-cb-section__header--btn:hover {
+  background-color: var(--slds-g-color-border-1, #e5e5e5);
+}
+
+.nk-cb-section__header--btn:focus {
+  outline: 2px solid var(--slds-g-color-accent-1, #066afe);
+  outline-offset: 2px;
+}
+
+.nk-cb-section__chevron {
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.nk-cb-section__title {
+  font-size: var(--slds-g-font-size-2, 1rem);
+  font-weight: 400;
+  line-height: 1.375rem;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.nk-cb-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-4, 16px);
+  padding-bottom: var(--slds-g-spacing-3, 12px);
+}
+
+/* Audience Visibility: User Group + Search row */
+.nk-cb-audience-row {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  align-items: stretch;
+}
+
+.nk-cb-audience-row .nk-cb-audience-combobox-wrap {
+  flex: 0 0 160px;
+  min-width: 0;
+}
+
+.nk-cb-audience-row .nk-cb-audience-search-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.nk-cb-pills--audience {
+  padding-top: var(--slds-g-spacing-1, 4px);
+}
+
+/* Combobox field */
+.nk-cb-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-1, 4px);
+}
+
+.nk-ai-sparkle {
+  margin-left: var(--slds-g-spacing-2, 8px);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-cb-combobox {
+  position: relative;
+}
+
+.nk-cb-input {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  height: 32px;
+  padding: 0 var(--slds-g-spacing-2, 8px);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  cursor: pointer;
+}
+
+.nk-cb-input__placeholder {
+  flex: 1;
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-cb-input__icon {
+  flex-shrink: 0;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* Dropdown listbox */
+.nk-cb-listbox {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  max-height: 240px;
+  overflow-y: auto;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  box-shadow: var(--slds-g-shadow-3, 0 2px 8px rgba(0, 0, 0, 0.16));
+  padding: 4px 0;
+}
+
+.nk-cb-listbox__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  cursor: pointer;
+}
+
+.nk-cb-listbox__item:hover {
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+.nk-cb-listbox__item--selected {
+  background-color: var(--slds-g-color-accent-container-1, #e6f0ff);
+}
+
+.nk-cb-listbox__item--selected:hover {
+  background-color: var(--slds-g-color-accent-container-1, #dbe8fc);
+}
+
+.nk-cb-listbox__check {
+  flex-shrink: 0;
+  color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-cb-listbox__label {
+  flex: 1;
+}
+
+/* Pills area */
+.nk-cb-pills {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--slds-g-spacing-1, 4px);
+  padding: 0 2px;
+}
+
+.nk-cb-pills__wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--slds-g-spacing-1, 4px);
+  flex: 1;
+}
+
+.nk-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-1, 4px);
+  height: 26px;
+  padding: var(--slds-g-spacing-1, 4px) var(--slds-g-spacing-1, 4px) var(--slds-g-spacing-1, 4px) var(--slds-g-spacing-2, 8px);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-4, 20px);
+  box-sizing: border-box;
+}
+
+.nk-pill__label {
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  color: var(--slds-g-color-on-surface-3, #03234d);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-pill__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.nk-pill__remove:hover {
+  color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.nk-cb-pills__more {
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  color: var(--slds-g-color-accent-2, #0250d9);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-bottom: 4px;
+}
+
+.nk-cb-pills__more:hover {
+  text-decoration: underline;
+}
+
+/* Gen AI input */
+.nk-cb-genai-input {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  overflow: hidden;
+}
+
+.nk-cb-genai-input__field {
+  flex: 1;
+  height: 100%;
+  padding: var(--slds-g-spacing-2, 8px);
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+}
+
+.nk-cb-genai-input__sparkle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 100%;
+  flex-shrink: 0;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Conditional Visibility toggle */
+.nk-cb-toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--slds-g-spacing-2, 8px);
+}
+
+.nk-cb-toggle-label {
+  font-size: 0.8125rem;
+  font-weight: 590;
+  line-height: 1.125rem;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  padding-top: 4px;
+}
+
+.nk-cb-toggle-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.nk-toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.nk-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.nk-toggle__track {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background-color: var(--slds-g-color-neutral-base-80, #c9c9c9);
+  transition: background-color 0.2s;
+}
+
+.nk-toggle__track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.nk-toggle input:checked + .nk-toggle__track {
+  background-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-toggle input:checked + .nk-toggle__track::after {
+  transform: translateX(24px);
+}
+
+.nk-cb-toggle-status {
+  font-size: 0.625rem;
+  line-height: 0.875rem;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* ── Step 2 form styles ────────────────────────────────────── */
+
+.nk-card__body--form {
+  padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-6, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-4, 16px);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Summary textarea: ~76px input area to match Figma's 100px field total */
+.nk-form-field lightning-textarea {
+  min-height: 76px;
+}
+
+.nk-required-note {
+  text-align: right;
+  font-size: var(--slds-g-font-size-neg-1, 0.75rem);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* Summary field (no section header) */
+.nk-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-1, 4px);
+}
+
+.nk-label-row {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-1, 4px);
+}
+
+.nk-help-icon {
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Step 2 section body with left padding */
+.nk-section__body--padded {
+  padding: var(--slds-g-spacing-3, 12px) 0 var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-3, 12px);
+}
+
+/* Two-column grid for Properties, Channel, Assignment, Translations */
+.nk-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 42px;
+}
+
+.nk-grid__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-4, 16px);
+}
+
+/* Read-only fields (underline style) */
+.nk-readonly-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nk-readonly-val {
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-weight: 400;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  line-height: 1.125rem;
+  border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  min-height: 24px;
+  padding: 2px 0;
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-1, 4px);
+}
+
+.nk-readonly-val--user {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-1, 4px);
+}
+
+.nk-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--slds-g-color-accent-container-1, #066afe);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+/* ── Add Sources Modal ─────────────────────────────────────── */
+
+.nk-as-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+}
+
+.nk-as-modal {
+  position: relative;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24), 0 0 2px rgba(0, 0, 0, 0.12);
+  width: 800px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 96px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nk-as-modal__close {
+  position: absolute;
+  top: var(--slds-g-spacing-4, 16px);
+  right: var(--slds-g-spacing-4, 16px);
+  z-index: 1;
+}
+
+/* Modal header */
+.nk-as-modal__header {
+  padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-4, 16px);
+  text-align: center;
+  flex-shrink: 0;
+  border-radius: 20px 20px 0px 0px;
+  border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-2, 8px);
+}
+
+.nk-as-modal__title {
+  font-size: var(--slds-g-font-scale-3, 1.25rem);
+  font-weight: 400;
+  line-height: 1.75rem;
+  color: var(--slds-g-color-on-surface-3, #03234d);
+  margin: 0;
+}
+
+.nk-as-modal__subtitle {
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  line-height: 1.4;
+  margin: 0;
+  width: 100%;
+}
+
+/* Tabs row */
+.nk-as-tabs {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-4, 16px) 0;
+  flex-shrink: 0;
+}
+
+.nk-as-tab {
+  padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-4, 16px);
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-weight: 590;
+  line-height: 1.125rem;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.nk-as-tab:hover {
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.nk-as-tab--active {
+  color: var(--slds-g-color-accent-1, #066afe);
+  border-bottom-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-as-tab:focus {
+  outline: 2px solid var(--slds-g-color-accent-1, #066afe);
+  outline-offset: -2px;
+}
+
+/* Modal body */
+.nk-as-modal__body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: var(--slds-g-spacing-4, 16px);
+}
+
+/* File Upload tab */
+.nk-as-upload-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-4, 16px);
+}
+
+.nk-as-upload-zone {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-3, 12px);
+  padding: 4px;
+  border: 1px dashed var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  transition: border-color 0.15s, background-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.nk-as-upload-zone--drag-over {
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+/* Hidden real file input */
+.nk-as-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Custom "Upload Files" label button */
+.nk-as-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-1, 4px);
+  padding: 0 var(--slds-g-spacing-4, 16px);
+  height: 32px;
+  border: 1px solid var(--slds-g-color-accent-1, #066afe);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-weight: 590;
+  font-family: inherit;
+  color: var(--slds-g-color-accent-1, #066afe);
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nk-as-upload-btn:hover {
+  background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.nk-as-upload-btn__icon {
+  flex-shrink: 0;
+}
+
+.nk-as-upload-zone__or {
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-weight: 400;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  line-height: 1.125rem;
+}
+
+/* Uploaded file list */
+.nk-as-file-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.nk-as-file-row {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-5, 20px);
+  padding: var(--slds-g-spacing-2, 8px) 0;
+  border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.nk-as-file-row:last-child {
+  border-bottom: none;
+}
+
+/* File info block: doctype icon + name + meta */
+.nk-as-file-info {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  flex-shrink: 0;
+  width: 283px;
+  min-width: 0;
+}
+
+.nk-as-file-info--link {
+  flex: 1;
+  width: auto;
+}
+
+.nk-as-file-doctype {
+  flex-shrink: 0;
+}
+
+.nk-as-file-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nk-as-file-name {
+  font-size: var(--slds-g-font-scale-1, 0.875rem);
+  font-weight: 400;
+  line-height: 1.1875rem;
+  color: var(--slds-g-color-accent-1, #066afe);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nk-as-file-meta {
+  font-size: var(--slds-g-font-scale-neg-1, 0.75rem);
+  font-weight: 400;
+  line-height: 1.0625rem;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  white-space: nowrap;
+}
+
+/* Progress bar track */
+.nk-as-file-progress {
+  flex: 1;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: var(--slds-g-color-surface-container-3, #e5e5e5);
+  overflow: hidden;
+}
+
+.nk-as-file-progress__fill {
+  height: 100%;
+  border-radius: 9999px;
+}
+
+/* Uploading state: blue bar animates 0 → 100% */
+@keyframes nk-upload-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+.nk-as-file-progress__fill--uploading {
+  background-color: var(--slds-g-color-accent-1, #066afe);
+  animation: nk-upload-progress 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Complete state: full green bar */
+.nk-as-file-progress__fill--complete {
+  width: 100%;
+  background-color: var(--slds-g-color-on-success-1, #056764);
+}
+
+.nk-as-file-delete {
+  flex-shrink: 0;
+  color: var(--slds-g-color-accent-1, #066afe);
+}
+
+/* Max files reached message */
+.nk-as-max-files-msg {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  margin: 0;
+  padding: var(--slds-g-spacing-2, 8px) 0;
+}
+
+.nk-as-max-files-msg__icon {
+  flex-shrink: 0;
+}
+
+.nk-as-upload-hint {
+  font-size: var(--slds-g-font-scale-neg-1, 0.75rem);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  margin: 0;
+  margin-top: var(--slds-g-spacing-3, 8px);
+  line-height: 1.4;
+}
+
+.nk-as-hint-link {
+  color: var(--slds-g-color-accent-1, #066afe);
+  text-decoration: none;
+}
+
+.nk-as-hint-link:hover {
+  text-decoration: underline;
+}
+
+/* Links tab */
+.nk-as-links-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-4, 16px);
+}
+
+.nk-as-link-row {
+  display: flex;
+  gap: var(--slds-g-spacing-3, 12px);
+  align-items: flex-end;
+}
+
+.nk-as-link-input-wrap {
+  flex: 1;
+}
+
+.nk-as-link-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 var(--slds-g-spacing-3, 12px);
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-family: inherit;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  box-sizing: border-box;
+}
+
+.nk-as-link-input:focus {
+  outline: none;
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-as-link-input::placeholder {
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Stub panels (External Apps, Import Library) */
+.nk-as-stub-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--slds-g-spacing-3, 12px);
+  padding: var(--slds-g-spacing-8, 32px) var(--slds-g-spacing-6, 24px);
+  text-align: center;
+  min-height: 200px;
+}
+
+.nk-as-stub-icon {
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-as-stub-title {
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-weight: 590;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  margin: 0;
+}
+
+.nk-as-stub-body {
+  font-size: var(--slds-g-font-size-1, 0.75rem);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  margin: 0;
+  max-width: 360px;
+  line-height: 1.5;
+}
+
+/* ── Import Library file selection panel ───────────────────── */
+
+/* Outer wrapper for the file selection panel body */
+.nk-fs-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-5, 20px);
+}
+
+/* Each section (My Resources / Enterprise Resources) */
+.nk-fs-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  overflow: hidden;
+}
+
+/* Section header: title + select-all checkbox + add button */
+.nk-fs-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px var(--slds-g-spacing-4, 16px);
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+  border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  gap: var(--slds-g-spacing-2, 8px);
+  flex-shrink: 0;
+}
+
+/* Clickable label wrapping select-all checkbox + section title */
+.nk-fs-select-all-label {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Section title text */
+.nk-fs-section__title {
+  font-size: var(--slds-g-font-size-2, 1rem);
+  font-weight: 590;
+  line-height: 1.375rem;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Custom checkbox appearance (shared by select-all and file rows) */
+.nk-fs-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-1, 4px);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s, background-color 0.15s;
+  box-sizing: border-box;
+}
+
+.nk-fs-checkbox:checked {
+  background-color: var(--slds-g-color-accent-1, #066afe);
+  border-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-fs-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  width: 5px;
+  height: 8px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(40deg);
+}
+
+.nk-fs-checkbox:focus {
+  outline: 2px solid var(--slds-g-color-accent-1, #066afe);
+  outline-offset: 2px;
+}
+
+/* Plus (+) button in section header */
+.nk-fs-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  flex-shrink: 0;
+  border: 1px solid var(--slds-g-color-accent-1, #066afe);
+  border-radius: var(--slds-g-radius-border-circle, 50%);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  color: var(--slds-g-color-accent-1, #066afe);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.nk-fs-add-btn:hover {
+  background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.nk-fs-add-btn:focus {
+  outline: 2px solid var(--slds-g-color-accent-1, #066afe);
+  outline-offset: 2px;
+}
+
+/* File list container */
+.nk-fs-file-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Individual file row (uses <label> for accessibility) */
+.nk-fs-file-row {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-3, 12px);
+  padding: 10px var(--slds-g-spacing-4, 16px);
+  border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  cursor: pointer;
+  transition: background-color 0.1s;
+  box-sizing: border-box;
+}
+
+.nk-fs-file-row:last-child {
+  border-bottom: none;
+}
+
+.nk-fs-file-row:hover {
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+/* Selected state: light blue tint */
+.nk-fs-file-row--selected {
+  background-color: var(--slds-g-color-accent-container-1, #e6f0ff);
+}
+
+.nk-fs-file-row--selected:hover {
+  background-color: var(--slds-g-color-accent-container-1, #d8e9fe);
+}
+
+/* File icon */
+.nk-fs-file-icon {
+  flex-shrink: 0;
+}
+
+/* File name + meta text block */
+.nk-fs-file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.nk-fs-file-name {
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-weight: 400;
+  line-height: 1.125rem;
+  color: var(--slds-g-color-accent-1, #066afe);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nk-fs-file-meta {
+  font-size: var(--slds-g-font-scale-neg-1, 0.75rem);
+  line-height: 1.0625rem;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  white-space: nowrap;
+}
+
+/* Selection count badge at the bottom of the panel */
+.nk-fs-selection-count {
+  font-size: var(--slds-g-font-size-base, 0.8125rem);
+  font-weight: 590;
+  color: var(--slds-g-color-accent-1, #066afe);
+  margin: 0;
+  text-align: right;
+}
+
+/* Modal footer */
+.nk-as-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--slds-g-spacing-3, 12px);
+  padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-3, 12px);
+  border-radius: 0px 0px 20px 20px;
+  border-top: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  flex-shrink: 0;
+}
+
+/* ── Generate Content Modal ─────────────────────────────────── */
+
+.nk-gc-modal {
+  position: relative;
+  background: var(--slds-g-color-surface-1, #fff);
+  border-radius: 20px;
+  width: 700px;
+  max-width: calc(100vw - 48px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nk-gc-modal__body {
+  padding: var(--slds-g-spacing-4, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-5, 20px);
+  overflow-y: auto;
+}
+
+.nk-gc-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.nk-gc-field-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-5, 20px);
+}
+
+/* ── Check Similar Articles Modal (Figma 7654:149830) ────────────
+   813px-wide modal with the close button rendered above the card
+   (per the Figma layout), white card body with elevation-4 shadow,
+   intro paragraph, and a vertical list of article rows separated
+   by a 1px hairline. Each row's archive button transforms in place
+   into a "Archived" SLDS 2 light badge once activated. */
+
+/* Backdrop overlay reuses .nk-as-backdrop. Card sits inside it. */
+.nk-cs-modal {
+  position: relative;
+  width: 813px;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 96px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--slds-g-spacing-2, 8px);
+  pointer-events: auto;
+}
+
+/* Close button — Figma renders it above the card on the right. */
+.nk-cs-modal__close {
+  align-self: flex-end;
+}
+
+.nk-cs-modal__card {
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border-radius: var(--slds-g-radius-border-4, 20px);
+  box-shadow:
+    0 0 10px 0 rgba(0, 0, 0, 0.12),
+    0 7px 7px 0 rgba(0, 0, 0, 0.12),
+    0 -1px 3px 0 rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Header */
+.nk-cs-modal__header {
+  flex-shrink: 0;
+  padding: var(--slds-g-spacing-4, 16px);
+  border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  text-align: center;
+}
+
+.nk-cs-modal__title {
+  margin: 0;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-3, 1.25rem);
+  font-weight: 400;
+  line-height: 1.75rem;
+  color: #181818;
+}
+
+/* Body — scrollable when list overflows. Figma uses 24px between
+   the intro paragraph and the first article row. */
+.nk-cs-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--slds-g-spacing-4, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-6, 24px);
+}
+
+.nk-cs-modal__intro {
+  margin: 0;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: 14px;
+  line-height: 19px;
+  color: #181818;
+}
+
+.nk-cs-modal__intro-title {
+  font-weight: 590;
+}
+
+/* Article list — Figma uses gap-[24px] between rows. Each row owns
+   its own 24px top padding + 1px hairline divider so the divider
+   sits flush against the gap above (which becomes "breathing room"
+   between rows). */
+.nk-cs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-6, 24px);
+}
+
+.nk-cs-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-4, 16px);
+  padding-top: var(--slds-g-spacing-6, 24px);
+  border-top: 1px solid rgba(94, 93, 96, 0.13);
+}
+
+.nk-cs-row__top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--slds-g-spacing-4, 16px);
+}
+
+.nk-cs-row__title-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Title link — Confluence text-link style (accent-1, no underline). */
+.nk-cs-row__title {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: 14px;
+  line-height: 19px;
+  font-weight: 400;
+  color: var(--slds-g-color-accent-1, #066afe);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nk-cs-row__title:hover {
+  text-decoration: underline;
+}
+
+.nk-cs-row__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-cs-row__source {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #747474;
+}
+
+.nk-cs-row__source lightning-icon {
+  --slds-c-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-cs-row__sep {
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-cs-row__updated {
+  color: var(--slds-g-color-accent-1, #066afe);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nk-cs-row__updated:hover {
+  text-decoration: underline;
+}
+
+/* Status badge — light by default, success variant for "Published". */
+.nk-cs-row__status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.nk-cs-row__status-badge--success {
+  background-color: var(--slds-g-color-success-base-50, #cdefc4);
+  color: var(--slds-g-color-success-base-10, #194e10);
+  border: none;
+}
+
+.nk-cs-row__status-icon {
+  --slds-c-icon-color-foreground: var(--slds-g-color-success-base-10, #194e10);
+}
+
+/* Similarity score column */
+.nk-cs-row__score-col {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 82px;
+}
+
+.nk-cs-row__score-label {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-cs-row__score-value {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: 16px;
+  font-weight: 590;
+  line-height: 22px;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* Archive button / archived badge column */
+.nk-cs-row__action-col {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  min-height: 32px;
+}
+
+.nk-cs-archived-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: 12px;
+  font-weight: 590;
+  line-height: 17px;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  border: 1px solid var(--slds-g-color-border-1, #e5e5e5);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+}
+
+.nk-cs-archived-badge__icon {
+  --slds-c-icon-color-foreground: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Similar aspects row */
+.nk-cs-row__aspects {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nk-cs-row__aspects-label {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: 12px;
+  font-weight: 590;
+  line-height: 17px;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  margin-right: 2px;
+}
+
+.nk-cs-row__aspect-badge {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 17px;
+  padding: 2px 8px;
+}
+
+/* Archived row dims slightly to signal the action took effect */
+.nk-cs-row--archived .nk-cs-row__title,
+.nk-cs-row--archived .nk-cs-row__updated {
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-cs-row--archived .nk-cs-row__score-value {
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Footer */
+.nk-cs-modal__footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--slds-g-spacing-2, 8px);
+  height: 64px;
+  padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-3, 12px);
+  border-top: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+/* ── Step 2 two-column layout ──────────────────────────────────── */
+
+.nk-card__body--preview {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-2, 14px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  line-height: 1.6;
+}
+
+.nk-preview-content {
+  pointer-events: auto;
+}
+
+/* Read-only preview: editor block boundaries must not show (unwrap in JS; fallback if any remain) */
+.nk-preview-content .nk-created-block-boundary {
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  display: contents !important;
+}
+
+.nk-preview-para {
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  padding: var(--slds-g-spacing-2, 8px);
+  margin-bottom: 4px;
+  transition: background-color 0.25s ease, box-shadow 0.25s ease, border-left-color 0.25s ease;
+  border-left: 3px solid transparent;
+}
+
+.nk-preview-para:last-child {
+  margin-bottom: 0;
+}
+
+.nk-preview-para--highlight {
+  background-color: var(--slds-g-color-highlight-1, #f3f9ff);
+  box-shadow: 0 0 0 2px var(--slds-g-color-accent-2, #0250d9);
+  border-left: 3px solid var(--slds-g-color-accent-2, #0250d9);
+  animation: nk-highlight-fade-in 0.3s ease;
+}
+
+@keyframes nk-highlight-fade-in {
+  from {
+    background-color: transparent;
+    box-shadow: none;
+    border-left-color: transparent;
+  }
+  to {
+    background-color: var(--slds-g-color-highlight-1, #f3f9ff);
+    box-shadow: 0 0 0 2px var(--slds-g-color-accent-2, #0250d9);
+    border-left-color: var(--slds-g-color-accent-2, #0250d9);
+  }
+}
+
+.nk-sim-right {
+  width: 451px;
+  min-width: 451px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.nk-sim-right-card {
+  background: var(--slds-g-color-surface-container-1, #fff);
+  border-radius: var(--slds-g-radius-border-4, 20px);
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ── Similarity Check Step ─────────────────────────────────────── */
+
+.nk-sim-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: var(--slds-g-spacing-4, 16px);
+  padding: var(--slds-g-spacing-8, 32px);
+}
+
+.nk-sim-spinner__label {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  margin: 0;
+}
+
+.nk-sim-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-3, 12px);
+  border-bottom: 1px solid var(--slds-g-color-border-1, #e5e5e5);
+}
+
+.nk-sim-card__title {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-3, 20px);
+  font-weight: var(--slds-g-font-weight-6, 600);
+  color: var(--slds-g-color-on-surface-3, #001e5b);
+  line-height: 28px;
+}
+
+.nk-sim-badge {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-neg-1, 12px);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  border-radius: 20px;
+  padding: 2px 12px;
+  line-height: 18px;
+}
+
+.nk-sim-card__body {
+  padding: var(--slds-g-spacing-4, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-3, 12px);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.nk-sim-intro {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  line-height: 20px;
+  margin: 0 0 var(--slds-g-spacing-2, 8px);
+}
+
+/* Each similar article row */
+.nk-sim-article {
+  border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  border-radius: var(--slds-g-radius-border-3, 12px);
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.nk-sim-article__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--slds-g-spacing-3, 12px);
+  cursor: pointer;
+  gap: var(--slds-g-spacing-2, 8px);
+  border-radius: var(--slds-g-radius-border-3, 12px);
+}
+
+.nk-sim-article__header:hover {
+  background: var(--slds-g-color-surface-2, #f3f3f3);
+  border-radius: var(--slds-g-radius-border-3, 12px);
+}
+
+.nk-sim-article__left {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-1, 4px);
+  flex: 1;
+  min-width: 0;
+}
+
+.nk-sim-article__chevron {
+  flex-shrink: 0;
+  color: var(--slds-g-color-accent-2, #0250d9);
+}
+
+.nk-sim-article__icon {
+  flex-shrink: 0;
+}
+
+.nk-sim-article__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nk-sim-article__title {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  color: var(--slds-g-color-accent-2, #0250d9);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 18px;
+}
+
+.nk-sim-article__title:hover {
+  text-decoration: underline;
+}
+
+.nk-sim-article__sub {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nk-sim-source-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.nk-sim-source-icon svg,
+.nk-sim-source-icon img {
+  display: block;
+  vertical-align: middle;
+}
+
+.nk-sim-source-icon--confluence {
+  flex-shrink: 0;
+  color: var(--slds-g-color-on-surface-1, #747474);
+}
+
+.nk-sim-article__source,
+.nk-sim-article__date {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-neg-1, 12px);
+  color: var(--slds-g-color-on-surface-1, #747474);
+  line-height: 17px;
+}
+
+.nk-sim-article__dot {
+  color: var(--slds-g-color-on-surface-1, #747474);
+  font-size: var(--slds-g-font-scale-neg-1, 12px);
+}
+
+.nk-sim-article__score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  gap: 2px;
+}
+
+.nk-sim-score__label {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 12px;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.nk-sim-score__value {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-2, 16px);
+  font-weight: var(--slds-g-font-weight-6, 600);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  line-height: 22px;
+}
+
+/* Expanded article body — never clip, always show all section cards + action buttons */
+.nk-sim-article__body {
+  padding: var(--slds-g-spacing-3, 12px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-2, 8px);
+  border-top: 1px solid var(--slds-g-color-border-1, #e5e5e5);
+}
+
+.nk-sim-section-card {
+  background: var(--slds-g-color-surface-container-1, #fff);
+  border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  border-radius: var(--slds-g-radius-border-3, 12px);
+  padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.nk-sim-section-card:hover {
+  border-color: var(--slds-g-color-accent-2, #0250d9);
+  background: var(--slds-g-color-surface-1, #f3f9ff);
+}
+
+.nk-sim-section-card--active {
+  border-color: var(--slds-g-color-accent-2, #0250d9);
+  background: var(--slds-g-color-surface-1, #f3f9ff);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-2, #0250d9);
+}
+
+.nk-sim-section-card__title {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  font-weight: var(--slds-g-font-weight-6, 600);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  line-height: 18px;
+}
+
+.nk-sim-section-card__desc {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-neg-1, 12px);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  line-height: 17px;
+  margin-top: 2px;
+}
+
+.nk-sim-article__actions {
+  display: flex;
+  gap: var(--slds-g-spacing-2, 8px);
+  padding-top: var(--slds-g-spacing-3, 12px);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Suggested Placement – Hierarchy Panel (Step 3, non-KB)
+   ═══════════════════════════════════════════════════════════════ */
+
+.nk-hierarchy-right {
+  /* Figma 7555:111894 — Suggested Placement panel sits on the LEFT
+     at 320px wide, with the metadata form to the right. */
+  width: 320px;
+  min-width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.nk-hierarchy-card {
+  background: var(--slds-g-color-surface-container-1, #fff);
+  border: 1px solid rgba(94, 93, 96, 0.13);
+  border-radius: var(--slds-g-radius-border-4, 20px);
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.nk-hierarchy-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--slds-g-spacing-4, 16px);
+  flex-shrink: 0;
+}
+
+.nk-hierarchy-card__title {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-3, 20px);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  color: var(--slds-g-color-on-surface-3, #03234d);
+  line-height: 28px;
+}
+
+/* Figma 7555:111894 — left-arrow collapse button replaces the older
+   Graph View toggle. Tinted to the SLDS accent so it reads as a link. */
+.nk-hierarchy-card__collapse {
+  --slds-c-button-text-color: var(--slds-g-color-accent-1, #066afe);
+  --slds-c-button-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-hierarchy-card__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+}
+
+/* Graph View toggle – Figma frame (node 7023-4409380): OFF = grey, ON = blue + check */
+.nk-graph-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  cursor: pointer;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nk-graph-view-toggle__label {
+  flex-shrink: 0;
+  line-height: 24px;
+}
+
+.nk-graph-view-toggle__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nk-graph-view-toggle__track {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 48px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 24px;
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  background-color: var(--slds-g-color-border-2, #5c5c5c);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* ON state: blue track per Figma */
+.nk-graph-view-toggle__input:checked + .nk-graph-view-toggle__track {
+  background-color: var(--slds-g-color-accent-1, #066afe);
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.25), inset 0 0.5px 2px rgba(0, 0, 0, 0.5), inset 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.nk-graph-view-toggle__input:focus-visible + .nk-graph-view-toggle__track {
+  outline: 2px solid var(--slds-g-color-accent-1, #066afe);
+  outline-offset: 2px;
+}
+
+.nk-graph-view-toggle__check {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.nk-graph-view-toggle__input:checked + .nk-graph-view-toggle__track .nk-graph-view-toggle__check {
+  display: flex;
+}
+
+.nk-graph-view-toggle__check .nk-graph-view-toggle__check-icon {
+  --slds-c-icon-color-foreground: #fff;
+}
+
+.nk-graph-view-toggle__thumb {
+  position: absolute;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+/* Thumb on right when ON (48 - 2 - 20 = 26px) */
+.nk-graph-view-toggle__input:checked + .nk-graph-view-toggle__track .nk-graph-view-toggle__thumb {
+  transform: translateX(26px);
+}
+
+.nk-hierarchy-card__toggle-label {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.nk-hierarchy-card__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-4, 16px);
+}
+
+.nk-hierarchy-search {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  padding: 6px var(--slds-g-spacing-3, 12px);
+  margin-top: var(--slds-g-spacing-4, 16px);
+  margin-bottom: var(--slds-g-spacing-2, 8px);
+  background: var(--slds-g-color-surface-container-1, #fff);
+}
+
+.nk-hierarchy-search__icon {
+  flex-shrink: 0;
+}
+
+.nk-hierarchy-search__input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background: transparent;
+  line-height: 18px;
+}
+
+.nk-hierarchy-search__input::placeholder {
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-hierarchy-tree {
+  display: flex;
+  flex-direction: column;
+}
+
+.nk-ht-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--slds-g-spacing-2, 8px);
+  padding: 6px var(--slds-g-spacing-2, 8px) 6px var(--slds-g-spacing-4, 16px);
+  cursor: grab;
+  border-left: 4px solid transparent;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.nk-ht-row--static {
+  cursor: default;
+}
+
+.nk-ht-row:hover {
+  background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.nk-ht-row--child {
+  padding-left: var(--slds-g-spacing-8, 32px);
+}
+
+.nk-ht-row--selected {
+  background-color: var(--slds-g-color-brand-base-90, #d6e6ff);
+  border-left-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-ht-row--selected:hover {
+  background-color: var(--slds-g-color-brand-base-90, #d6e6ff);
+}
+
+.nk-ht-row--drag-over {
+  background-color: var(--slds-g-color-brand-base-95, #e8f0fe);
+  border-left-color: var(--slds-g-color-accent-2, #0250d9);
+}
+
+.nk-ht-row__chevron {
+  flex-shrink: 0;
+  width: 14px;
+  padding-top: 3px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.nk-ht-row__label {
+  flex: 1;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-3, #03234d);
+  line-height: 18px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-ht-row__drag {
+  flex-shrink: 0;
+  padding-top: 2px;
+  cursor: grab;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Toggle Switch (shared between KB sections and hierarchy)
+   ═══════════════════════════════════════════════════════════════ */
+
+.nk-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  transition: background-color 0.2s;
+}
+
+.nk-toggle--sm {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+}
+
+.nk-toggle--off {
+  background-color: var(--slds-g-color-border-2, #5c5c5c);
+}
+
+.nk-toggle--on {
+  background-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-toggle__thumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.nk-toggle--sm .nk-toggle__thumb {
+  width: 16px;
+  height: 16px;
+}
+
+.nk-toggle--on .nk-toggle__thumb {
+  transform: translateX(20px);
+}
+
+.nk-toggle--on.nk-toggle--sm .nk-toggle__thumb {
+  transform: translateX(16px);
+}
+
+.nk-toggle__label {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-neg-2, 11px);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  line-height: 14px;
+  margin-left: var(--slds-g-spacing-2, 8px);
+}
+
+.nk-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-3, 12px);
+}
+
+.nk-toggle-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Knowledge Block – Collapsible section header
+   ═══════════════════════════════════════════════════════════════ */
+
+.nk-section__header--collapsible {
+  cursor: pointer;
+  user-select: none;
+}
+
+.nk-section__header--collapsible:hover {
+  background-color: var(--slds-g-color-surface-container-3, #e5e5e5);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Knowledge Block – Audience Visibility selector
+   ═══════════════════════════════════════════════════════════════ */
+
+.nk-audience-selector {
+  margin-top: var(--slds-g-spacing-4, 16px);
+}
+
+.nk-grouped-combobox {
+  display: flex;
+  margin-top: var(--slds-g-spacing-1, 4px);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Knowledge Block – Translation rows (horizontal Figma layout)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Translation content: CSS show/hide (lwc:if doesn't re-render in light DOM) */
+.nk-tr-content { display: block; }
+.nk-tr-content--hidden { display: none; }
+
+/* Native checkbox toggle (label > input[hidden] + track span) */
+.nk-native-toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.nk-native-toggle--sm {
+  width: 40px;
+  height: 20px;
+}
+
+.nk-native-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.nk-native-toggle__track {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background-color: var(--slds-g-color-neutral-base-80, #c9c9c9);
+  transition: background-color 0.2s;
+}
+
+.nk-native-toggle__track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.nk-native-toggle--sm .nk-native-toggle__track::after {
+  width: 16px;
+  height: 16px;
+}
+
+.nk-native-toggle input:checked + .nk-native-toggle__track {
+  background-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-native-toggle input:checked + .nk-native-toggle__track::after {
+  transform: translateX(24px);
+}
+
+.nk-native-toggle--sm input:checked + .nk-native-toggle__track::after {
+  transform: translateX(20px);
+}
+
+/* One translation row: horizontal flex */
+.nk-tr-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: 8px;
+  padding: 4px 0;
+}
+
+/* Column base */
+.nk-tr-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nk-tr-col__label {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-neg-2, 11px);
+  font-weight: 600;
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  white-space: nowrap;
+}
+
+/* Column widths */
+.nk-tr-col--lang  { width: 150px; flex-shrink: 0; }
+.nk-tr-col--ai    { width: 110px; flex-shrink: 0; align-items: flex-start; }
+.nk-tr-col--value { flex: 1; min-width: 0; }
+.nk-tr-col--date  { width: 155px; flex-shrink: 0; }
+
+/* AI toggle inside col */
+.nk-tr-ai-toggle {
+  --slds-c-input-toggle-color-border: var(--slds-g-color-border-2, #5c5c5c);
+}
+
+/* Combobox inside a translation col — full width, no extra label */
+.nk-tr-combobox {
+  width: 100%;
+}
+
+/* Grouped input: picklist + lookup fused together */
+.nk-tr-grouped {
+  display: flex;
+  width: 100%;
+  height: 32px;
+}
+
+.nk-tr-grouped__picklist {
+  position: relative;
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.nk-tr-select {
+  appearance: none;
+  width: 100%;
+  height: 32px;
+  padding: 0 28px 0 8px;
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-2, 4px) 0 0 var(--slds-g-radius-border-2, 4px);
+  border-right: none;
+  background: var(--slds-g-color-surface-container-1, #fff);
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.nk-tr-select:focus {
+  outline: none;
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-tr-select__chevron {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-tr-grouped__lookup {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.nk-tr-lookup {
+  width: 100%;
+  height: 32px;
+  padding: 0 28px 0 8px;
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: 0 var(--slds-g-radius-border-2, 4px) var(--slds-g-radius-border-2, 4px) 0;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background: var(--slds-g-color-surface-container-1, #fff);
+  box-sizing: border-box;
+}
+
+.nk-tr-lookup:focus {
+  outline: none;
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-tr-lookup::placeholder { color: var(--slds-g-color-on-surface-1, #5c5c5c); }
+
+.nk-tr-lookup__icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Date picker */
+.nk-tr-date-wrap { width: 100%; }
+
+.nk-tr-date {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+  border-radius: var(--slds-g-radius-border-2, 4px);
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background: var(--slds-g-color-surface-container-1, #fff);
+  box-sizing: border-box;
+}
+
+.nk-tr-date:focus {
+  outline: none;
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+
+/* AI info message — inline on the same row, filling remaining space */
+.nk-tr-ai-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 4px;
+  align-self: flex-end;
+}
+
+.nk-tr-ai-info-icon {
+  flex-shrink: 0;
+  color: var(--slds-g-color-on-surface-1, #706e6b);
+}
+
+.nk-tr-ai-info-text {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-neg-1, 12px);
+  color: var(--slds-g-color-on-surface-1, #706e6b);
+  line-height: 1.4;
+}
+
+/* Manual fields wrapper: value + date side by side */
+.nk-tr-manual-fields {
+  display: contents;
+}
+
+/* Select inside imperative rows */
+.nk-tr-col__select-wrap {
+  position: relative;
+}
+
+.nk-tr-col__select {
+  appearance: none;
+  width: 100%;
+  height: 32px;
+  padding: 0 28px 0 8px;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: var(--slds-g-radius-border-2, 4px);
+  background: var(--slds-g-color-surface-container-1, #fff);
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.nk-tr-col__select:focus {
+  outline: none;
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-tr-col__select-chevron {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Remove button (imperative rows) */
+.nk-tr-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  border-radius: 4px;
+  flex-shrink: 0;
+  align-self: flex-end;
+  margin-bottom: 2px;
+}
+
+.nk-tr-remove-btn:hover {
+  background: var(--slds-g-color-surface-container-2, #f3f3f3);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* Value lookup dropdown */
+.nk-tr-value-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: 0 0 var(--slds-g-radius-border-2, 4px) var(--slds-g-radius-border-2, 4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+  z-index: 100;
+}
+
+.nk-tr-value-dropdown__item {
+  padding: 8px 12px;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  cursor: pointer;
+}
+
+.nk-tr-value-dropdown__item:hover {
+  background: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+/* Rows container */
+.nk-tr-rows-container {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Remove button aligned to bottom of row */
+.nk-tr-remove {
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+/* Add Translations button */
+.nk-tr-add-row {
+  margin-top: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+
+.nk-grouped-combobox__left {
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.nk-grouped-combobox__right {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Data Category multi-select ─────────────────────────── */
+.nk-datacat-field {
+  margin-top: 12px;
+}
+
+.nk-datacat-field .nk-field-label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.nk-req-mark {
+  color: #c23934;
+  text-decoration: none;
+  margin-right: 2px;
+}
+
+.nk-datacat-input-wrap {
+  position: relative;
+}
+
+.nk-datacat-search {
+  width: 100%;
+  height: 32px;
+  padding: 0 32px 0 8px;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: var(--slds-g-radius-border-2, 4px);
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background: var(--slds-g-color-surface-container-1, #fff);
+  box-sizing: border-box;
+}
+
+.nk-datacat-search:focus {
+  outline: none;
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-datacat-search::placeholder {
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-datacat-chevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-datacat-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: 0 0 var(--slds-g-radius-border-2, 4px) var(--slds-g-radius-border-2, 4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+  z-index: 100;
+}
+
+.nk-datacat-dropdown__item {
+  padding: 8px 12px;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  cursor: pointer;
+}
+
+.nk-datacat-dropdown__item:hover {
+  background: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.nk-datacat-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--slds-g-spacing-2, 8px);
+  margin-top: var(--slds-g-spacing-2, 8px);
+}
+
+/* ── Audience Visibility ───────────────────────────────── */
+.nk-audience-content {
+  margin-top: 12px;
+}
+
+.nk-field-label--audience {
+  display: block;
+  margin-bottom: 4px;
+}
+
+
+/* Audience grouped input: select + search fused together */
+.nk-audience-grouped {
+  display: flex;
+  width: 100%;
+  height: 32px;
+}
+
+.nk-audience-grouped__select-wrap {
+  position: relative;
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.nk-audience-grouped__select {
+  appearance: none;
+  width: 100%;
+  height: 32px;
+  padding: 0 28px 0 8px;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: var(--slds-g-radius-border-2, 4px) 0 0 var(--slds-g-radius-border-2, 4px);
+  border-right: none;
+  background: var(--slds-g-color-surface-container-1, #fff);
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.nk-audience-grouped__select:focus {
+  outline: none;
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-audience-grouped__chevron {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-audience-grouped__lookup-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.nk-audience-grouped__lookup {
+  width: 100%;
+  height: 32px;
+  padding: 0 32px 0 8px;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: 0 var(--slds-g-radius-border-2, 4px) var(--slds-g-radius-border-2, 4px) 0;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  background: var(--slds-g-color-surface-container-1, #fff);
+  box-sizing: border-box;
+}
+
+.nk-audience-grouped__lookup:focus {
+  outline: none;
+  border-color: var(--slds-g-color-accent-1, #066afe);
+  box-shadow: 0 0 0 1px var(--slds-g-color-accent-1, #066afe);
+}
+
+.nk-audience-grouped__lookup::placeholder {
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.nk-audience-grouped__search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Audience dropdown */
+.nk-audience-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: 0 0 var(--slds-g-radius-border-2, 4px) var(--slds-g-radius-border-2, 4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+  z-index: 100;
+}
+
+.nk-audience-dropdown__item {
+  padding: 8px 12px;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  cursor: pointer;
+}
+
+.nk-audience-dropdown__item:hover {
+  background: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+/* Audience pills */
+.nk-audience-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--slds-g-spacing-2, 8px);
+  margin-top: var(--slds-g-spacing-2, 8px);
+}
+
+.nk-audience-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--slds-g-color-border-1, #dddbda);
+  border-radius: 12px;
+  background: var(--slds-g-color-surface-container-1, #fff);
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-neg-1, 12px);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  white-space: nowrap;
+}
+
+.nk-audience-pill__label {
+  line-height: 1;
+}
+
+.nk-audience-pill__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--slds-g-color-on-surface-1, #706e6b);
+  padding: 0;
+  border-radius: 50%;
+}
+
+.nk-audience-pill__remove:hover {
+  background: var(--slds-g-color-surface-container-2, #f3f3f3);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Docked Form Footer (SLDS 2 docked-form-footer pattern, Figma
+   7719:165936). Nested inside the Content Editor card (.nk-card),
+   not viewport-fixed: relies on the card's flex column layout to
+   pin to the bottom while the .nk-card__body scrolls above.
+   - surface-container-1 background
+   - spacing-2 padding + gap
+   - SLDS 2 Elevation-2 (up) shadow for separation from card body
+   ────────────────────────────────────────────────────────────── */
+.nk-docked-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  padding: var(--slds-g-spacing-2, 8px);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  box-shadow:
+    0 1px 2px 0 rgba(0, 0, 0, 0.09),
+    0 -3px 3px 0 rgba(0, 0, 0, 0.16),
+    0 0 5px 0 rgba(0, 0, 0, 0.16);
+  position: relative;
+  z-index: 1;
+}
+
+.nk-docked-footer__stepper {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  gap: 2px;
+  /* Re-uses .nk-stepper__dot / .nk-stepper__bar styles from this file */
+}
+
+.nk-docked-footer__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  flex-shrink: 0;
+}
+
+.nk-docked-footer__btn {
+  --slds-c-button-radius-border: 100px;
+  --slds-c-button-radius-border-startstart: 100px;
+  --slds-c-button-radius-border-startend: 100px;
+  --slds-c-button-radius-border-endstart: 100px;
+  --slds-c-button-radius-border-endend: 100px;
+  --sds-c-button-sizing-height: 32px;
+}
+
+/* Stepper: convert to a slim progress bar with a rounded thumb on the left */
+.nk-docked-footer__stepper {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  position: relative;
+}
+
+.nk-docked-footer__stepper::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 24px;
+  top: 50%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--slds-g-color-border-1, #c9c9c9);
+  transform: translateY(-50%);
+}
+
+.nk-docked-footer__stepper::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--slds-g-color-accent-2, #0250d9);
+  transform: translateY(-50%);
+}
+
+/* Hide the original dot-and-bar nodes inside the footer stepper */
+.nk-docked-footer__stepper .nk-stepper__dot,
+.nk-docked-footer__stepper .nk-stepper__bar {
+  display: none;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Page-level Docked Form Footer (Figma 7549:109817).
+   Sits at the bottom of the outer Card (.nk-page), spanning the
+   full width across the resources panel + Content Editor card.
+   - surface-container-1 background
+   - spacing-2 (8px) padding + gap
+   - SLDS 2 Elevation-2 (up) shadow per Figma spec
+   - 48px total height (32px button + 8px top/bottom padding)
+   ────────────────────────────────────────────────────────────── */
+.nk-page-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  padding: var(--slds-g-spacing-2, 8px);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  /* Top-edge separator only — wrapper page shadow removed elsewhere. */
+  box-shadow: 0 -3px 3px 0 rgba(0, 0, 0, 0.16);
+  position: relative;
+  z-index: 2;
+}
+
+/* Slim progress bar with a rounded thumb on the left.
+   Reuses the same visual treatment as the in-card docked footer:
+   the source dot/bar nodes are hidden and replaced with absolutely
+   positioned pseudo-elements for the bar and indicator. */
+/* Footer stepper — Figma 7549:109818 / 109956
+   16×16 indicator dots separated by 2px-tall light-grey connector bars.
+   Active = blue ring (white center, blue outline).
+   Completed = solid blue circle with white check.
+   Inactive = small 8×8 grey filled dot centered in the 16×16 box. */
+/* SLDS 2 Progress Indicator (Figma 7549:109818 / 7767:178942):
+   16×16 step indicators connected by 2px-tall bars that flex to fill the
+   row. Three indicator states:
+     • Completed — solid accent-1 disc + white utility:check icon (12×12)
+     • Active    — 16×16 ring (2px accent-1 border, white center)
+     • Inactive  — 8×8 neutral-base-80 disc centered in a 16×16 hit box
+   Bars use neutral-base-80 by default and accent-1 once filled. The
+   indicators sit on accent-1 / neutral-base-80 design tokens so the
+   stepper inherits theme overrides. */
+/* Footer stepper — uses SLDS 2 lightning-progress-indicator (2 steps, base
+   variant). Pinned to 400px on the left of the footer; the .actions group
+   uses margin-left: auto to absorb the remaining space. Step labels and
+   popovers are hidden so only the dots + connector bar show, matching
+   Figma 7549:109817.
+   Tokens: --slds-g-color-accent-1 for the active/completed fill,
+           --slds-g-color-neutral-base-80 for the inactive bar. */
+.nk-page-footer__stepper {
+  flex: 0 0 400px;
+  width: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 32px;
+  /* No inline padding — first indicator sits flush with the footer's
+     own 8px left padding, matching Figma 7776:162804 (left content
+     starts at left:0 inside the docked footer). */
+  padding-inline: 0;
+}
+
+.nk-page-footer__stepper lightning-progress-indicator {
+  width: 100%;
+  display: block;
+}
+
+/* SLDS ships .slds-progress with max-width: 70% + margin: auto, which
+   centers the dots-and-bar strip inside the host and leaves ~15% of
+   empty space on each side. We override both so the indicator spans
+   the full 400px container, flush-left per Figma 7776:162804.
+   !important is required because the SLDS rule ships at the same
+   specificity and is loaded globally; descendant scoping isn't enough
+   to win the cascade. */
+.nk-page-footer__stepper .slds-progress {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding-inline: 0 !important;
+}
+
+.nk-page-footer__stepper .slds-progress__list {
+  width: 100%;
+  padding-inline: 0;
+  margin-inline: 0;
+}
+
+/* Hide the textual step label / hover popover beneath each indicator so we
+   get a clean dots+bar progress strip. */
+.nk-page-footer__stepper .slds-progress__item_content,
+.nk-page-footer__stepper .slds-progress__step-label,
+.nk-page-footer__stepper .slds-popover {
+  display: none !important;
+}
+
+.nk-page-footer__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  flex-shrink: 0;
+  /* Stepper is now pinned at 400px on the left — push the actions
+     cluster to the right of the footer. */
+  margin-left: auto;
+}
+
+.nk-page-footer__btn {
+  --slds-c-button-radius-border: 100px;
+  --slds-c-button-radius-border-startstart: 100px;
+  --slds-c-button-radius-border-startend: 100px;
+  --slds-c-button-radius-border-endstart: 100px;
+  --slds-c-button-radius-border-endend: 100px;
+  --sds-c-button-sizing-height: 32px;
+}

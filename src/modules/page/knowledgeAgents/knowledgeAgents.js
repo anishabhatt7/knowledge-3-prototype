@@ -6,6 +6,8 @@ import {
     seedAgents,
     toTableRow,
     formatRelativeTime,
+    statusBadgeClass,
+    govBadgeClass,
     GOVERNANCE_LABELS,
     GOVERNANCE_DESCRIPTIONS,
     SIGNAL_LABELS,
@@ -141,6 +143,7 @@ export default class KnowledgeAgents extends LightningElement {
         else if (id === 'command-center') navigate('/command-center');
         else if (id === 'healing-graph') navigate('/healing-graph');
         else if (id === 'kb-base') navigate('/knowledge-base');
+        else if (id === 'kb-blocks') navigate('/knowledge-blocks');
     }
 
     // ── Data ────────────────────────────────────────────────────────
@@ -204,10 +207,10 @@ export default class KnowledgeAgents extends LightningElement {
 
         const govLabel = GOVERNANCE_LABELS[agent.governanceTier] || agent.governanceTier;
         const govDescription = GOVERNANCE_DESCRIPTIONS[agent.governanceTier] || '';
-        const govClass = `ka-detail__gov-tier ka-detail__gov-tier--${agent.governanceTier}`;
+        const govClass = govBadgeClass(agent.governanceTier);
         const govBlockClass = `ka-detail__gov-card ka-detail__gov-card--${agent.governanceTier}`;
         const statusLabel = STATUS_LABELS[agent.status] || agent.status;
-        const statusClass = `ka-status-badge ka-status-badge--${agent.status}`;
+        const statusClass = statusBadgeClass(agent.status);
 
         return {
             id: agent.id,

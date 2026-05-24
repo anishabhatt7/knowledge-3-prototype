@@ -8,6 +8,7 @@ import HealingGraph from 'page/healingGraph';
 import KnowledgeBase from 'page/knowledgeBase';
 import CommandCenter from 'page/commandCenter';
 import KnowledgeAgents from 'page/knowledgeAgents';
+import KnowledgeBlocks from 'page/knowledgeBlocks';
 
 /** Option A: explicit registration – add one import + one entry here when adding a route */
 const ROUTE_COMPONENTS = {
@@ -17,6 +18,7 @@ const ROUTE_COMPONENTS = {
     'page-knowledge-base': KnowledgeBase,
     'page-command-center': CommandCenter,
     'page-knowledge-agents': KnowledgeAgents,
+    'page-knowledge-blocks': KnowledgeBlocks,
 };
 
 /** Derived from routes.config: component name → nav page id (includes navHighlight for child routes) */

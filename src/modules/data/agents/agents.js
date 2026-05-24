@@ -268,10 +268,10 @@ export function toTableRow(agent) {
         avatar: agent.avatar,
 
         statusLabel: STATUS_LABELS[agent.status] || agent.status,
-        statusClass: `ka-status-badge ka-status-badge--${agent.status}`,
+        statusClass: statusBadgeClass(agent.status),
 
         govLabel: GOVERNANCE_LABELS[agent.governanceTier] || agent.governanceTier,
-        govClass: `ka-gov-pill ka-gov-pill--${agent.governanceTier}`,
+        govClass: govBadgeClass(agent.governanceTier),
 
         articlesCreated: agent.articlesCreated,
         articlesUpdated: agent.articlesUpdated,
@@ -282,6 +282,44 @@ export function toTableRow(agent) {
         healthScore: agent.domainHealthScore,
         healthClass: healthScoreClass(agent.domainHealthScore),
     };
+}
+
+/**
+ * SLDS 2 badge theming for the agent status pill. We map each
+ * runtime state onto a standard SLDS theme class so the pill picks
+ * up the canonical color/text treatment from `lightning-badge`
+ * instead of the bespoke `.ka-status-badge` rules. Learning gets a
+ * scoped tint via `ka-badge-learning` since SLDS has no info theme.
+ */
+export function statusBadgeClass(status) {
+    switch (status) {
+        case 'active':
+            return 'slds-theme_success';
+        case 'paused':
+            return 'slds-theme_warning';
+        case 'error':
+            return 'slds-theme_error';
+        case 'learning':
+        default:
+            return 'ka-badge-learning';
+    }
+}
+
+/**
+ * SLDS 2 badge theming for the governance tier. The tiers escalate
+ * from auto-publish → human-review → human-required, so we lift the
+ * visual weight (lightest → default → inverse) accordingly.
+ */
+export function govBadgeClass(tier) {
+    switch (tier) {
+        case 'human-required':
+            return 'slds-badge_inverse';
+        case 'human-review':
+            return 'slds-badge_lightest';
+        case 'auto-publish':
+        default:
+            return '';
+    }
 }
 
 /**

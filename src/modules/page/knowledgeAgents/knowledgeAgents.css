@@ -297,11 +297,14 @@ page-knowledge-agents {
 /* ─────────────────────────────────────────────────────────────────
    TABLE
    Built on the SLDS2 data-table blueprint (slds-table, _bordered,
-   _cell-buffer + slds-text-title_caps headers + slds-hint-parent
-   rows). The rules below are *only* for things SLDS doesn't already
-   give us: the wrapper border, the special cell contents (avatar,
-   pills, chips, health badge), and a few minor tweaks to the SLDS
-   defaults so the design matches Figma 78:10164.
+   _cell-buffer + slds-hint-parent rows). Header cells follow the
+   SLDS 2 "⚡ Header cell" component (Figma 78:7300): surface-
+   container-2 fill, a 1px left divider between columns, and a
+   semibold sentence-case label (no ALL CAPS, no slds-text-title_caps).
+   The rules below are *only* for things SLDS doesn't already give
+   us: the wrapper border, header-cell structure, special body-cell
+   contents (pills, chips, health badge), and a few minor tweaks so
+   the design matches Figma 78:10164.
    ─────────────────────────────────────────────────────────────── */
 .ka-table-wrap {
     margin-top: var(--slds-g-spacing-5, 20px);
@@ -322,76 +325,136 @@ page-knowledge-agents {
     white-space: nowrap;
 }
 
+/* SLDS 2 body cell (Figma 78:6888 — "⚡ Cell"). White fill, 1px
+   bottom hairline, 36px row height, 8px horizontal padding via the
+   inner flex wrapper. Override `slds-table_cell-buffer`'s padding
+   so the SLDS 2 cell spec drives the layout end-to-end. */
+.ka-td {
+    background: var(--slds-g-color-surface-container-1, #fff);
+    border-bottom: var(--slds-g-sizing-border-1, 1px) solid
+        var(--slds-g-color-border-1, #c9c9c9);
+    padding: 0;
+    height: 36px;
+    min-height: 30px;
+}
+
+.ka-td__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    height: 100%;
+    padding: 0 var(--slds-g-spacing-2, 8px);
+}
+
+/* SLDS 2 header cell (Figma 78:7300). The outer <th> carries the
+   fill + bottom hairline; the inner wrapper carries the vertical
+   divider so it draws *inside* the cell and skips the first column.
+   `text-transform: none` is set defensively here too so the SLDS 1
+   ALL CAPS convention can never leak in via inherited rules. */
+.ka-th {
+    background: var(--slds-g-color-surface-container-2, #f3f3f3);
+    border-bottom: var(--slds-g-sizing-border-1, 1px) solid
+        var(--slds-g-color-border-1, #c9c9c9);
+    padding: 0;
+    height: 36px;
+    min-height: 30px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.ka-th__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-2, 8px);
+    height: 100%;
+    padding: 0 var(--slds-g-spacing-2, 8px);
+    border-left: var(--slds-g-sizing-border-1, 1px) solid
+        var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.ka-th:first-child .ka-th__inner {
+    border-left: 0;
+}
+
+.ka-th__label {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    font-weight: var(--slds-g-font-weight-6, 600);
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* The sortable Health header reuses the same inner wrapper via
+   `.slds-th__action`, so the role="button" span gets the same
+   layout/border-left treatment without nesting an extra div. */
+.ka-th--sortable .slds-th__action.ka-th__inner {
+    display: flex;
+    width: 100%;
+    background: transparent;
+    text-decoration: none;
+    cursor: pointer;
+}
+
 /* Health column header — keep the sort affordance visible without
    overriding SLDS' built-in `slds-is-sorted` colour treatment. */
 .ka-th-health .ka-th-health__icon {
+    flex: 0 0 auto;
     margin-inline-start: var(--slds-g-spacing-1, 4px);
     --sds-c-icon-sizing-width: 12px;
     --sds-c-icon-sizing-height: 12px;
 }
 
-/* Last column = row action chevron; keep it narrow and right-aligned. */
+/* Last column = row action chevron; keep it narrow and right-aligned.
+   Alignment runs through the SLDS 2 inner flex wrapper so it works
+   for both `.ka-th__inner` and `.ka-td__inner`. */
 .ka-th-actions,
 .ka-cell-actions {
     width: 3.25rem;
-    text-align: right;
+}
+
+.ka-cell-actions .ka-td__inner {
+    justify-content: flex-end;
 }
 
 .ka-cell-name {
     min-width: 240px;
 }
 
+/* Signal Sources column — hidden for now while the design is being
+   reworked. Header is the 5th <th> in the thead row and each body
+   row is `<th> + 4 <td>`s, so the Signal Sources cell is also the
+   5th child. Delete this rule to bring the column back. */
+.ka-table thead tr > :nth-child(5),
+.ka-table tbody tr > :nth-child(5) {
+    display: none;
+}
+
 .ka-cell-health {
-    text-align: center;
     width: 96px;
 }
 
-/* Name cell: small square avatar + agent link + domain subline ---
-   mirrors the avatar block on each AutonomousAgents card in the
-   vision app so the row reads as "agent identity" not just text. */
-.ka-table__name-wrap {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--slds-g-spacing-3, 12px);
-}
-
-.ka-table__avatar {
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
-    border-radius: 10px;
-    background: var(--slds-g-color-accent-2, #0250d9);
-    color: var(--slds-g-color-on-accent-1, #fff);
-    display: inline-flex;
-    align-items: center;
+.ka-cell-health .ka-td__inner {
     justify-content: center;
-    font-size: var(--slds-g-font-scale-1, 14px);
-    font-weight: var(--slds-g-font-weight-7, 700);
-    line-height: 1;
 }
 
-.ka-table__name-stack {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: flex-start;
-    line-height: 1.2;
-}
-
-.ka-table__domain {
-    font-size: var(--slds-g-font-scale-neg-2, 11px);
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
-    margin-top: 2px;
-}
-
-/* Agent-name link — button styled as a link, no SLDS equivalent
-   we want here (lightning-button variants are too tall/heavy). */
+/* Agent-name cell: a single inline blue link per Figma 78:9410.
+   Avatars and domain sublines were removed to match the canonical
+   SLDS data-table "link" cell exactly. */
 .ka-table__link {
     background: none;
     border: 0;
     padding: 0;
     font-family: inherit;
-    font-size: inherit;
-    font-weight: var(--slds-g-font-weight-6, 600);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    font-weight: var(--slds-g-font-weight-4, 400);
+    line-height: 18px;
     color: var(--slds-g-color-accent-2, #0250d9);
     cursor: pointer;
     text-align: left;
@@ -402,8 +465,10 @@ page-knowledge-agents {
     color: var(--slds-g-color-accent-3, #0b5cab);
 }
 
-/* Row action chevron is a <lightning-button-icon variant="border-filled">.
-   Round it and dial size down so it visually matches the row height. */
+/* Row action chevron — Figma 78:9703 uses the "Extra extra small"
+   bordered button-icon variant. We render `lightning-button-icon`
+   with size="xx-small" variant="border-filled" and just round it
+   into the SLDS 2 circular silhouette. */
 .ka-row-action {
     --slds-c-button-radius-border: var(--slds-g-radius-border-circle, 9999px);
     --sds-c-button-radius-border: var(--slds-g-radius-border-circle, 9999px);
@@ -485,36 +550,15 @@ page-knowledge-agents {
     color: var(--slds-g-color-on-surface-1, #5c5c5c);
 }
 
-/* Status pills */
-.ka-status-badge {
-    display: inline-flex;
-    align-items: center;
-    height: 22px;
-    padding: 0 10px;
-    border-radius: 9999px;
-    font-size: var(--slds-g-font-scale-neg-1, 12px);
-    font-weight: 500;
-    text-transform: capitalize;
-}
-
-.ka-status-badge--active {
-    background: #e1fadc;
-    color: #186b1c;
-}
-
-.ka-status-badge--learning {
-    background: #dbeafe;
-    color: #1d4ed8;
-}
-
-.ka-status-badge--paused {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.ka-status-badge--error {
-    background: #fee2e2;
-    color: #b91c1c;
+/* Status / governance badges now lean on `lightning-badge`'s built-in
+   SLDS 2 theming (slds-theme_success, slds-badge_inverse, etc.). The
+   only state SLDS doesn't ship a theme for is "learning" — keep a
+   single info-blue tint scoped to that custom class. */
+.ka-badge-learning {
+    --slds-c-badge-color-background: #dbeafe;
+    --slds-c-badge-text-color: #1d4ed8;
+    --sds-c-badge-color-background: #dbeafe;
+    --sds-c-badge-text-color: #1d4ed8;
 }
 
 /* Governance pill */
@@ -956,34 +1000,6 @@ page-knowledge-agents {
    LIST TABLE — vision-app data points
    (governance pill, activity counts, signal chips, health score)
    ─────────────────────────────────────────────────────────────── */
-
-/* Governance pill in the table mirrors the detail view's gov-tier
-   but is small enough to live inline in a row. */
-.ka-gov-pill {
-    display: inline-flex;
-    align-items: center;
-    height: 22px;
-    padding: 0 10px;
-    border-radius: 9999px;
-    font-size: var(--slds-g-font-scale-neg-1, 12px);
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.ka-gov-pill--auto-publish {
-    background: #f3f3f3;
-    color: #4a4a4a;
-}
-
-.ka-gov-pill--human-review {
-    background: #e6e6e6;
-    color: #2e2e2e;
-}
-
-.ka-gov-pill--human-required {
-    background: #d4d4d4;
-    color: #1a1a1a;
-}
 
 /* Activity column: three "<count> label" segments separated by a
    thin divider, matching the "47 created  132 updated  8 gaps" row

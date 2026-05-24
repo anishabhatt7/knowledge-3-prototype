@@ -103,8 +103,14 @@
                         <div class="ka-detail__title-block">
                             <div class="ka-detail__title-row">
                                 <h1 class="ka-detail__title">{detail.name}</h1>
-                                <span class={detail.statusClass}>{detail.statusLabel}</span>
-                                <span class={detail.govClass}>{detail.govLabel}</span>
+                                <lightning-badge
+                                    label={detail.statusLabel}
+                                    class={detail.statusClass}
+                                ></lightning-badge>
+                                <lightning-badge
+                                    label={detail.govLabel}
+                                    class={detail.govClass}
+                                ></lightning-badge>
                             </div>
                             <p class="ka-detail__domain">{detail.domain} Domain</p>
                         </div>
@@ -384,9 +390,13 @@
                     </div>
                 </div>
 
-                <!-- SLDS2 Data Table blueprint (slds-table + bordered + cell-buffer).
-                     Header cells use slds-text-title_caps + slds-truncate; rows use
-                     slds-hint-parent so the row chevron can hide until hover. -->
+                <!-- SLDS2 Data Table blueprint (slds-table + bordered).
+                     Header cells follow the SLDS 2 "⚡ Header cell"
+                     component (Figma 78:7300) — sentence-case label
+                     inside a flex inner wrapper that draws the vertical
+                     column divider. Body cells follow the matching
+                     "⚡ Cell" component (Figma 78:6888). Rows use
+                     slds-hint-parent so the chevron can hide until hover. -->
                 <div class="ka-table-wrap">
                     <table
                         role="grid"
@@ -395,108 +405,127 @@
                     >
                         <thead>
                             <tr class="slds-line-height_reset">
-                                <th scope="col" class="slds-text-title_caps">
-                                    <div class="slds-truncate" title="Agent Name">Agent Name</div>
+                                <th scope="col" class="ka-th">
+                                    <div class="ka-th__inner">
+                                        <span class="ka-th__label" title="Agent Name">Agent Name</span>
+                                    </div>
                                 </th>
-                                <th scope="col" class="slds-text-title_caps">
-                                    <div class="slds-truncate" title="Status">Status</div>
+                                <th scope="col" class="ka-th">
+                                    <div class="ka-th__inner">
+                                        <span class="ka-th__label" title="Status">Status</span>
+                                    </div>
                                 </th>
-                                <th scope="col" class="slds-text-title_caps">
-                                    <div class="slds-truncate" title="Governance">Governance</div>
+                                <th scope="col" class="ka-th">
+                                    <div class="ka-th__inner">
+                                        <span class="ka-th__label" title="Governance">Governance</span>
+                                    </div>
                                 </th>
-                                <th scope="col" class="slds-text-title_caps">
-                                    <div class="slds-truncate" title="Activity">Activity</div>
+                                <th scope="col" class="ka-th">
+                                    <div class="ka-th__inner">
+                                        <span class="ka-th__label" title="Activity">Activity</span>
+                                    </div>
                                 </th>
-                                <th scope="col" class="slds-text-title_caps">
-                                    <div class="slds-truncate" title="Signal Sources">Signal Sources</div>
+                                <th scope="col" class="ka-th">
+                                    <div class="ka-th__inner">
+                                        <span class="ka-th__label" title="Signal Sources">Signal Sources</span>
+                                    </div>
                                 </th>
                                 <th
                                     scope="col"
                                     aria-sort="descending"
-                                    class="slds-text-title_caps slds-is-sortable slds-is-sorted slds-is-sorted_desc ka-th-health"
+                                    class="ka-th ka-th--sortable slds-is-sortable slds-is-sorted slds-is-sorted_desc ka-th-health"
                                 >
-                                    <span class="slds-th__action slds-text-link_reset" role="button" tabindex="0">
+                                    <span class="slds-th__action slds-text-link_reset ka-th__inner" role="button" tabindex="0">
                                         <span class="slds-assistive-text">Sort by: </span>
-                                        <span class="slds-grid slds-grid_vertical-align-center">
-                                            <span class="slds-truncate" title="Health">Health</span>
-                                            <lightning-icon
-                                                icon-name="utility:arrowdown"
-                                                size="xx-small"
-                                                alternative-text="Sorted descending"
-                                                class="ka-th-health__icon"
-                                            ></lightning-icon>
-                                        </span>
+                                        <span class="ka-th__label" title="Health">Health</span>
+                                        <lightning-icon
+                                            icon-name="utility:arrowdown"
+                                            size="xx-small"
+                                            alternative-text="Sorted descending"
+                                            class="ka-th-health__icon"
+                                        ></lightning-icon>
                                     </span>
                                 </th>
-                                <th scope="col" class="ka-th-actions" aria-label="Row actions"></th>
+                                <th scope="col" class="ka-th ka-th-actions" aria-label="Row actions">
+                                    <div class="ka-th__inner"></div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
                             <template for:each={tableRows} for:item="row">
                                 <tr key={row.id} class="slds-hint-parent">
-                                    <th scope="row" data-label="Agent Name" class="ka-cell-name">
-                                        <span class="ka-table__name-wrap">
-                                            <span class="ka-table__avatar" aria-hidden="true">{row.avatar}</span>
-                                            <span class="ka-table__name-stack">
-                                                <button
-                                                    type="button"
-                                                    class="ka-table__link"
-                                                    data-id={row.id}
-                                                    onclick={handleSelectAgent}
-                                                    onkeydown={handleSelectAgentKeyDown}
-                                                >{row.name}</button>
-                                                <span class="ka-table__domain">{row.domain} Domain</span>
-                                            </span>
-                                        </span>
+                                    <th scope="row" data-label="Agent Name" class="ka-td ka-cell-name">
+                                        <div class="ka-td__inner">
+                                            <button
+                                                type="button"
+                                                class="ka-table__link"
+                                                data-id={row.id}
+                                                onclick={handleSelectAgent}
+                                                onkeydown={handleSelectAgentKeyDown}
+                                            >{row.name}</button>
+                                        </div>
                                     </th>
-                                    <td role="gridcell" data-label="Status">
-                                        <span class={row.statusClass}>{row.statusLabel}</span>
+                                    <td role="gridcell" data-label="Status" class="ka-td">
+                                        <div class="ka-td__inner">
+                                            <lightning-badge
+                                                label={row.statusLabel}
+                                                class={row.statusClass}
+                                            ></lightning-badge>
+                                        </div>
                                     </td>
-                                    <td role="gridcell" data-label="Governance">
-                                        <span class={row.govClass}>{row.govLabel}</span>
+                                    <td role="gridcell" data-label="Governance" class="ka-td">
+                                        <div class="ka-td__inner">
+                                            <lightning-badge
+                                                label={row.govLabel}
+                                                class={row.govClass}
+                                            ></lightning-badge>
+                                        </div>
                                     </td>
-                                    <td role="gridcell" data-label="Activity">
-                                        <span class="ka-table-activity">
-                                            <span class="ka-table-activity__seg">
-                                                <strong>{row.articlesCreated}</strong>
-                                                <span>created</span>
+                                    <td role="gridcell" data-label="Activity" class="ka-td">
+                                        <div class="ka-td__inner">
+                                            <span class="ka-table-activity">
+                                                <span class="ka-table-activity__seg">
+                                                    <strong>{row.articlesCreated}</strong>
+                                                    <span>created</span>
+                                                </span>
+                                                <span class="ka-table-activity__seg">
+                                                    <strong>{row.articlesUpdated}</strong>
+                                                    <span>updated</span>
+                                                </span>
+                                                <span class="ka-table-activity__seg ka-table-activity__seg--gaps">
+                                                    <strong>{row.gapsIdentified}</strong>
+                                                    <span>gaps</span>
+                                                </span>
                                             </span>
-                                            <span class="ka-table-activity__seg">
-                                                <strong>{row.articlesUpdated}</strong>
-                                                <span>updated</span>
+                                        </div>
+                                    </td>
+                                    <td role="gridcell" data-label="Signal Sources" class="ka-td">
+                                        <div class="ka-td__inner">
+                                            <span class="ka-signal-chips">
+                                                <template for:each={row.signalChips} for:item="chip">
+                                                    <span key={chip.key} class="ka-signal-chip">{chip.label}</span>
+                                                </template>
                                             </span>
-                                            <span class="ka-table-activity__seg ka-table-activity__seg--gaps">
-                                                <strong>{row.gapsIdentified}</strong>
-                                                <span>gaps</span>
-                                            </span>
-                                        </span>
+                                        </div>
                                     </td>
-                                    <td role="gridcell" data-label="Signal Sources">
-                                        <span class="ka-signal-chips">
-                                            <template for:each={row.signalChips} for:item="chip">
-                                                <span key={chip.key} class="ka-signal-chip">{chip.label}</span>
-                                            </template>
-                                        </span>
+                                    <td role="gridcell" data-label="Health" class="ka-td ka-cell-health">
+                                        <div class="ka-td__inner">
+                                            <span class={row.healthClass}>{row.healthScore}</span>
+                                        </div>
                                     </td>
-                                    <td role="gridcell" data-label="Health" class="ka-cell-health">
-                                        <span class={row.healthClass}>{row.healthScore}</span>
-                                    </td>
-                                    <td role="gridcell" class="ka-cell-actions slds-cell-buffer_left slds-cell-buffer_right">
-                                        <button
-                                            type="button"
-                                            class="slds-button slds-button_icon slds-button_icon-border-filled ka-row-action"
-                                            data-id={row.id}
-                                            aria-label="Open agent"
-                                            title="Open agent"
-                                            onclick={handleSelectAgent}
-                                        >
-                                            <lightning-icon
+                                    <td role="gridcell" class="ka-td ka-cell-actions">
+                                        <div class="ka-td__inner">
+                                            <lightning-button-icon
                                                 icon-name="utility:chevrondown"
+                                                variant="border-filled"
                                                 size="xx-small"
-                                                alternative-text=""
-                                            ></lightning-icon>
-                                            <span class="slds-assistive-text">Open agent</span>
-                                        </button>
+                                                alternative-text="Open agent"
+                                                title="Open agent"
+                                                data-id={row.id}
+                                                onclick={handleSelectAgent}
+                                                class="ka-row-action"
+                                            ></lightning-button-icon>
+                                        </div>
                                     </td>
                                 </tr>
                             </template>

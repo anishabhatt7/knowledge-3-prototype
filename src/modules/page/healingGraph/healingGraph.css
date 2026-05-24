@@ -161,7 +161,7 @@ page-healing-graph {
     align-items: center;
     justify-content: space-between;
     gap: var(--slds-g-spacing-5, 24px);
-    padding: var(--slds-g-spacing-5, 24px);
+    padding: var(--slds-g-spacing-5, 24px) 40px;
     background-color: var(--slds-g-color-surface-1, #fff);
     border-bottom: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
 }
@@ -317,7 +317,7 @@ page-healing-graph {
     display: flex;
     align-items: center;
     gap: var(--slds-g-spacing-3, 12px);
-    padding: 10px var(--slds-g-spacing-6, 24px);
+    padding: 10px 40px;
     background-color: var(--slds-g-color-surface-1, #fff);
     border-bottom: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
     overflow-x: auto;

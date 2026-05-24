@@ -1,0 +1,542 @@
+<template lwc:render-mode="light">
+  <div class="skr-page">
+
+    <!-- 14px splitview strip -->
+    <div class="skr-splitview" aria-hidden="true">
+      <span class="skr-splitview__arrow">&#8250;</span>
+    </div>
+
+    <div class="skr-main">
+
+      <!-- ── Page Header ───────────────────────────────────────── -->
+      <div class="skr-page-header">
+        <div class="skr-ph-top">
+          <div class="skr-ph-identity">
+            <div class="skr-ph-icon" aria-hidden="true">
+              <template lwc:if={isKbCreationFlow}>
+                <img src="/public/assets/kb-icon-object.png" alt="Knowledge Block" class="skr-ph-custom-icon" width="32" height="32" />
+              </template>
+              <template lwc:else>
+                <lightning-icon icon-name="standard:knowledge" size="small" alternative-text="Knowledge"></lightning-icon>
+              </template>
+            </div>
+            <div class="skr-ph-title-group">
+              <p class="skr-ph-breadcrumb">{breadcrumbLabel}</p>
+              <div class="skr-ph-title-row">
+                <h1 class="skr-ph-title">{articleTitle}</h1>
+              </div>
+            </div>
+          </div>
+          <div class="skr-ph-actions">
+            <lightning-button variant="brand-outline" label="Follow" icon-name="utility:add" icon-position="left" title="Follow"></lightning-button>
+            <lightning-button-group>
+              <lightning-button variant="neutral" label="Archive" title="Archive"></lightning-button>
+              <lightning-button variant="neutral" label="Submit for Translation" title="Submit for Translation"></lightning-button>
+              <lightning-button variant="neutral" label="Edit as Draft" title="Edit as Draft" onclick={handleEditAsDraft}></lightning-button>
+            </lightning-button-group>
+          </div>
+        </div>
+
+        <!-- Detail row: meta fields -->
+        <div class="skr-ph-details">
+          <div class="skr-ph-detail">
+            <span class="skr-ph-detail__label">{numberFieldLabel}</span>
+            <span class="skr-ph-detail__value">10002345</span>
+          </div>
+          <div class="skr-ph-detail">
+            <span class="skr-ph-detail__label">{recordTypeFieldLabel}</span>
+            <span class="skr-ph-detail__value">{recordType}</span>
+          </div>
+          <div class="skr-ph-detail">
+            <span class="skr-ph-detail__label">Version Number</span>
+            <span class="skr-ph-detail__value">1</span>
+          </div>
+          <div class="skr-ph-detail">
+            <span class="skr-ph-detail__label">Is Latest Version</span>
+            <span class="skr-ph-detail__value">
+              <input type="checkbox" checked disabled class="skr-ph-checkbox" aria-label="Is Latest Version" />
+            </span>
+          </div>
+          <div class="skr-ph-detail">
+            <span class="skr-ph-detail__label">Publication Status</span>
+            <span class="skr-ph-detail__value">Draft</span>
+          </div>
+          <div class="skr-ph-detail">
+            <span class="skr-ph-detail__label">Language</span>
+            <span class="skr-ph-detail__value">English</span>
+          </div>
+          <div class="skr-ph-detail">
+            <span class="skr-ph-detail__label">Parent Article</span>
+            <span class="skr-ph-detail__value skr-ph-detail__value--link">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Two-column content area ───────────────────────────── -->
+      <div class="skr-content">
+
+        <!-- LEFT: Record Details Card -->
+        <div class="skr-record-card">
+
+          <!-- Tabs -->
+          <div class="skr-tabs" role="tablist" aria-label="Record detail tabs">
+            <div class={detailsTabClass} role="tab" aria-selected={isDetailsTab} tabindex="0" data-tab="details" onclick={handleTabClick}>Details</div>
+            <div class={relatedListsTabClass} role="tab" aria-selected={isRelatedListsTab} tabindex="-1" data-tab="related-lists" onclick={handleTabClick}>Related Lists</div>
+            <div class={versionsTabClass} role="tab" aria-selected={isVersionsTab} tabindex="-1" data-tab="versions" onclick={handleTabClick}>Versions</div>
+          </div>
+
+          <!-- Tab content: Details -->
+          <template lwc:if={isDetailsTab}>
+          <div class="skr-tab-panel" role="tabpanel">
+
+            <!-- ── Information ─────────────────────────────── -->
+            <div class="skr-section">
+              <div class="skr-section__header" data-section-id="information" onclick={handleToggleSection}>
+                <lightning-icon icon-name={infoChevron} size="xx-small" alternative-text="Toggle" class="skr-section__chevron"></lightning-icon>
+                <span class="skr-section__title">Information</span>
+              </div>
+              <div class={infoBodyClass}>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">{titleFieldLabel}</span>
+                  <div class="skr-ro-field__value">{articleTitle}</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <template lwc:if={showSummaryField}>
+                  <div class="skr-ro-field">
+                    <span class="skr-ro-field__label">
+                      Summary
+                      <lightning-icon icon-name="utility:info" size="xx-small" alternative-text="Info" class="skr-ro-field__info-icon"></lightning-icon>
+                    </span>
+                    <div class="skr-ro-field__value">{summary}</div>
+                    <div class="skr-ro-field__line"></div>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- ── Details ─────────────────────────────────── -->
+            <div class="skr-section">
+              <div class="skr-section__header" data-section-id="details" onclick={handleToggleSection}>
+                <lightning-icon icon-name={detailsChevron} size="xx-small" alternative-text="Toggle" class="skr-section__chevron"></lightning-icon>
+                <span class="skr-section__title">Details</span>
+              </div>
+              <div class={detailsBodyClass}>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">
+                    Details
+                    <lightning-icon icon-name="utility:info" size="xx-small" alternative-text="Info" class="skr-ro-field__info-icon"></lightning-icon>
+                  </span>
+                  <div class="skr-ro-field__value skr-ro-field__rte" data-id="detailsDisplay"></div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">
+                    Internal Comments
+                    <lightning-icon icon-name="utility:info" size="xx-small" alternative-text="Info" class="skr-ro-field__info-icon"></lightning-icon>
+                  </span>
+                  <div class="skr-ro-field__value skr-ro-field__value--muted">—</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Properties ──────────────────────────────── -->
+            <div class="skr-section">
+              <div class="skr-section__header" data-section-id="properties" onclick={handleToggleSection}>
+                <lightning-icon icon-name={propertiesChevron} size="xx-small" alternative-text="Toggle" class="skr-section__chevron"></lightning-icon>
+                <span class="skr-section__title">Properties</span>
+              </div>
+              <div class={propertiesBodyClass}>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">{numberFieldLabel}</span>
+                  <div class="skr-ro-field__value">000001251</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Version number</span>
+                  <div class="skr-ro-field__value">1</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Publication Status</span>
+                  <div class="skr-ro-field__value">Draft</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Last Modified Date</span>
+                  <div class="skr-ro-field__value">6/8/2023, 6:28 AM</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">{viewCountFieldLabel}</span>
+                  <div class="skr-ro-field__value">15</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">First Published Date</span>
+                  <div class="skr-ro-field__value">6/8/2023, 6:28 AM</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Department</span>
+                  <div class="skr-ro-field__value">Operations</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Mobile</span>
+                  <div class="skr-ro-field__value">
+                    <a href="tel:4157776555" class="skr-ro-field__phone">
+                      <lightning-icon icon-name="utility:call" size="xx-small" alternative-text="Phone" class="skr-ro-field__phone-icon"></lightning-icon>
+                      415-777-6555
+                    </a>
+                  </div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Channel ─────────────────────────────────── -->
+            <div class="skr-section">
+              <div class="skr-section__header" data-section-id="channel" onclick={handleToggleSection}>
+                <lightning-icon icon-name={channelChevron} size="xx-small" alternative-text="Toggle" class="skr-section__chevron"></lightning-icon>
+                <span class="skr-section__title">Channel</span>
+              </div>
+              <div class={channelBodyClass}>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Visible to Customer</span>
+                  <div class="skr-ro-field__value">
+                    <input type="checkbox" checked disabled class="skr-ph-checkbox" aria-label="Visible to Customer" />
+                  </div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Visible to Internal App</span>
+                  <div class="skr-ro-field__value">
+                    <input type="checkbox" checked disabled class="skr-ph-checkbox" aria-label="Visible to Internal App" />
+                  </div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Visible to Partner</span>
+                  <div class="skr-ro-field__value">
+                    <input type="checkbox" disabled class="skr-ph-checkbox" aria-label="Visible to Partner" />
+                  </div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">
+                    Featured in Communities
+                    <lightning-icon icon-name="utility:info" size="xx-small" alternative-text="Info" class="skr-ro-field__info-icon"></lightning-icon>
+                  </span>
+                  <div class="skr-ro-field__value">
+                    <input type="checkbox" disabled class="skr-ph-checkbox" aria-label="Featured in Communities" />
+                  </div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field skr-ro-field--full">
+                  <span class="skr-ro-field__label">Visible in Public Knowledge Base</span>
+                  <div class="skr-ro-field__value">
+                    <input type="checkbox" checked disabled class="skr-ph-checkbox" aria-label="Visible in Public Knowledge Base" />
+                  </div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Assignment ──────────────────────────────── -->
+            <div class="skr-section">
+              <div class="skr-section__header" data-section-id="assignment" onclick={handleToggleSection}>
+                <lightning-icon icon-name={assignmentChevron} size="xx-small" alternative-text="Toggle" class="skr-section__chevron"></lightning-icon>
+                <span class="skr-section__title">Assignment</span>
+              </div>
+              <div class={assignmentBodyClass}>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Assigned To</span>
+                  <div class="skr-ro-field__value skr-ro-field__value--user">
+                    <span class="skr-avatar">
+                      <lightning-icon icon-name="utility:user" size="xx-small" alternative-text="User"></lightning-icon>
+                    </span>
+                    Joseph Cooper
+                  </div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Owner</span>
+                  <div class="skr-ro-field__value skr-ro-field__value--user">
+                    <span class="skr-avatar">
+                      <lightning-icon icon-name="utility:user" size="xx-small" alternative-text="User"></lightning-icon>
+                    </span>
+                    Joseph Cooper
+                  </div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Assignment Due Date</span>
+                  <div class="skr-ro-field__value">6/12/2025</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Assignment By</span>
+                  <div class="skr-ro-field__value skr-ro-field__value--user">
+                    <span class="skr-avatar">
+                      <lightning-icon icon-name="utility:user" size="xx-small" alternative-text="User"></lightning-icon>
+                    </span>
+                    Joseph Cooper
+                  </div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Assignment Note</span>
+                  <div class="skr-ro-field__value skr-ro-field__value--muted">—</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Assignment Date</span>
+                  <div class="skr-ro-field__value">6/12/2025</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Translations ─────────────────────────────── -->
+            <div class="skr-section">
+              <div class="skr-section__header" data-section-id="translations" onclick={handleToggleSection}>
+                <lightning-icon icon-name={translationsChevron} size="xx-small" alternative-text="Toggle" class="skr-section__chevron"></lightning-icon>
+                <span class="skr-section__title">Translations</span>
+              </div>
+              <div class={translationsBodyClass}>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Assigned To</span>
+                  <div class="skr-ro-field__value">English</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Translation Exported Date</span>
+                  <div class="skr-ro-field__value">6/12/2025</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Article Primary Language</span>
+                  <div class="skr-ro-field__value">English</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Translation Imported Date</span>
+                  <div class="skr-ro-field__value">6/12/2025</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+                <div class="skr-ro-field skr-ro-field--empty"></div>
+                <div class="skr-ro-field">
+                  <span class="skr-ro-field__label">Translation Completed Date</span>
+                  <div class="skr-ro-field__value">6/12/2025</div>
+                  <div class="skr-ro-field__line"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          </template>
+
+          <!-- Tab content: Related Lists -->
+          <template lwc:if={isRelatedListsTab}>
+          <div class="skr-tab-panel" role="tabpanel">
+            <div class="skr-rl-card">
+              <div class="skr-rl-card__header">
+                <div class="skr-rl-card__header-left">
+                  <img src="/public/assets/kb-icon-object.png" alt="" class="skr-rl-card__icon" width="24" height="24" />
+                  <h3 class="skr-rl-card__title">Knowledge Block Usage (6+)</h3>
+                </div>
+              </div>
+              <div class="skr-rl-card__body">
+                <table class="skr-rl-table">
+                  <thead>
+                    <tr class="skr-rl-table__header-row">
+                      <th class="skr-rl-table__header-cell skr-rl-table__header-cell--checkbox">
+                        <input type="checkbox" class="skr-rl-checkbox" aria-label="Select all" />
+                      </th>
+                      <th class="skr-rl-table__header-cell">
+                        <div class="skr-rl-table__header-content">
+                          <span>Article</span>
+                          <lightning-button-icon icon-name="utility:arrowdown" variant="bare" size="x-small" alternative-text="Sort"></lightning-button-icon>
+                        </div>
+                      </th>
+                      <th class="skr-rl-table__header-cell">
+                        <div class="skr-rl-table__header-content">
+                          <span>Article Author</span>
+                          <lightning-button-icon icon-name="utility:arrowdown" variant="bare" size="x-small" alternative-text="Sort"></lightning-button-icon>
+                        </div>
+                      </th>
+                      <th class="skr-rl-table__header-cell">
+                        <div class="skr-rl-table__header-content">
+                          <span>Creation Date</span>
+                          <lightning-button-icon icon-name="utility:arrowdown" variant="bare" size="x-small" alternative-text="Sort"></lightning-button-icon>
+                        </div>
+                      </th>
+                      <th class="skr-rl-table__header-cell">
+                        <div class="skr-rl-table__header-content">
+                          <span>Version</span>
+                          <lightning-button-icon icon-name="utility:arrowdown" variant="bare" size="x-small" alternative-text="Sort"></lightning-button-icon>
+                        </div>
+                      </th>
+                      <th class="skr-rl-table__header-cell skr-rl-table__header-cell--actions"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={kbUsageArticles} for:item="row">
+                      <tr key={row.id} class="skr-rl-table__row">
+                        <td class="skr-rl-table__cell skr-rl-table__cell--checkbox">
+                          <input type="checkbox" class="skr-rl-checkbox" aria-label={row.article} />
+                        </td>
+                        <td class="skr-rl-table__cell">
+                          <a href="#" class="skr-rl-table__link">{row.article}</a>
+                        </td>
+                        <td class="skr-rl-table__cell">{row.author}</td>
+                        <td class="skr-rl-table__cell">{row.creationDate}</td>
+                        <td class="skr-rl-table__cell">{row.version}</td>
+                        <td class="skr-rl-table__cell skr-rl-table__cell--actions">
+                          <lightning-button-icon icon-name="utility:down" variant="border-filled" size="x-small" alternative-text="Row actions"></lightning-button-icon>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+              <div class="skr-rl-card__footer">
+                <a href="#" class="skr-rl-card__view-all">View All</a>
+              </div>
+            </div>
+          </div>
+          </template>
+
+          <!-- Tab content: Versions (placeholder) -->
+          <template lwc:if={isVersionsTab}>
+          <div class="skr-tab-panel" role="tabpanel">
+            <p class="skr-tab-placeholder">No version data available.</p>
+          </div>
+          </template>
+
+
+        </div>
+
+        <!-- RIGHT: Side cards -->
+        <div class="skr-side-cards">
+
+          <!-- Table of Content card -->
+          <template lwc:if={showTableOfContents}>
+          <div class="skr-side-card">
+            <div class="skr-side-card__header">
+              <span class="skr-side-card__title">Table of Content</span>
+              <lightning-button-icon icon-name="utility:chevrondown" variant="bare" size="small" alternative-text="Collapse"></lightning-button-icon>
+            </div>
+            <div class="skr-toc">
+              <template for:each={tocItems} for:item="toc">
+                <div
+                  key={toc.id}
+                  class={toc.itemClass}
+                  data-toc-id={toc.id}
+                  onclick={handleTocItemClick}
+                  role="button"
+                  tabindex="0"
+                >
+                  <template lwc:if={toc.hasChildren}>
+                    <lightning-icon icon-name={toc.chevronIcon} size="xx-small" alternative-text="" class="skr-toc-item__chevron"></lightning-icon>
+                  </template>
+                  <template lwc:else>
+                    <span class="skr-toc-item__chevron-spacer" aria-hidden="true"></span>
+                  </template>
+                  <span class="skr-toc-item__label">{toc.label}</span>
+                </div>
+              </template>
+            </div>
+          </div>
+          </template>
+
+          <!-- Was this helpful card -->
+          <div class="skr-side-card">
+            <div class="skr-helpful-header">
+              <span class="skr-side-card__title">Was this article helpful?</span>
+            </div>
+            <div class="skr-helpful-actions">
+              <lightning-button variant="brand-outline" label="Like" icon-name="utility:like" icon-position="left" title="Like"></lightning-button>
+              <lightning-button variant="brand-outline" label="Dislike" icon-name="utility:dislike" icon-position="left" title="Dislike"></lightning-button>
+            </div>
+          </div>
+
+          <!-- Categories card -->
+          <div class="skr-side-card">
+            <div class="skr-side-card__header">
+              <span class="skr-side-card__title">Categories(1)</span>
+              <lightning-button-icon icon-name="utility:chevrondown" variant="bare" size="small" alternative-text="Collapse"></lightning-button-icon>
+            </div>
+            <div class="skr-categories">
+              <div class="skr-category-item">
+                <lightning-icon icon-name="utility:chevronright" size="xx-small" alternative-text="" class="skr-toc-item__chevron"></lightning-icon>
+                <span class="skr-category-item__label">Inquiry Type(1)</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Edit Knowledge Block Modal ══════════════════════════════════ -->
+  <template lwc:if={showEditModal}>
+    <div class="skr-modal-backdrop" onclick={handleEditModalBackdropClick}>
+      <div class="skr-modal skr-modal--edit" role="dialog" aria-modal="true" aria-label="Edit Knowledge Block">
+        <div class="skr-modal__header">
+          <h2 class="skr-modal__title">Edit Knowledge Block</h2>
+          <lightning-button-icon icon-name="utility:close" variant="bare" size="medium" alternative-text="Close" onclick={handleEditModalClose}></lightning-button-icon>
+        </div>
+        <div class="skr-modal__body">
+          <div class="skr-edit-field">
+            <label class="skr-edit-field__label" for="edit-kb-title">Knowledge Block Title</label>
+            <input type="text" id="edit-kb-title" class="skr-edit-field__input" value={editedTitle} oninput={handleEditTitleInput} />
+          </div>
+          <div class="skr-edit-field">
+            <label class="skr-edit-field__label">Details</label>
+            <div class="skr-edit-rte">
+              <div class="skr-edit-rte__toolbar">
+                <lightning-button-icon icon-name="utility:bold" variant="bare" size="small" alternative-text="Bold"></lightning-button-icon>
+                <lightning-button-icon icon-name="utility:italic" variant="bare" size="small" alternative-text="Italic"></lightning-button-icon>
+                <lightning-button-icon icon-name="utility:underline" variant="bare" size="small" alternative-text="Underline"></lightning-button-icon>
+                <span class="skr-edit-rte__divider"></span>
+                <lightning-button-icon icon-name="utility:richtextbulletedlist" variant="bare" size="small" alternative-text="Bulleted list"></lightning-button-icon>
+                <lightning-button-icon icon-name="utility:richtextnumberedlist" variant="bare" size="small" alternative-text="Numbered list"></lightning-button-icon>
+                <span class="skr-edit-rte__divider"></span>
+                <lightning-button-icon icon-name="utility:link" variant="bare" size="small" alternative-text="Link"></lightning-button-icon>
+                <lightning-button-icon icon-name="utility:image" variant="bare" size="small" alternative-text="Image"></lightning-button-icon>
+              </div>
+              <div class="skr-edit-rte__editor" contenteditable="true" data-id="editDetailsEditor" role="textbox" aria-label="Details editor" aria-multiline="true" oninput={handleEditContentInput}></div>
+            </div>
+          </div>
+        </div>
+        <div class="skr-modal__footer">
+          <lightning-button variant="neutral" label="Cancel" onclick={handleEditModalClose}></lightning-button>
+          <lightning-button variant="brand" label="Update All 6 Articles" disabled={isUpdateButtonDisabled} onclick={handleUpdateAllArticles}></lightning-button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- ══ Confirmation Modal ══════════════════════════════════════════ -->
+  <template lwc:if={showConfirmModal}>
+    <div class="skr-modal-backdrop" onclick={handleConfirmBackdropClick}>
+      <div class="skr-modal skr-modal--confirm" role="dialog" aria-modal="true" aria-label="Confirm Update">
+        <div class="skr-modal__header">
+          <h2 class="skr-modal__title">Update Articles</h2>
+          <lightning-button-icon icon-name="utility:close" variant="bare" size="medium" alternative-text="Close" onclick={handleConfirmModalClose}></lightning-button-icon>
+        </div>
+        <div class="skr-modal__body skr-modal__body--confirm">
+          <p class="skr-confirm-question">Are you sure that you want to update all 6 Knowledge Article which are using this knowledge Block?</p>
+        </div>
+        <div class="skr-modal__footer">
+          <lightning-button variant="brand-outline" label="Cancel" onclick={handleConfirmModalClose}></lightning-button>
+          <lightning-button variant="brand" label="Update All 6 Articles" onclick={handleConfirmUpdate}></lightning-button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+</template>

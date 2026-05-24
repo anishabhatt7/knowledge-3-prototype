@@ -117,6 +117,7 @@ export default class CommandCenter extends LightningElement {
         else if (id === 'knowledge-agents') navigate('/knowledge-agents');
         else if (id === 'healing-graph') navigate('/healing-graph');
         else if (id === 'kb-base') navigate('/knowledge-base');
+        else if (id === 'kb-blocks') navigate('/knowledge-blocks');
     }
 
     // ── Data ────────────────────────────────────────────────────────

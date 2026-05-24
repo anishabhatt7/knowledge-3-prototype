@@ -238,6 +238,8 @@ export default class KnowledgeHome extends LightningElement {
             navigate('/knowledge-base');
         } else if (id === 'command-center') {
             navigate('/command-center');
+        } else if (id === 'kb-blocks') {
+            navigate('/knowledge-blocks');
         }
     }
 

@@ -1,0 +1,1800 @@
+<template lwc:render-mode="light">
+  <div class="nk-page">
+
+    <!-- ── Page header: white bar, full width ── -->
+    <div class="nk-page-header">
+      <div class="nk-page-header__left">
+        <h1 class="nk-page-header__title">{pageTitle}</h1>
+      </div>
+      <template lwc:if={isStep1}>
+        <lightning-button
+          label="Check Similar Articles"
+          variant="brand-outline"
+          title="Check Similar Articles"
+          onclick={handleOpenCheckSimilarModal}
+          class="nk-check-similar-btn"
+        ></lightning-button>
+      </template>
+    </div>
+
+    <!-- ── Gray content area: stepper + resources panel + card ── -->
+    <div class="nk-body">
+
+      <!-- Progress stepper: 2-step SLDS 2 Progress Indicator. Hidden in
+           v2 (the docked footer carries the visible stepper); kept here
+           for a11y/markup parity. -->
+      <div class="nk-stepper" role="progressbar" aria-valuenow={stepperAriaValueNow} aria-valuemin="1" aria-valuemax={stepperAriaValueMax} aria-label={stepperAriaLabel}>
+        <template lwc:if={isStep1}>
+          <span class="nk-stepper__dot nk-stepper__dot--active"></span>
+          <span class="nk-stepper__bar"></span>
+          <span class="nk-stepper__dot"></span>
+        </template>
+        <template lwc:else>
+          <span class="nk-stepper__dot nk-stepper__dot--completed"></span>
+          <span class="nk-stepper__bar nk-stepper__bar--filled"></span>
+          <span class="nk-stepper__dot nk-stepper__dot--active"></span>
+        </template>
+      </div>
+
+      <!-- Content row: resources panel + card -->
+      <div class="nk-content-row">
+
+        <!-- Resources panel: collapsed (48px) / expanded (320px) — Step 1 only -->
+        <template lwc:if={showResourcesPanelCollapsed}>
+          <div class="nk-resources-panel nk-resources-panel--collapsed" aria-label="Resources">
+            <lightning-button-icon
+              icon-name="utility:arrow_right"
+              variant="bare"
+              size="small"
+              alternative-text="Expand resources"
+              class="nk-resources-panel__toggle"
+              onclick={handleExpandResources}
+            ></lightning-button-icon>
+          </div>
+        </template>
+
+        <template lwc:if={showResourcesPanelExpanded}>
+          <div class="nk-resources-panel nk-resources-panel--expanded" aria-label={resourcesPanelHeaderTitle}>
+            <!-- Header: title + collapse arrow -->
+            <div class="nk-rp-header">
+              <h2 id="nk-rp-header-title" class="nk-rp-header__title">{resourcesPanelHeaderTitle}</h2>
+              <lightning-button-icon
+                icon-name="utility:arrow_left"
+                variant="bare"
+                size="small"
+                alternative-text="Collapse resources"
+                class="nk-resources-panel__toggle"
+                onclick={handleCollapseResources}
+              ></lightning-button-icon>
+            </div>
+
+            <!-- No Notebook AI when skipping similarity (264: KB Creation or KB Usage) -->
+            <template lwc:if={shouldHideNotebookAi}>
+              <div class="nk-rp-search">
+                <div class="nk-rp-search__field">
+                  <lightning-icon
+                    icon-name="utility:search"
+                    size="x-small"
+                    alternative-text="Search"
+                    class="nk-rp-search__icon"
+                  ></lightning-icon>
+                  <input
+                    type="search"
+                    class="nk-rp-search-input"
+                    placeholder="Search..."
+                    aria-label="Search blocks"
+                    value={resourceSearchTerm}
+                    oninput={handleResourceSearchInput}
+                  />
+                </div>
+              </div>
+
+              <div id="nk-rp-kb-blocks-panel" class={blocksPanelClass} role="region" aria-labelledby="nk-rp-header-title">
+                <template for:each={filteredKnowledgeArticles} for:item="article">
+                  <div key={article.id} class="nk-rp-item">
+                    <div class="nk-rp-item__text">
+                      <span class="nk-rp-item__title" data-article-id={article.id} onclick={handleKbTitleClick}>{article.title}</span>
+                      <span class="nk-rp-item__description">{article.description}</span>
+                    </div>
+                    <lightning-button-icon
+                      icon-name="utility:add"
+                      variant="border"
+                      size="small"
+                      alternative-text="Add article"
+                      class="nk-rp-item__add"
+                      data-article-id={article.id}
+                      onclick={handleAddKnowledgeBlock}
+                    ></lightning-button-icon>
+                  </div>
+                </template>
+                <template lwc:if={hasNoBlockSearchResults}>
+                  <p class="nk-rp-empty">No blocks match your search.</p>
+                </template>
+              </div>
+            </template>
+
+            <!-- Default flow: Blocks + Notebook AI tabs -->
+            <template lwc:else>
+            <div class="nk-rp-tabs" role="tablist">
+              <button
+                type="button"
+                class="nk-rp-tab"
+                role="tab"
+                aria-selected={isBlocksTabActive}
+                aria-controls="nk-rp-blocks-panel"
+                id="nk-rp-tab-blocks"
+                data-tab="blocks"
+                onclick={handleResourcesPanelTab}
+              >Blocks</button>
+              <button
+                type="button"
+                class="nk-rp-tab"
+                role="tab"
+                aria-selected={isNotebookAiTabActive}
+                aria-controls="nk-rp-notebook-panel"
+                id="nk-rp-tab-notebook"
+                data-tab="notebook-ai"
+                onclick={handleResourcesPanelTab}
+              >Notebook AI</button>
+            </div>
+
+            <!-- Search bar (Blocks tab only) -->
+            <template lwc:if={isBlocksTabActive}>
+              <div class="nk-rp-search">
+                <div class="nk-rp-search__field">
+                  <lightning-icon
+                    icon-name="utility:search"
+                    size="x-small"
+                    alternative-text="Search"
+                    class="nk-rp-search__icon"
+                  ></lightning-icon>
+                  <input
+                    type="search"
+                    class="nk-rp-search-input"
+                    placeholder="Search..."
+                    aria-label="Search blocks"
+                    value={resourceSearchTerm}
+                    oninput={handleResourceSearchInput}
+                  />
+                </div>
+              </div>
+            </template>
+
+            <!-- Blocks tab: searchable block list -->
+            <div id="nk-rp-blocks-panel" class={blocksPanelClass} role="tabpanel" aria-labelledby="nk-rp-tab-blocks">
+              <template for:each={filteredKnowledgeArticles} for:item="article">
+                <div key={article.id} class="nk-rp-item">
+                  <div class="nk-rp-item__text">
+                    <span class="nk-rp-item__title" data-article-id={article.id} onclick={handleKbTitleClick}>{article.title}</span>
+                    <span class="nk-rp-item__description">{article.description}</span>
+                  </div>
+                  <lightning-button-icon
+                    icon-name="utility:add"
+                    variant="border"
+                    size="small"
+                    alternative-text="Add article"
+                    class="nk-rp-item__add"
+                    data-article-id={article.id}
+                    onclick={handleAddKnowledgeBlock}
+                  ></lightning-button-icon>
+                </div>
+              </template>
+              <template lwc:if={hasNoBlockSearchResults}>
+                <p class="nk-rp-empty">No blocks match your search.</p>
+              </template>
+            </div>
+
+            <!-- Notebook AI tab -->
+            <div id="nk-rp-notebook-panel" class={notebookPanelClass} role="tabpanel" aria-labelledby="nk-rp-tab-notebook">
+
+              <!-- Zero state: no sources added yet -->
+              <template lwc:if={hasNoNotebookSources}>
+                <div class="nk-nb-zero-state">
+                  <div class="nk-nb-zero-state__card">
+                    <div class="nk-nb-zero-state__icon-wrap">
+                      <lightning-icon
+                        icon-name="utility:database"
+                        size="medium"
+                        alternative-text="No sources"
+                        class="nk-nb-zero-state__icon"
+                      ></lightning-icon>
+                    </div>
+                    <p class="nk-nb-zero-state__heading">No sources yet</p>
+                    <p class="nk-nb-zero-state__body">Add sources to generate article content with Notebook AI.</p>
+                    <lightning-button
+                      label="Add Sources"
+                      variant="neutral"
+                      onclick={handleAddSources}
+                    ></lightning-button>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Sources have been added -->
+              <template lwc:if={hasNotebookSources}>
+                <div class="nk-nb-sources">
+
+                  <!-- Toolbar: add + generate -->
+                  <div class="nk-nb-toolbar">
+                    <lightning-button-icon
+                      icon-name="utility:add"
+                      variant="border"
+                      size="small"
+                      alternative-text="Add sources"
+                      onclick={handleAddSources}
+                    ></lightning-button-icon>
+                    <lightning-button
+                      label="Generate Content"
+                      variant="brand-outline"
+                      onclick={handleGenerateContent}
+                    ></lightning-button>
+                  </div>
+
+                  <!-- Select all sources -->
+                  <div class="nk-nb-select-all">
+                    <label class="nk-nb-select-all__label">
+                      <input
+                        type="checkbox"
+                        class="nk-nb-checkbox"
+                        checked={allSourcesSelected}
+                        onchange={handleToggleAllSourcesSelect}
+                      />
+                      <span class="nk-nb-select-all__text">Select all sources</span>
+                    </label>
+                  </div>
+
+                  <hr class="nk-nb-divider" />
+
+                  <!-- MY RESOURCES -->
+                  <template lwc:if={hasMyResourcesSources}>
+                    <div class="nk-nb-section">
+                      <div class="nk-nb-section__header">MY RESOURCES</div>
+                      <template for:each={myResourcesSources} for:item="source">
+                        <div key={source.id} class={source.rowClass}>
+                          <label class="nk-nb-source-row__check-label">
+                            <input
+                              type="checkbox"
+                              class="nk-nb-checkbox"
+                              checked={source.selected}
+                              data-source-id={source.id}
+                              onchange={handleToggleSourceSelect}
+                            />
+                          </label>
+                          <lightning-icon
+                            icon-name={source.icon}
+                            size="x-small"
+                            alternative-text={source.type}
+                            class="nk-nb-source-row__icon"
+                          ></lightning-icon>
+                          <span class="nk-nb-source-row__name">{source.name}</span>
+                          <lightning-button-icon
+                            icon-name="utility:down"
+                            variant="bare"
+                            size="small"
+                            alternative-text="Expand source"
+                            class="nk-nb-source-row__chevron"
+                          ></lightning-button-icon>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+
+                  <!-- ENTERPRISE RESOURCES -->
+                  <template lwc:if={hasEnterpriseResourcesSources}>
+                    <hr class="nk-nb-divider" />
+                    <div class="nk-nb-section">
+                      <div class="nk-nb-section__header">ENTERPRISE RESOURCES</div>
+                      <template for:each={enterpriseResourcesSources} for:item="source">
+                        <div key={source.id} class={source.rowClass}>
+                          <label class="nk-nb-source-row__check-label">
+                            <input
+                              type="checkbox"
+                              class="nk-nb-checkbox"
+                              checked={source.selected}
+                              data-source-id={source.id}
+                              onchange={handleToggleSourceSelect}
+                            />
+                          </label>
+                          <lightning-icon
+                            icon-name={source.icon}
+                            size="x-small"
+                            alternative-text={source.type}
+                            class="nk-nb-source-row__icon"
+                          ></lightning-icon>
+                          <span class="nk-nb-source-row__name">{source.name}</span>
+                          <lightning-button-icon
+                            icon-name="utility:down"
+                            variant="bare"
+                            size="small"
+                            alternative-text="Expand source"
+                            class="nk-nb-source-row__chevron"
+                          ></lightning-button-icon>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+
+                </div>
+              </template>
+
+              <!-- Generated Content accordion: always at bottom -->
+              <div class="nk-nb-generated">
+                <button
+                  type="button"
+                  class="nk-nb-generated__header"
+                  onclick={handleToggleGeneratedContent}
+                  aria-expanded={notebookGeneratedContentOpen}
+                  aria-controls="nk-nb-generated-body"
+                  id="nk-nb-generated-header"
+                >
+                  <lightning-icon
+                    icon-name={generatedContentChevronIcon}
+                    size="xx-small"
+                    alternative-text=""
+                    class="nk-nb-generated__chevron"
+                  ></lightning-icon>
+                  <span class="nk-nb-generated__title">Generated Content</span>
+                </button>
+                <template lwc:if={notebookGeneratedContentOpen}>
+                  <div id="nk-nb-generated-body" class="nk-nb-generated__body" role="region" aria-labelledby="nk-nb-generated-header">
+
+                    <!-- Generated content list — items persist after being added to editor -->
+                    <template for:each={generatedItems} for:item="item">
+                      <div key={item.id} class="nk-nb-generated__row">
+
+                        <!-- Left col: flex-1, gap-8px (inner-row + meta-row stacked) -->
+                        <div class="nk-nb-generated__col">
+
+                          <!-- Inner row: Text Container (flex-1) + Dropdown button -->
+                          <div class="nk-nb-generated__inner-row">
+
+                            <!-- Text Container: title (accent, 13px, 1 line) + description (12px, 2 lines) -->
+                            <div class="nk-nb-generated__content">
+                              <p class="nk-nb-generated__title">{item.title}</p>
+                              <p class="nk-nb-generated__text">{item.text}</p>
+                            </div>
+
+                            <!-- Figma: ⚡ Button Icon - Bordered, extra small, utility:down -->
+                            <div class="nk-nb-generated__overflow">
+                              <lightning-button-icon
+                                icon-name="utility:down"
+                                variant="border-filled"
+                                size="x-small"
+                                alternative-text="More actions"
+                                title="More actions"
+                                data-item-id={item.id}
+                                onclick={handleToggleGcOverflow}
+                                aria-haspopup="true"
+                                aria-expanded={item.overflowOpen}
+                              ></lightning-button-icon>
+                              <template lwc:if={item.overflowOpen}>
+                                <div class={item.overflowMenuClass} role="menu" style={item.overflowMenuStyle}>
+                                  <button
+                                    type="button"
+                                    class="nk-nb-generated__overflow-item"
+                                    role="menuitem"
+                                    data-item-id={item.id}
+                                    onclick={handlePostGeneratedContent}
+                                  >
+                                    Add Content
+                                  </button>
+                                  <button
+                                    type="button"
+                                    class="nk-nb-generated__overflow-item"
+                                    role="menuitem"
+                                    data-item-id={item.id}
+                                    onclick={handleRegenerateContent}
+                                  >
+                                    Regenerate Content
+                                  </button>
+                                </div>
+                              </template>
+                            </div>
+
+                          </div>
+
+                          <!-- Meta row: utility:link icon + "N Sources" · bullet "Medium length" · bullet "Tone" -->
+                          <div class="nk-nb-generated__meta">
+                            <div class="nk-nb-generated__meta-sources">
+                              <lightning-icon
+                                icon-name="utility:link"
+                                size="xx-small"
+                                alternative-text=""
+                              ></lightning-icon>
+                              <span class="nk-nb-generated__meta-text">{item.sourceCount} Sources</span>
+                            </div>
+                            <ul class="nk-nb-generated__meta-bullets">
+                              <li class="nk-nb-generated__meta-bullet">{item.lengthLabel}</li>
+                              <li class="nk-nb-generated__meta-bullet">{item.toneTag}</li>
+                            </ul>
+                          </div>
+
+                        </div>
+                      </div>
+                    </template>
+
+                    <!-- Spinner while a new generation is in progress -->
+                    <template lwc:if={isGenerating}>
+                      <div class="nk-nb-generated__spinner-container" role="status" aria-label="Generating content…">
+                        <lightning-spinner
+                          alternative-text="Generating content…"
+                          size="small"
+                          variant="brand"
+                        ></lightning-spinner>
+                        <p class="nk-nb-generated__spinner-label">Generating content…</p>
+                      </div>
+                    </template>
+
+                    <!-- Error state -->
+                    <template lwc:if={generateError}>
+                      <div class="nk-nb-generated__error" role="alert">
+                        <lightning-icon icon-name="utility:error" size="x-small" variant="error"></lightning-icon>
+                        <span>{generateError}</span>
+                      </div>
+                    </template>
+
+                    <!-- Empty state: shown only when no items exist and not generating -->
+                    <template lwc:if={showGenerateArea}>
+                      <p class="nk-nb-generated__empty-msg">{generateAreaMessage}</p>
+                      <template lwc:if={hasNotebookSources}>
+                        <lightning-button
+                          label="Generate"
+                          variant="brand"
+                          onclick={handleGenerateContent}
+                        ></lightning-button>
+                      </template>
+                    </template>
+
+                  </div>
+                </template>
+              </div>
+
+            </div>
+            </template>
+
+          </div>
+        </template>
+
+        <!-- Main scrollable card area -->
+        <div class={mainAreaClass}>
+          <!-- LEFT: Suggested Placement hierarchy (Step 3 only, non-KB).
+               Figma 7555:111894 places the placement panel on the LEFT
+               at 320px wide; the metadata form sits on the RIGHT and
+               grows to fill the remainder. -->
+          <template lwc:if={showHierarchyPanel}>
+            <div class="nk-hierarchy-right">
+              <div class="nk-hierarchy-card">
+                <div class="nk-hierarchy-card__header">
+                  <span class="nk-hierarchy-card__title">Suggested Placement</span>
+                  <lightning-button-icon
+                    icon-name="utility:arrow_left"
+                    variant="bare"
+                    size="small"
+                    alternative-text="Collapse panel"
+                    title="Collapse panel"
+                    class="nk-hierarchy-card__collapse"
+                    onclick={handleCollapseHierarchyPanel}
+                  ></lightning-button-icon>
+                </div>
+                <div class="nk-hierarchy-card__body">
+                  <div class="nk-hierarchy-search">
+                    <lightning-icon icon-name="utility:search" size="xx-small" alternative-text="Search" class="nk-hierarchy-search__icon"></lightning-icon>
+                    <input type="text" class="nk-hierarchy-search__input" placeholder="Search..." value={_hierarchySearch} oninput={handleHierarchySearch} />
+                  </div>
+                  <div class="nk-hierarchy-tree">
+                    <template for:each={filteredHierarchyItems} for:item="item">
+                      <!-- Draggable row: only the user's article -->
+                      <template lwc:if={item.isDraggable}>
+                        <div
+                          key={item.id}
+                          class={item.rowClass}
+                          draggable="true"
+                          data-item-id={item.id}
+                          ondragstart={handleHierarchyDragStart}
+                          ondragover={handleHierarchyDragOver}
+                          ondragleave={handleHierarchyDragLeave}
+                          ondrop={handleHierarchyDrop}
+                          ondragend={handleHierarchyDragEnd}
+                        >
+                          <div class="nk-ht-row__chevron">
+                            <template lwc:if={item.chevronIcon}>
+                              <lightning-button-icon
+                                icon-name={item.chevronIcon}
+                                variant="bare"
+                                size="small"
+                                alternative-text="Toggle"
+                                data-item-id={item.id}
+                                onclick={handleHierarchyToggle}
+                              ></lightning-button-icon>
+                            </template>
+                          </div>
+                          <span class="nk-ht-row__label">{item.label}</span>
+                          <lightning-icon icon-name="utility:drag_and_drop" size="xx-small" alternative-text="Drag to reorder" class="nk-ht-row__drag"></lightning-icon>
+                        </div>
+                      </template>
+                      <!-- Static row: all other articles (not draggable) -->
+                      <template lwc:else>
+                        <div
+                          key={item.id}
+                          class={item.rowClass}
+                          data-item-id={item.id}
+                          ondragover={handleHierarchyDragOver}
+                          ondragleave={handleHierarchyDragLeave}
+                          ondrop={handleHierarchyDrop}
+                        >
+                          <div class="nk-ht-row__chevron">
+                            <template lwc:if={item.chevronIcon}>
+                              <lightning-button-icon
+                                icon-name={item.chevronIcon}
+                                variant="bare"
+                                size="small"
+                                alternative-text="Toggle"
+                                data-item-id={item.id}
+                                onclick={handleHierarchyToggle}
+                              ></lightning-button-icon>
+                            </template>
+                          </div>
+                          <span class="nk-ht-row__label">{item.label}</span>
+                        </div>
+                      </template>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <div class="nk-card" data-name="New Knowledge Card">
+            <header class="nk-card__header">
+              <h1 class="nk-card__title">{cardTitle}</h1>
+            </header>
+
+            <!-- Step 1: Details + Internal Comments RTE editors -->
+            <template lwc:if={isStep1}>
+              <div class="nk-card__body">
+                <div class="nk-section">
+                  <div class="nk-section__body">
+
+                    <!-- Details field (stretches to fill available space) -->
+                    <div class="nk-field-wrap nk-field-wrap--stretch">
+                      <label class="nk-field-label nk-field-label--required">
+                        <abbr class="nk-req-mark" title="required">*</abbr> Details
+                      </label>
+                      <div class="nk-rte" data-name="Details Editor">
+                        <div class="nk-rte__menubar">
+                          <button class="nk-rte__menu-btn" type="button">File</button>
+                          <button class="nk-rte__menu-btn" type="button">Edit</button>
+                          <button class="nk-rte__menu-btn" type="button">Insert</button>
+                          <button class="nk-rte__menu-btn" type="button">View</button>
+                          <button class="nk-rte__menu-btn" type="button">Format</button>
+                          <button class="nk-rte__menu-btn" type="button">Table</button>
+                          <button class="nk-rte__menu-btn" type="button">Tools</button>
+                          <button class="nk-rte__menu-btn" type="button">Help</button>
+                          <button class="nk-rte__btn nk-rte__btn--bordered nk-rte__menubar-expand" type="button" title="Expand editor">
+                            <lightning-icon icon-name="utility:expand_alt" size="xx-small" alternative-text="Expand editor"></lightning-icon>
+                          </button>
+                        </div>
+                        <div class="nk-rte__toolbar">
+                          <button class="nk-rte__btn nk-rte__btn--bordered" type="button" onmousedown={handleRemoveFormat} title="Clear formatting">
+                            <lightning-icon icon-name="utility:refresh" size="xx-small" alternative-text="Clear"></lightning-icon>
+                          </button>
+                          <div class="nk-rte__btn-group">
+                            <button class="nk-rte__btn" type="button" onmousedown={handleUndo} title="Undo">
+                              <lightning-icon icon-name="utility:undo" size="xx-small" alternative-text="Undo"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleRedo} title="Redo">
+                              <lightning-icon icon-name="utility:redo" size="xx-small" alternative-text="Redo"></lightning-icon>
+                            </button>
+                          </div>
+                          <select class="nk-rte__select" onchange={handleBlockFormat}>
+                            <option value="p">Paragraph</option>
+                            <option value="h1">Heading 1</option>
+                            <option value="h2">Heading 2</option>
+                            <option value="h3">Heading 3</option>
+                          </select>
+                          <div class="nk-rte__btn-group">
+                            <button class="nk-rte__btn" type="button" onmousedown={handleBold} title="Bold">
+                              <lightning-icon icon-name="utility:bold" size="xx-small" alternative-text="Bold"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleItalic} title="Italic">
+                              <lightning-icon icon-name="utility:italic" size="xx-small" alternative-text="Italic"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleUnderline} title="Underline">
+                              <lightning-icon icon-name="utility:underline" size="xx-small" alternative-text="Underline"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleStrikethrough} title="Strikethrough">
+                              <lightning-icon icon-name="utility:strikethrough" size="xx-small" alternative-text="Strikethrough"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleTextColor} title="Text color">
+                              <lightning-icon icon-name="utility:text_color" size="xx-small" alternative-text="Text color"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleHighlight} title="Highlight">
+                              <lightning-icon icon-name="utility:highlight" size="xx-small" alternative-text="Highlight"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleRemoveFormat} title="Remove formatting">
+                              <lightning-icon icon-name="utility:remove_formatting" size="xx-small" alternative-text="Remove formatting"></lightning-icon>
+                            </button>
+                          </div>
+                          <div class="nk-rte__btn-group">
+                            <button class="nk-rte__btn" type="button" onmousedown={handleAlignLeft} title="Align left">
+                              <lightning-icon icon-name="utility:left_align_text" size="xx-small" alternative-text="Left"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleAlignCenter} title="Align center">
+                              <lightning-icon icon-name="utility:center_align_text" size="xx-small" alternative-text="Center"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleAlignRight} title="Align right">
+                              <lightning-icon icon-name="utility:right_align_text" size="xx-small" alternative-text="Right"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleJustify} title="Justify">
+                              <lightning-icon icon-name="utility:justify_text" size="xx-small" alternative-text="Justify"></lightning-icon>
+                            </button>
+                          </div>
+                          <button class="nk-rte__btn nk-rte__btn--bordered" type="button" title="Insert">
+                            <lightning-icon icon-name="utility:new" size="xx-small" alternative-text="Insert"></lightning-icon>
+                          </button>
+                        </div>
+                        <div class="nk-rte__editor-wrap">
+                          <div
+                            class="nk-rte__editor"
+                            contenteditable="true"
+                            data-id="detailsEditor"
+                            role="textbox"
+                            aria-label="Details"
+                            aria-multiline="true"
+                            onmouseup={handleEditorMouseUp}
+                            onkeyup={handleEditorKeyUp}
+                            oninput={handleDetailsInput}
+                            onpaste={handleEditorPaste}
+                          ></div>
+
+                          <template lwc:if={showSelectionPopover}>
+                            <div class="nk-selection-popover" style={selectionPopoverStyle}>
+                              <button
+                                class="nk-selection-popover__btn"
+                                type="button"
+                                title="Delete selected text"
+                                onmousedown={handleDeleteSelection}
+                              >
+                                <lightning-icon icon-name="utility:delete" size="xx-small" alternative-text="Delete"></lightning-icon>
+                              </button>
+                              <button
+                                class="nk-selection-popover__btn"
+                                type="button"
+                                title="Add to knowledge"
+                                onmousedown={handleAddFromSelection}
+                              >
+                                <lightning-icon icon-name="utility:add" size="xx-small" alternative-text="Add"></lightning-icon>
+                              </button>
+                            </div>
+                          </template>
+                        </div>
+                        <div class="nk-rte__wordcount">{detailsWordCount}</div>
+                      </div>
+                    </div>
+
+                    <!-- Internal Comments field (hidden in 264: KB Creation flow) -->
+                    <template lwc:if={showInternalComments}>
+                    <div class="nk-field-wrap nk-field-wrap--comments">
+                      <label class="nk-field-label nk-field-label--required">
+                        <abbr class="nk-req-mark" title="required">*</abbr> Internal Comments
+                      </label>
+                      <div class="nk-rte" data-name="Internal Comments Editor">
+                        <div class="nk-rte__menubar">
+                          <button class="nk-rte__menu-btn" type="button">File</button>
+                          <button class="nk-rte__menu-btn" type="button">Edit</button>
+                          <button class="nk-rte__menu-btn" type="button">Insert</button>
+                          <button class="nk-rte__menu-btn" type="button">View</button>
+                          <button class="nk-rte__menu-btn" type="button">Format</button>
+                          <button class="nk-rte__menu-btn" type="button">Table</button>
+                          <button class="nk-rte__menu-btn" type="button">Tools</button>
+                          <button class="nk-rte__menu-btn" type="button">Help</button>
+                          <button class="nk-rte__btn nk-rte__btn--bordered nk-rte__menubar-expand" type="button" title="Expand editor">
+                            <lightning-icon icon-name="utility:expand_alt" size="xx-small" alternative-text="Expand editor"></lightning-icon>
+                          </button>
+                        </div>
+                        <div class="nk-rte__toolbar">
+                          <button class="nk-rte__btn nk-rte__btn--bordered" type="button" onmousedown={handleRemoveFormat} title="Clear formatting">
+                            <lightning-icon icon-name="utility:refresh" size="xx-small" alternative-text="Clear"></lightning-icon>
+                          </button>
+                          <div class="nk-rte__btn-group">
+                            <button class="nk-rte__btn" type="button" onmousedown={handleUndo} title="Undo">
+                              <lightning-icon icon-name="utility:undo" size="xx-small" alternative-text="Undo"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleRedo} title="Redo">
+                              <lightning-icon icon-name="utility:redo" size="xx-small" alternative-text="Redo"></lightning-icon>
+                            </button>
+                          </div>
+                          <select class="nk-rte__select" onchange={handleBlockFormat}>
+                            <option value="p">Paragraph</option>
+                            <option value="h1">Heading 1</option>
+                            <option value="h2">Heading 2</option>
+                            <option value="h3">Heading 3</option>
+                          </select>
+                          <div class="nk-rte__btn-group">
+                            <button class="nk-rte__btn" type="button" onmousedown={handleBold} title="Bold">
+                              <lightning-icon icon-name="utility:bold" size="xx-small" alternative-text="Bold"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleItalic} title="Italic">
+                              <lightning-icon icon-name="utility:italic" size="xx-small" alternative-text="Italic"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleUnderline} title="Underline">
+                              <lightning-icon icon-name="utility:underline" size="xx-small" alternative-text="Underline"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleStrikethrough} title="Strikethrough">
+                              <lightning-icon icon-name="utility:strikethrough" size="xx-small" alternative-text="Strikethrough"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleTextColor} title="Text color">
+                              <lightning-icon icon-name="utility:text_color" size="xx-small" alternative-text="Text color"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleHighlight} title="Highlight">
+                              <lightning-icon icon-name="utility:highlight" size="xx-small" alternative-text="Highlight"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleRemoveFormat} title="Remove formatting">
+                              <lightning-icon icon-name="utility:remove_formatting" size="xx-small" alternative-text="Remove formatting"></lightning-icon>
+                            </button>
+                          </div>
+                          <div class="nk-rte__btn-group">
+                            <button class="nk-rte__btn" type="button" onmousedown={handleAlignLeft} title="Align left">
+                              <lightning-icon icon-name="utility:left_align_text" size="xx-small" alternative-text="Left"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleAlignCenter} title="Align center">
+                              <lightning-icon icon-name="utility:center_align_text" size="xx-small" alternative-text="Center"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleAlignRight} title="Align right">
+                              <lightning-icon icon-name="utility:right_align_text" size="xx-small" alternative-text="Right"></lightning-icon>
+                            </button>
+                            <button class="nk-rte__btn" type="button" onmousedown={handleJustify} title="Justify">
+                              <lightning-icon icon-name="utility:justify_text" size="xx-small" alternative-text="Justify"></lightning-icon>
+                            </button>
+                          </div>
+                        </div>
+                        <div class="nk-rte__editor-wrap">
+                          <div
+                            class="nk-rte__editor"
+                            contenteditable="true"
+                            data-id="commentsEditor"
+                            role="textbox"
+                            aria-label="Internal Comments"
+                            aria-multiline="true"
+                            oninput={handleCommentsInput}
+                            onpaste={handleEditorPaste}
+                          ></div>
+                        </div>
+                        <div class="nk-rte__wordcount">{commentsWordCount}</div>
+                      </div>
+                    </div>
+                    </template>
+
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Step 3: Article metadata form -->
+            <template lwc:if={isStep3}>
+              <div class="nk-card__body nk-card__body--form">
+
+                <!-- ═══ Knowledge Block metadata (Figma: Metadata_Knowledge Block) ═══ -->
+                <template lwc:if={isKnowledgeBlockOrKbCreation}>
+                  <!-- Summary (hidden for 264: KB Creation flow) -->
+                  <template lwc:if={showKbSummaryField}>
+                    <div class="nk-form-field">
+                      <div class="nk-label-row">
+                        <label class="nk-field-label">Summary</label>
+                        <lightning-button-icon icon-name="utility:info" variant="bare" size="small" alternative-text="Summary help" title="A brief description of the block" class="nk-help-icon"></lightning-button-icon>
+                      </div>
+                      <lightning-textarea name="summary" label="Summary" variant="label-hidden" value={summary} onchange={handleSummaryChange}></lightning-textarea>
+                    </div>
+                  </template>
+
+                  <!-- Settings -->
+                  <div class="nk-section">
+                    <div class="nk-section__header nk-section__header--collapsible" onclick={toggleKbSettings}>
+                      <lightning-button-icon icon-name={kbSettingsChevron} variant="bare" size="small" alternative-text="Toggle Settings"></lightning-button-icon>
+                      <span class="nk-section__title">Settings</span>
+                    </div>
+                    <template lwc:if={kbSettingsOpen}>
+                      <div class="nk-section__body nk-section__body--padded">
+                        <lightning-input label="Short Description" required value={kbShortDescription} onchange={handleKbShortDescChange}></lightning-input>
+                        <!-- Data Category: native multi-select lookup with pills -->
+                        <div class="nk-datacat-field">
+                          <label class="nk-field-label"><abbr class="nk-req-mark" title="required">*</abbr> Data Category</label>
+                          <div class="nk-datacat-input-wrap">
+                            <input
+                              type="text"
+                              class="nk-datacat-search"
+                              placeholder="Select Data Categories"
+                              autocomplete="off"
+                              oninput={handleDataCategorySearchInput}
+                              onfocus={handleDataCategorySearchFocus}
+                              onblur={handleDataCategorySearchBlur}
+                            />
+                            <svg class="nk-datacat-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 52 52"><path fill="currentColor" d="M8.3 14.3a1.1 1.1 0 0 0-1.5 0L3.5 17.5c-.4.4-.4 1.1 0 1.5l20.5 20.5c.4.4 1.1.4 1.5 0L46 19c.4-.4.4-1.1 0-1.5l-3.2-3.2c-.4-.4-1.1-.4-1.5 0L26 29.5 8.3 14.3z"/></svg>
+                            <div class="nk-datacat-dropdown" style="display:none"></div>
+                          </div>
+                          <div class="nk-datacat-pills"></div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+
+                  <!-- Translations -->
+                  <div class="nk-section">
+                    <div class="nk-section__header nk-section__header--collapsible" onclick={toggleKbTranslations}>
+                      <lightning-button-icon icon-name={kbTranslationsChevron} variant="bare" size="small" alternative-text="Toggle Translations"></lightning-button-icon>
+                      <span class="nk-section__title">Translations</span>
+                    </div>
+                    <template lwc:if={kbTranslationsOpen}>
+                      <div class="nk-section__body nk-section__body--padded">
+
+                        <!-- Toggle: Apply Translations Manually -->
+                        <div class="nk-toggle-row">
+                          <span class="nk-field-label">Apply Translations Manually</span>
+                          <div class="nk-toggle-wrapper">
+                            <label class="nk-native-toggle">
+                              <input type="checkbox" checked={kbApplyTranslations} onchange={handleKbTranslationsToggleChange} />
+                              <span class="nk-native-toggle__track"></span>
+                            </label>
+                            <span class="nk-toggle__label">{kbTranslationsToggleLabel}</span>
+                          </div>
+                        </div>
+
+                        <!-- Translation content: shown/hidden imperatively -->
+                        <div class="nk-tr-content" style="display:none">
+
+                          <!-- Rows inserted imperatively by handleAddTranslation -->
+                          <div class="nk-tr-rows-container"></div>
+
+                          <!-- Add Translations button -->
+                          <div class="nk-tr-add-row">
+                            <lightning-button
+                              label="Add Translations"
+                              icon-name="utility:add"
+                              variant="brand-outline"
+                              onclick={handleAddTranslation}
+                            ></lightning-button>
+                          </div>
+
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+
+                  <!-- Audience Visibility -->
+                  <div class="nk-section">
+                    <div class="nk-section__header nk-section__header--collapsible" onclick={toggleKbAudience}>
+                      <lightning-button-icon icon-name={kbAudienceChevron} variant="bare" size="small" alternative-text="Toggle Audience Visibility"></lightning-button-icon>
+                      <span class="nk-section__title">Audience Visibility</span>
+                    </div>
+                    <template lwc:if={kbAudienceOpen}>
+                      <div class="nk-section__body nk-section__body--padded">
+                        <!-- Toggle: Set Audience Visibility for this Block -->
+                        <div class="nk-toggle-row">
+                          <span class="nk-field-label">Set Audience Visibility for this Block</span>
+                          <div class="nk-toggle-wrapper">
+                            <label class="nk-native-toggle">
+                              <input type="checkbox" checked={kbAudienceVisibility} onchange={handleKbAudienceToggleChange} />
+                              <span class="nk-native-toggle__track"></span>
+                            </label>
+                            <span class="nk-toggle__label">{kbAudienceToggleLabel}</span>
+                          </div>
+                        </div>
+
+                        <!-- Audience selector: shown/hidden imperatively -->
+                        <div class="nk-audience-content" style="">
+                          <div class="nk-audience-selector">
+                            <label class="nk-field-label nk-field-label--audience">Select Audience</label>
+                            <div class="nk-audience-grouped">
+                              <div class="nk-audience-grouped__select-wrap">
+                                <select class="nk-audience-grouped__select" onchange={handleKbAudienceGroupChange}>
+                                  <template for:each={kbAudienceUserGroupOptions} for:item="opt">
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                  </template>
+                                </select>
+                                <svg class="nk-audience-grouped__chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 52 52"><path fill="currentColor" d="M8.3 14.3a1.1 1.1 0 0 0-1.5 0L3.5 17.5c-.4.4-.4 1.1 0 1.5l20.5 20.5c.4.4 1.1.4 1.5 0L46 19c.4-.4.4-1.1 0-1.5l-3.2-3.2c-.4-.4-1.1-.4-1.5 0L26 29.5 8.3 14.3z"/></svg>
+                              </div>
+                              <div class="nk-audience-grouped__lookup-wrap">
+                                <input
+                                  type="text"
+                                  class="nk-audience-grouped__lookup"
+                                  placeholder="Search User Groups"
+                                  autocomplete="off"
+                                  oninput={handleKbAudienceSearchInput}
+                                  onfocus={handleKbAudienceSearchFocus}
+                                  onblur={handleKbAudienceSearchBlur}
+                                />
+                                <svg class="nk-audience-grouped__search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 52 52"><path fill="currentColor" d="M49.6 45.3 38.3 34c2.6-3.6 4.2-8 4.2-12.8C42.5 9.5 33 0 21.3 0S0 9.5 0 21.3s9.5 21.3 21.3 21.3c4.8 0 9.2-1.6 12.8-4.2l11.3 11.3c.6.6 1.5.6 2.1 0l2.1-2.1c.6-.7.6-1.7 0-2.3zM21.3 36.4c-8.4 0-15.2-6.8-15.2-15.2S12.9 6.1 21.3 6.1s15.2 6.8 15.2 15.2-6.9 15.1-15.2 15.1z"/></svg>
+                                <div class="nk-audience-dropdown" style="display:none"></div>
+                              </div>
+                            </div>
+                            <!-- Pills rendered imperatively -->
+                            <div class="nk-audience-pills"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+
+                <!-- ═══ Article/other record types metadata ═══ -->
+                <template lwc:if={isArticleMetadataForm}>
+
+                  <!-- Information (Figma 7555:111894) -->
+                  <div class="nk-section">
+                    <div class="nk-section__header nk-section__header--banner">
+                      <span class="nk-section__title">Information</span>
+                    </div>
+                    <div class="nk-section__body nk-section__body--padded">
+                      <div class="nk-form-field">
+                        <lightning-input
+                          label="Knowledge Article Title"
+                          required
+                          value={articleTitle}
+                          onchange={handleArticleTitleInput}
+                        ></lightning-input>
+                      </div>
+                      <div class="nk-form-field">
+                        <div class="nk-label-row">
+                          <label class="nk-field-label">Summary</label>
+                          <lightning-button-icon icon-name="utility:info" variant="bare" size="small" alternative-text="Summary help" title="A brief description of the article" class="nk-help-icon"></lightning-button-icon>
+                        </div>
+                        <lightning-textarea name="summary" label="Summary" variant="label-hidden" value={summary} onchange={handleSummaryChange}></lightning-textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Properties -->
+                  <div class="nk-section">
+                    <div class="nk-section__header nk-section__header--banner">
+                      <span class="nk-section__title">Properties</span>
+                    </div>
+                    <div class="nk-section__body nk-section__body--padded">
+                      <div class="nk-grid">
+                        <div class="nk-grid__col">
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Article Number</span>
+                            <div class="nk-readonly-val">1002345</div>
+                          </div>
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Version Number</span>
+                            <div class="nk-readonly-val">1002345</div>
+                          </div>
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Article Total View Count</span>
+                            <div class="nk-readonly-val">1002345</div>
+                          </div>
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Article Case Association Count</span>
+                            <div class="nk-readonly-val">1002345</div>
+                          </div>
+                          <lightning-combobox label="Validation Status" value={validationStatus} options={step2ValidationStatusOptions} onchange={handleValidationStatusChange}></lightning-combobox>
+                          <lightning-combobox label="Workflow Status" value={workflowStatus} options={step2WorkflowStatusOptions} onchange={handleWorkflowStatusChange}></lightning-combobox>
+                        </div>
+                        <div class="nk-grid__col">
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Publication Status</span>
+                            <div class="nk-readonly-val">1002345</div>
+                          </div>
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Last Modified Date</span>
+                            <div class="nk-readonly-val">1002345</div>
+                          </div>
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">First Published Date</span>
+                            <div class="nk-readonly-val">1002345</div>
+                          </div>
+                          <lightning-input label="URL Name" required value={urlName} onchange={handleUrlNameChange} placeholder="Input text"></lightning-input>
+                          <lightning-input type="checkbox" label="Requires Revision" checked={requiresRevision} onchange={handleRequiresRevisionChange}></lightning-input>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Channel -->
+                  <div class="nk-section">
+                    <div class="nk-section__header nk-section__header--banner">
+                      <span class="nk-section__title">Channel</span>
+                    </div>
+                    <div class="nk-section__body nk-section__body--padded">
+                      <div class="nk-grid">
+                        <div class="nk-grid__col">
+                          <lightning-input type="checkbox" label="Visible to Customer" checked={visibleToCustomer} onchange={handleVisibleToCustomer}></lightning-input>
+                          <lightning-input type="checkbox" label="Visible to Partner" checked={visibleToPartner} onchange={handleVisibleToPartner}></lightning-input>
+                        </div>
+                        <div class="nk-grid__col">
+                          <lightning-input type="checkbox" label="Visible in Internal App" checked={visibleInternalApp} onchange={handleVisibleInternalApp}></lightning-input>
+                          <lightning-input type="checkbox" label="Featured in Communities" checked={featuredCommunities} onchange={handleFeaturedCommunities}></lightning-input>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Assignment -->
+                  <div class="nk-section">
+                    <div class="nk-section__header nk-section__header--banner">
+                      <span class="nk-section__title">Assignment</span>
+                    </div>
+                    <div class="nk-section__body nk-section__body--padded">
+                      <div class="nk-grid">
+                        <div class="nk-grid__col">
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Assigned To</span>
+                            <div class="nk-readonly-val nk-readonly-val--user">
+                              <span class="nk-avatar">
+                                <lightning-icon icon-name="utility:user" size="xx-small" alternative-text="User"></lightning-icon>
+                              </span>
+                              Joseph Cooper
+                            </div>
+                          </div>
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Assignment Due Date</span>
+                            <div class="nk-readonly-val">6/12/2025</div>
+                          </div>
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Assignment Note</span>
+                            <div class="nk-readonly-val">-</div>
+                          </div>
+                        </div>
+                        <div class="nk-grid__col">
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Owner</span>
+                            <div class="nk-readonly-val nk-readonly-val--user">
+                              <span class="nk-avatar">
+                                <lightning-icon icon-name="utility:user" size="xx-small" alternative-text="User"></lightning-icon>
+                              </span>
+                              Joseph Cooper
+                            </div>
+                          </div>
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Assignment By</span>
+                            <div class="nk-readonly-val nk-readonly-val--user">
+                              <span class="nk-avatar">
+                                <lightning-icon icon-name="utility:user" size="xx-small" alternative-text="User"></lightning-icon>
+                              </span>
+                              Joseph Cooper
+                            </div>
+                          </div>
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Assignment Date</span>
+                            <div class="nk-readonly-val">6/12/2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Translations -->
+                  <div class="nk-section">
+                    <div class="nk-section__header nk-section__header--banner">
+                      <span class="nk-section__title">Translations</span>
+                    </div>
+                    <div class="nk-section__body nk-section__body--padded">
+                      <div class="nk-grid">
+                        <div class="nk-grid__col">
+                          <lightning-combobox label="Assigned To" value={translationLanguage} options={step2LanguageOptions} onchange={handleTranslationLanguageChange}></lightning-combobox>
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Article Primary Language</span>
+                            <div class="nk-readonly-val">English</div>
+                          </div>
+                        </div>
+                        <div class="nk-grid__col">
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Translation Exported Date</span>
+                            <div class="nk-readonly-val">6/12/2025</div>
+                          </div>
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Translation Imported Date</span>
+                            <div class="nk-readonly-val">6/12/2025</div>
+                          </div>
+                          <div class="nk-readonly-field">
+                            <span class="nk-field-label">Translation Completed Date</span>
+                            <div class="nk-readonly-val">6/12/2025</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+
+              </div>
+            </template>
+
+          </div>
+
+        </div>
+
+        <!-- (Docked footer rendered below outside content row) -->
+
+        <!-- Create a Block panel (right side) -->
+        <template lwc:if={showCreateBlockPanel}>
+          <div class="nk-create-block-backdrop" role="dialog" aria-modal="true" aria-label="Create a Block">
+          <div class="nk-create-block">
+            <header class="nk-create-block__header">
+              <h2 class="nk-create-block__title">Create a Block</h2>
+              <lightning-button-icon
+                icon-name="utility:close"
+                variant="bare"
+                size="small"
+                alternative-text="Close"
+                title="Close"
+                class="nk-create-block__close"
+                onclick={handleCloseCreateBlock}
+              ></lightning-button-icon>
+            </header>
+            <div class="nk-create-block__body">
+              <!-- Selected text from editor -->
+              <div class="nk-create-block__selected-text">
+                <label class="nk-create-block__selected-label">Selected Text</label>
+                <textarea class="nk-create-block__selected-textarea" readonly>{blockSelectedText}</textarea>
+              </div>
+              <!-- Settings -->
+              <div class="nk-cb-section">
+                <div class="nk-cb-section__header nk-cb-section__header--collapsible" onclick={handleModalToggleSettings}>
+                  <svg class="nk-cb-section__chevron nk-cb-section__chevron--down" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 52 52"><path fill="currentColor" d="M8.3 14.3a1.1 1.1 0 0 0-1.5 0L3.5 17.5c-.4.4-.4 1.1 0 1.5l20.5 20.5c.4.4 1.1.4 1.5 0L46 19c.4-.4.4-1.1 0-1.5l-3.2-3.2c-.4-.4-1.1-.4-1.5 0L26 29.5 8.3 14.3z"/></svg>
+                  <span class="nk-cb-section__title">Settings</span>
+                </div>
+                <div class="nk-cb-section__body nk-modal-settings-body">
+                  <div class="nk-cb-field">
+                    <label class="nk-field-label">Short Description</label>
+                    <input type="text" class="nk-cb-text-input" value={blockShortDescription} placeholder="Enter a short description..." onchange={handleBlockDescriptionChange} />
+                  </div>
+                  <div class="nk-cb-field">
+                    <label class="nk-field-label">Data Category</label>
+                    <div class="nk-modal-datacat-wrap">
+                      <input type="text" class="nk-modal-datacat-search" placeholder="Select Data Categories" autocomplete="off" oninput={handleModalDataCatInput} onfocus={handleModalDataCatFocus} onblur={handleModalDataCatBlur} />
+                      <div class="nk-modal-datacat-dropdown" style="display:none"></div>
+                    </div>
+                    <div class="nk-modal-datacat-pills"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Translations -->
+              <div class="nk-cb-section">
+                <div class="nk-cb-section__header nk-cb-section__header--collapsible" onclick={handleModalToggleTranslations}>
+                  <svg class="nk-cb-section__chevron nk-cb-section__chevron--down" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 52 52"><path fill="currentColor" d="M8.3 14.3a1.1 1.1 0 0 0-1.5 0L3.5 17.5c-.4.4-.4 1.1 0 1.5l20.5 20.5c.4.4 1.1.4 1.5 0L46 19c.4-.4.4-1.1 0-1.5l-3.2-3.2c-.4-.4-1.1-.4-1.5 0L26 29.5 8.3 14.3z"/></svg>
+                  <span class="nk-cb-section__title">Translations</span>
+                </div>
+                <div class="nk-cb-section__body nk-modal-translations-body">
+                  <div class="nk-toggle-row">
+                    <span class="nk-field-label">Apply Translations Manually</span>
+                    <div class="nk-toggle-wrapper">
+                      <label class="nk-native-toggle">
+                        <input type="checkbox" onchange={handleModalTranslationsToggle} />
+                        <span class="nk-native-toggle__track"></span>
+                      </label>
+                      <span class="nk-toggle__label">Inactive</span>
+                    </div>
+                  </div>
+                  <div class="nk-modal-translations-content" style="display:none">
+                    <div class="nk-modal-tr-rows"></div>
+                    <div class="nk-tr-add-row">
+                      <lightning-button
+                        label="Add Translations"
+                        icon-name="utility:add"
+                        variant="brand-outline"
+                        onclick={handleModalAddTranslation}
+                      ></lightning-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Audience Visibility -->
+              <div class="nk-cb-section">
+                <div class="nk-cb-section__header nk-cb-section__header--collapsible" onclick={handleModalToggleAudience}>
+                  <svg class="nk-cb-section__chevron nk-cb-section__chevron--down" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 52 52"><path fill="currentColor" d="M8.3 14.3a1.1 1.1 0 0 0-1.5 0L3.5 17.5c-.4.4-.4 1.1 0 1.5l20.5 20.5c.4.4 1.1.4 1.5 0L46 19c.4-.4.4-1.1 0-1.5l-3.2-3.2c-.4-.4-1.1-.4-1.5 0L26 29.5 8.3 14.3z"/></svg>
+                  <span class="nk-cb-section__title">Audience Visibility</span>
+                </div>
+                <div class="nk-cb-section__body nk-modal-audience-body">
+                  <div class="nk-toggle-row">
+                    <span class="nk-field-label">Set Audience Visibility for this Block</span>
+                    <div class="nk-toggle-wrapper">
+                      <label class="nk-native-toggle">
+                        <input type="checkbox" onchange={handleModalAudienceToggle} />
+                        <span class="nk-native-toggle__track"></span>
+                      </label>
+                      <span class="nk-toggle__label">Inactive</span>
+                    </div>
+                  </div>
+                  <div class="nk-modal-audience-content" style="display:none">
+                    <div class="nk-audience-selector">
+                      <label class="nk-field-label">Select Audience</label>
+                      <div class="nk-modal-audience-search-wrap">
+                        <input type="text" class="nk-modal-audience-search" placeholder="Search audiences..." autocomplete="off" oninput={handleModalAudienceInput} onfocus={handleModalAudienceFocus} onblur={handleModalAudienceBlur} />
+                        <div class="nk-modal-audience-dropdown" style="display:none"></div>
+                      </div>
+                      <div class="nk-modal-audience-pills"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="nk-create-block__footer">
+              <lightning-button label="Cancel" variant="neutral" onclick={handleCloseCreateBlock}></lightning-button>
+              <lightning-button label="Create Block" variant="brand" onclick={handleSaveBlock}></lightning-button>
+            </div>
+          </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- ── Page-level Docked Form Footer (Figma 7549:109817) ──
+         Sits at the bottom of the outer Card (.nk-page), spanning the full width
+         across the resources panel + Content Editor card. SLDS 2 docked-form-footer
+         pattern: surface-container-1 fill, spacing-2 padding, Elevation-2 (up) shadow.
+         Left: progress stepper. Right: Cancel / Save & New / Save actions. -->
+    <footer class="nk-page-footer" role="contentinfo">
+      <!-- SLDS 2 Progress Indicator (Figma 7549:109817) — 2 steps:
+           authoring (Details/Similarity) → finalize (Metadata). -->
+      <div class="nk-page-footer__stepper" aria-label={stepperAriaLabel}>
+        <lightning-progress-indicator
+          current-step={currentProgressStep}
+          type="base"
+          variant="base"
+        >
+          <lightning-progress-step label="Details" value="step-1"></lightning-progress-step>
+          <lightning-progress-step label="Metadata" value="step-2"></lightning-progress-step>
+        </lightning-progress-indicator>
+      </div>
+      <!-- Step-aware footer actions (2-step flow — the dedicated
+           Similarity step has been replaced by the inline "Check
+           Similar Articles" modal in the page header on Step 1):
+           • Step 1 (Details)        → Cancel + Next   (Figma 7776:162804)
+           • Step 3 (Metadata/save)  → Back + Save & New + Save (Figma 7549:109817) -->
+      <div class="nk-page-footer__actions">
+        <template lwc:if={isStep1}>
+          <lightning-button
+            label="Cancel"
+            variant="brand-outline"
+            title="Cancel"
+            onclick={handleCancel}
+            class="nk-page-footer__btn"
+          ></lightning-button>
+          <lightning-button
+            label="Next"
+            variant="brand"
+            title="Next"
+            onclick={handleNext}
+            class="nk-page-footer__btn"
+          ></lightning-button>
+        </template>
+        <template lwc:else>
+          <lightning-button
+            label="Back"
+            variant="brand-outline"
+            title="Back"
+            onclick={handleBack}
+            class="nk-page-footer__btn"
+          ></lightning-button>
+          <lightning-button
+            label="Save & New"
+            variant="brand-outline"
+            title="Save & New"
+            onclick={handleSaveAndNew}
+            class="nk-page-footer__btn"
+          ></lightning-button>
+          <lightning-button
+            label="Save"
+            variant="brand"
+            title="Save"
+            onclick={handleSaveDraft}
+            class="nk-page-footer__btn"
+          ></lightning-button>
+        </template>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ── Generate Content Modal ──────────────────────────────── -->
+  <template lwc:if={generateContentModalOpen}>
+    <div class="nk-as-backdrop" onclick={handleCloseGenerateContentModal} role="dialog" aria-modal="true" aria-label="Generate Content">
+      <div class="nk-gc-modal" onclick={handleGcModalContentClick}>
+
+        <!-- Close button -->
+        <lightning-button-icon
+          icon-name="utility:close"
+          variant="border-filled"
+          size="medium"
+          alternative-text="Close"
+          class="nk-as-modal__close"
+          onclick={handleCloseGenerateContentModal}
+        ></lightning-button-icon>
+
+        <!-- Header -->
+        <div class="nk-as-modal__header">
+          <h2 class="nk-as-modal__title">Generate Content</h2>
+          <p class="nk-as-modal__subtitle">Describe what you'd like to generate, then set the length and tone for the output.</p>
+        </div>
+
+        <!-- Body -->
+        <div class="nk-gc-modal__body">
+
+          <!-- Description -->
+          <div class="nk-gc-field">
+            <lightning-textarea
+              label="Brief Description"
+              placeholder="e.g. Summarize compliance requirements for onboarding new hires across AMER and EMEA..."
+              value={gcDescription}
+              oninput={handleGcDescriptionInput}
+              max-length="500"
+            ></lightning-textarea>
+          </div>
+
+          <!-- Length + Tone side by side -->
+          <div class="nk-gc-field-row">
+            <div class="nk-gc-field">
+              <lightning-radio-group
+                label="Content Length"
+                name="gcLength"
+                options={gcLengthOptions}
+                value={gcLength}
+                type="button"
+                onchange={handleGcLengthChange}
+              ></lightning-radio-group>
+            </div>
+            <div class="nk-gc-field">
+              <lightning-radio-group
+                label="Tone"
+                name="gcTone"
+                options={gcToneOptions}
+                value={gcTone}
+                type="button"
+                onchange={handleGcToneChange}
+              ></lightning-radio-group>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="nk-as-modal__footer">
+          <lightning-button
+            label="Cancel"
+            variant="neutral"
+            onclick={handleCloseGenerateContentModal}
+          ></lightning-button>
+          <lightning-button
+            label="Generate Content"
+            variant="brand"
+            onclick={handleConfirmGenerateContent}
+          ></lightning-button>
+        </div>
+
+      </div>
+    </div>
+  </template>
+
+  <!-- ── Add Sources Modal ───────────────────────────────────── -->
+  <template lwc:if={addSourcesModalOpen}>
+    <div class="nk-as-backdrop" onclick={handleCloseAddSourcesModal} role="dialog" aria-modal="true" aria-label="Add Sources">
+      <div class="nk-as-modal" onclick={handleModalContentClick}>
+
+        <!-- Close button -->
+        <lightning-button-icon
+          icon-name="utility:close"
+          variant="border-filled"
+          size="medium"
+          alternative-text="Close"
+          class="nk-as-modal__close"
+          onclick={handleCloseAddSourcesModal}
+        ></lightning-button-icon>
+
+        <!-- Header -->
+        <div class="nk-as-modal__header">
+          <h2 class="nk-as-modal__title">Add Sources</h2>
+          <p class="nk-as-modal__subtitle">Add sources to conduct research, generate insights, and create new content for your organization.</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="nk-as-tabs" role="tablist">
+          <button type="button" class={fileUploadTabClass} role="tab" data-tab="file-upload" aria-selected={isFileUploadTabActive} onclick={handleAddSourcesTab}>File Upload</button>
+          <button type="button" class={linksTabClass} role="tab" data-tab="links" aria-selected={isLinksTabActive} onclick={handleAddSourcesTab}>Links</button>
+          <button type="button" class={externalAppsTabClass} role="tab" data-tab="external-apps" aria-selected={isExternalAppsTabActive} onclick={handleAddSourcesTab}>External Apps</button>
+          <button type="button" class={importLibraryTabClass} role="tab" data-tab="import-library" aria-selected={isImportLibraryTabActive} onclick={handleAddSourcesTab}>Import Library</button>
+        </div>
+
+        <!-- Tab content -->
+        <div class="nk-as-modal__body">
+
+          <!-- File Upload tab -->
+          <template lwc:if={isFileUploadTabActive}>
+            <div class="nk-as-upload-panel">
+
+              <!-- Upload zone: hidden once 5 files reached -->
+              <template lwc:if={showUploadZone}>
+                <div
+                  class={uploadZoneClass}
+                  ondragover={handleDragOver}
+                  ondragleave={handleDragLeave}
+                  ondrop={handleDrop}
+                >
+                  <input
+                    type="file"
+                    id="nk-as-file-input"
+                    class="nk-as-file-input"
+                    multiple
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.png,.csv,.xls,.xlsx,.ppt,.pptx"
+                    onchange={handleFileInputChange}
+                  />
+                  <label for="nk-as-file-input" class="nk-as-upload-btn">
+                    <lightning-icon icon-name="utility:upload" size="xx-small" alternative-text="" class="nk-as-upload-btn__icon"></lightning-icon>
+                    Upload Files
+                  </label>
+                  <span class="nk-as-upload-zone__or">Or drop files</span>
+                </div>
+              </template>
+
+              <!-- Max files reached banner -->
+              <template lwc:if={maxFilesReached}>
+                <p class="nk-as-max-files-msg">
+                  <lightning-icon icon-name="utility:info" size="xx-small" alternative-text="Info" class="nk-as-max-files-msg__icon"></lightning-icon>
+                  Maximum of 5 files reached. Remove a file to add another.
+                </p>
+              </template>
+
+              <!-- Uploaded file rows -->
+              <template lwc:if={hasPendingFiles}>
+                <div class="nk-as-file-list" role="list">
+                  <template for:each={pendingFiles} for:item="file">
+                    <div key={file.name} class="nk-as-file-row" role="listitem">
+                      <div class="nk-as-file-info">
+                        <lightning-icon
+                          icon-name={file.doctypeIcon}
+                          size="small"
+                          alternative-text={file.typeLabel}
+                          class="nk-as-file-doctype"
+                        ></lightning-icon>
+                        <div class="nk-as-file-details">
+                          <span class="nk-as-file-name">{file.name}</span>
+                          <span class="nk-as-file-meta">{file.meta}</span>
+                        </div>
+                      </div>
+                      <div class="nk-as-file-progress" aria-label={file.progressLabel}>
+                        <div class={file.progressFillClass}></div>
+                      </div>
+                      <lightning-button-icon
+                        icon-name={file.actionIcon}
+                        variant="bare"
+                        size="small"
+                        alternative-text={file.actionAltText}
+                        title={file.actionAltText}
+                        data-file-name={file.name}
+                        onclick={handleFileRowAction}
+                        class="nk-as-file-delete"
+                      ></lightning-button-icon>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <p class="nk-as-upload-hint">
+                Upload up to 5 files at a time. For supported file types and size limits, see
+                <a href="https://help.salesforce.com" target="_blank" class="nk-as-hint-link">Salesforce Help</a>.
+              </p>
+            </div>
+          </template>
+
+          <!-- Links tab -->
+          <template lwc:if={isLinksTabActive}>
+            <div class="nk-as-links-panel">
+              <div class="nk-as-link-row">
+                <div class="nk-as-link-input-wrap">
+                  <input
+                    type="url"
+                    class="nk-as-link-input"
+                    placeholder="Paste a URL…"
+                    value={linkInputValue}
+                    oninput={handleLinkInputChange}
+                    aria-label="Source URL"
+                  />
+                </div>
+                <lightning-button
+                  label="Add"
+                  variant="brand"
+                  onclick={handleAddLink}
+                  class="nk-as-link-add-btn"
+                ></lightning-button>
+              </div>
+              <template lwc:if={hasPendingLinks}>
+                <div class="nk-as-file-list" role="list">
+                  <template for:each={pendingLinks} for:item="link">
+                    <div key={link.id} class="nk-as-file-row" role="listitem">
+                      <div class="nk-as-file-info nk-as-file-info--link">
+                        <lightning-icon icon-name="utility:link" size="small" alternative-text="Link" class="nk-as-file-doctype"></lightning-icon>
+                        <div class="nk-as-file-details">
+                          <span class="nk-as-file-name">{link.url}</span>
+                          <span class="nk-as-file-meta">Link</span>
+                        </div>
+                      </div>
+                      <lightning-button-icon
+                        icon-name="utility:delete"
+                        variant="bare"
+                        size="small"
+                        alternative-text="Remove link"
+                        title="Remove link"
+                        data-link-id={link.id}
+                        onclick={handleRemovePendingLink}
+                        class="nk-as-file-delete"
+                      ></lightning-button-icon>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <!-- External Apps tab -->
+          <template lwc:if={isExternalAppsTabActive}>
+            <div class="nk-as-stub-panel">
+              <lightning-icon icon-name="utility:connected_apps" size="large" alternative-text="" class="nk-as-stub-icon"></lightning-icon>
+              <p class="nk-as-stub-title">Connect External Apps</p>
+              <p class="nk-as-stub-body">Import content directly from Confluence, SharePoint, Google Drive, and more.</p>
+            </div>
+          </template>
+
+          <!-- Import Library tab: file selection panel -->
+          <template lwc:if={isImportLibraryTabActive}>
+            <div class="nk-fs-panel">
+
+              <!-- My Resources section -->
+              <div class="nk-fs-section">
+                <div class="nk-fs-section__header">
+                  <label class="nk-fs-select-all-label">
+                    <input
+                      type="checkbox"
+                      class="nk-fs-checkbox"
+                      checked={myResourcesAllSelected}
+                      onchange={handleToggleMyResourcesSelectAll}
+                      aria-label="Select all My Resources"
+                    />
+                    <span class="nk-fs-section__title">My Resources</span>
+                  </label>
+                  <button
+                    type="button"
+                    class="nk-fs-add-btn"
+                    onclick={handleAddMoreLibraryFiles}
+                    title="Upload a new file"
+                    aria-label="Upload a new file"
+                  >
+                    <lightning-icon icon-name="utility:add" size="xx-small" alternative-text="Add"></lightning-icon>
+                  </button>
+                </div>
+                <div class="nk-fs-file-list" role="list">
+                  <template for:each={myResourcesFiles} for:item="file">
+                    <label key={file.id} class={file.rowClass} role="listitem">
+                      <input
+                        type="checkbox"
+                        class="nk-fs-checkbox"
+                        checked={file.selected}
+                        data-file-id={file.id}
+                        onchange={handleToggleFileSelect}
+                        aria-label={file.name}
+                      />
+                      <lightning-icon
+                        icon-name={file.icon}
+                        size="small"
+                        alternative-text={file.type}
+                        class="nk-fs-file-icon"
+                      ></lightning-icon>
+                      <div class="nk-fs-file-info">
+                        <span class="nk-fs-file-name">{file.name}</span>
+                        <span class="nk-fs-file-meta">{file.meta}</span>
+                      </div>
+                    </label>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Enterprise Resources section -->
+              <div class="nk-fs-section">
+                <div class="nk-fs-section__header">
+                  <label class="nk-fs-select-all-label">
+                    <input
+                      type="checkbox"
+                      class="nk-fs-checkbox"
+                      checked={enterpriseResourcesAllSelected}
+                      onchange={handleToggleEnterpriseSelectAll}
+                      aria-label="Select all Enterprise Resources"
+                    />
+                    <span class="nk-fs-section__title">Enterprise Resources</span>
+                  </label>
+                  <button
+                    type="button"
+                    class="nk-fs-add-btn"
+                    onclick={handleAddMoreLibraryFiles}
+                    title="Upload a new file"
+                    aria-label="Upload a new file"
+                  >
+                    <lightning-icon icon-name="utility:add" size="xx-small" alternative-text="Add"></lightning-icon>
+                  </button>
+                </div>
+                <div class="nk-fs-file-list" role="list">
+                  <template for:each={enterpriseResourcesFiles} for:item="file">
+                    <label key={file.id} class={file.rowClass} role="listitem">
+                      <input
+                        type="checkbox"
+                        class="nk-fs-checkbox"
+                        checked={file.selected}
+                        data-file-id={file.id}
+                        onchange={handleToggleFileSelect}
+                        aria-label={file.name}
+                      />
+                      <lightning-icon
+                        icon-name={file.icon}
+                        size="small"
+                        alternative-text={file.type}
+                        class="nk-fs-file-icon"
+                      ></lightning-icon>
+                      <div class="nk-fs-file-info">
+                        <span class="nk-fs-file-name">{file.name}</span>
+                        <span class="nk-fs-file-meta">{file.meta}</span>
+                      </div>
+                    </label>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Selection count indicator -->
+              <template lwc:if={hasImportLibrarySelection}>
+                <p class="nk-fs-selection-count">{selectedImportFileCountLabel}</p>
+              </template>
+
+            </div>
+          </template>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="nk-as-modal__footer">
+          <lightning-button
+            label="Cancel"
+            variant="neutral"
+            onclick={handleCloseAddSourcesModal}
+          ></lightning-button>
+          <lightning-button
+            label={addFilesLabel}
+            variant="brand"
+            disabled={addFilesDisabled}
+            onclick={handleConfirmAddSources}
+          ></lightning-button>
+        </div>
+
+      </div>
+    </div>
+  </template>
+
+  <!-- ── Knowledge-block hover tooltip (SLDS 2) ─────────────────
+       Rendered at the component root with position: fixed so it
+       sits in viewport coordinates. Position + visibility are driven
+       from JS (`kbTooltipStyle` / `kbTooltipVisible`); the JS clamps
+       the rect to the .nk-rte__editor's getBoundingClientRect so the
+       tooltip never escapes the editor pane while scrolling or
+       hovering blocks near its edges. -->
+  <template lwc:if={kbTooltipVisible}>
+    <div class={kbTooltipClass} role="tooltip" style={kbTooltipStyle}>
+      <span class="nk-kb-tooltip__body">This is a Knowledge Block</span>
+    </div>
+  </template>
+
+  <!-- ── Check Similar Articles Modal (Figma 7654:149830) ──────
+       Triggered from the page-header "Check Similar Articles" button.
+       Lists similar articles surfaced by search. Each row exposes an
+       archive button that, on click, transforms into an SLDS 2 badge
+       reading "Archived" and dispatches a `kbtoast` event so the app
+       toast confirms the action. Dismiss via the X icon, the backdrop,
+       Cancel, or Done. -->
+  <template lwc:if={checkSimilarModalOpen}>
+    <div class="nk-as-backdrop" onclick={handleCloseCheckSimilarModal} role="dialog" aria-modal="true" aria-label="Check Similar Articles">
+      <div class="nk-cs-modal" onclick={handleCsModalContentClick}>
+
+        <!-- Close icon (Figma puts it above the modal card on the right) -->
+        <lightning-button-icon
+          icon-name="utility:close"
+          variant="border-filled"
+          size="medium"
+          alternative-text="Close"
+          class="nk-cs-modal__close"
+          onclick={handleCloseCheckSimilarModal}
+        ></lightning-button-icon>
+
+        <div class="nk-cs-modal__card">
+
+          <!-- Header -->
+          <div class="nk-cs-modal__header">
+            <h2 class="nk-cs-modal__title">Check Similar Articles</h2>
+          </div>
+
+          <!-- Body: intro text + scrollable article list -->
+          <div class="nk-cs-modal__body">
+            <p class="nk-cs-modal__intro">
+              Here are some existing articles similar to the article titled <strong class="nk-cs-modal__intro-title">'{checkSimilarIntroTitle}'</strong>. Consider editing or attaching it to avoid duplicating articles.
+            </p>
+
+            <ul class="nk-cs-list">
+              <template for:each={similarArticles} for:item="article">
+                <li key={article.id} class={article.rowClass}>
+                  <div class="nk-cs-row__top">
+
+                    <!-- Title + source/status meta column -->
+                    <div class="nk-cs-row__title-col">
+                      <a class="nk-cs-row__title" href="#" onclick={handleCsModalContentClick}>{article.title}</a>
+                      <div class="nk-cs-row__meta">
+                        <span class="nk-cs-row__source">
+                          <lightning-icon icon-name="utility:knowledge_base" size="xx-small" alternative-text="Confluence"></lightning-icon>
+                          <span>{article.source}</span>
+                        </span>
+                        <span class="nk-cs-row__sep">·</span>
+                        <a class="nk-cs-row__updated" href="#" onclick={handleCsModalContentClick}>Last updated on: {article.lastUpdated}</a>
+                        <span class={article.statusBadgeClass}>
+                          <template lwc:if={article.statusIsSuccess}>
+                            <lightning-icon icon-name="utility:success" size="xx-small" class="nk-cs-row__status-icon"></lightning-icon>
+                          </template>
+                          {article.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Similarity score column -->
+                    <div class="nk-cs-row__score-col">
+                      <span class="nk-cs-row__score-label">Similarity Score</span>
+                      <span class="nk-cs-row__score-value">{article.score}%</span>
+                    </div>
+
+                    <!-- Archive action / archived badge -->
+                    <div class="nk-cs-row__action-col">
+                      <template lwc:if={article.archived}>
+                        <span class="slds-badge slds-badge_lightest nk-cs-archived-badge">
+                          <lightning-icon icon-name="utility:archive" size="xx-small" class="nk-cs-archived-badge__icon"></lightning-icon>
+                          Archived
+                        </span>
+                      </template>
+                      <template lwc:else>
+                        <lightning-button-icon
+                          icon-name="utility:archive"
+                          variant="border-filled"
+                          size="medium"
+                          alternative-text="Archive article"
+                          title="Archive article"
+                          data-id={article.id}
+                          onclick={handleArchiveSimilarArticle}
+                        ></lightning-button-icon>
+                      </template>
+                    </div>
+                  </div>
+
+                  <!-- Similar aspects row -->
+                  <div class="nk-cs-row__aspects">
+                    <span class="nk-cs-row__aspects-label">Similar Aspects:</span>
+                    <template for:each={article.aspects} for:item="aspect">
+                      <span key={aspect} class="slds-badge slds-badge_lightest nk-cs-row__aspect-badge">{aspect}</span>
+                    </template>
+                  </div>
+                </li>
+              </template>
+            </ul>
+          </div>
+
+          <!-- Footer: Cancel + Done -->
+          <div class="nk-cs-modal__footer">
+            <lightning-button
+              label="Cancel"
+              variant="brand-outline"
+              onclick={handleCloseCheckSimilarModal}
+            ></lightning-button>
+            <lightning-button
+              label="Done"
+              variant="brand"
+              onclick={handleCloseCheckSimilarModal}
+            ></lightning-button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </template>
+
+
+</template>

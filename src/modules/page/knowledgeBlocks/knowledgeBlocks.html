@@ -1,0 +1,137 @@
+<template lwc:render-mode="light">
+    <div class="kblocks-page" onsavedraft={handleSaveDraft} onkbtoast={handleKbToast}>
+
+        <!-- ═══ LEFT RAIL (hidden during create/saved views) ═══ -->
+        <template lwc:if={showLeftRail}>
+        <nav class={railClass} aria-label="Knowledge navigation">
+            <div class="kh-rail__top">
+                <template for:each={railTopItems} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class={item.rowClass}
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+
+                <div class="kh-rail__divider" role="separator"></div>
+                <div class="kh-rail__group-header">Maintain</div>
+                <template for:each={railMaintainComputed} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class={item.rowClass}
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+
+                <div class="kh-rail__divider" role="separator"></div>
+                <div class="kh-rail__group-header">Create</div>
+                <template for:each={railCreateComputed} for:item="item">
+                    <button
+                        key={item.id}
+                        type="button"
+                        class={item.rowClass}
+                        data-id={item.id}
+                        onclick={handleRailNav}
+                    >
+                        <lightning-icon
+                            icon-name={item.icon}
+                            size="x-small"
+                            alternative-text={item.label}
+                            class="kh-rail__icon"
+                        ></lightning-icon>
+                        <span class="kh-rail__label">{item.label}</span>
+                    </button>
+                </template>
+            </div>
+
+            <div class="kh-rail__bottom">
+                <button
+                    type="button"
+                    class="kh-rail__row kh-rail__row--collapse"
+                    aria-label={collapseAriaLabel}
+                    onclick={handleToggleRail}
+                >
+                    <lightning-icon
+                        icon-name={collapseIconName}
+                        size="x-small"
+                        alternative-text={collapseAriaLabel}
+                        class="kh-rail__icon"
+                    ></lightning-icon>
+                    <span class="kh-rail__label">Collapse</span>
+                </button>
+            </div>
+        </nav>
+        </template>
+
+        <!-- ═══ MAIN CONTENT ═══ -->
+        <div class="kblocks-shell">
+
+            <!-- List view: page header + KB data table -->
+            <template lwc:if={isListView}>
+                <ui-knowledge-page-header
+                    is-kb-creation-flow
+                    onopennewknowledge={handleOpenNewKnowledge}
+                ></ui-knowledge-page-header>
+                <ui-knowledge-data-table
+                    is-kb-creation-flow
+                    saved-items={_savedKbListItems}
+                    onviewrecord={handleViewKbRecord}
+                ></ui-knowledge-data-table>
+            </template>
+
+            <!-- Single block creation form -->
+            <template lwc:if={isCreateView}>
+                <ui-new-knowledge-block-modal
+                    record-type="Article"
+                    skip-similarity-step
+                    onclose={handleCloseModal}
+                ></ui-new-knowledge-block-modal>
+            </template>
+
+            <!-- Saved knowledge block record view -->
+            <template lwc:if={isSavedView}>
+                <ui-saved-knowledge-block-record
+                    saved-data={_savedArticle}
+                    is-kb-creation-flow
+                ></ui-saved-knowledge-block-record>
+            </template>
+
+        </div>
+
+        <!-- Success toast -->
+        <template lwc:if={showToast}>
+            <div class="kblocks-toast" role="status" aria-live="assertive" aria-atomic="true">
+                <div class="kblocks-toast__inner">
+                    <lightning-icon
+                        icon-name="utility:success"
+                        size="small"
+                        alternative-text="Success"
+                        class="kblocks-toast__icon"
+                    ></lightning-icon>
+                    <span class="kblocks-toast__message">{toastMessage}</span>
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

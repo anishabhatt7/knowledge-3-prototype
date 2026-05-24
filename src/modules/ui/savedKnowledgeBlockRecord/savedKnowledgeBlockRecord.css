@@ -1,0 +1,857 @@
+main-saved-knowledge-record {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Root layout ─────────────────────────────────────────── */
+.skr-page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+  overflow: hidden;
+}
+
+/* ── Splitview strip ─────────────────────────────────────── */
+.skr-splitview {
+  width: 14px;
+  flex-shrink: 0;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  box-shadow: -1px 0 0 0 #c9c9c9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.skr-splitview__arrow {
+  font-size: 12px;
+  color: #747474;
+  line-height: 1;
+  user-select: none;
+}
+
+/* ── Main area ───────────────────────────────────────────── */
+.skr-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Page header ─────────────────────────────────────────── */
+.skr-page-header {
+  flex-shrink: 0;
+  background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+  padding: var(--slds-g-spacing-4, 16px);
+  border-bottom: 1px solid var(--slds-g-color-border-1, #dddbda);
+}
+
+.skr-ph-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--slds-g-spacing-3, 12px);
+  margin-bottom: var(--slds-g-spacing-4, 16px);
+}
+
+.skr-ph-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--slds-g-spacing-3, 12px);
+  flex: 1;
+  min-width: 0;
+}
+
+.skr-ph-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #ff5d2d;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  --slds-c-icon-color-foreground: #fff;
+}
+
+.skr-ph-custom-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.skr-ph-title-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.skr-ph-breadcrumb {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-neg-1, 12px);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  line-height: 18px;
+  margin: 0;
+}
+
+.skr-ph-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+}
+
+.skr-ph-title {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-5, 28px);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  color: var(--slds-g-color-on-surface-3, #001e5b);
+  line-height: 35px;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.skr-ph-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+/* Detail row */
+.skr-ph-details {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--slds-g-spacing-8, 32px);
+}
+
+.skr-ph-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.skr-ph-detail__label {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-neg-1, 12px);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  line-height: 17px;
+  white-space: nowrap;
+}
+
+.skr-ph-detail__value {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-3, #001e5b);
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.skr-ph-detail__value--link {
+  color: var(--slds-g-color-accent-2, #0250d9);
+}
+
+.skr-ph-checkbox {
+  cursor: default;
+  accent-color: var(--slds-g-color-brand-1, #0176d3);
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Two-column content area ─────────────────────────────── */
+.skr-content {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: var(--slds-g-spacing-3, 12px);
+  padding: var(--slds-g-spacing-4, 16px);
+  /* Page-level scroll removed — each card inside this row
+     (record details, side cards) owns its own scroll, so the
+     overall page stays fixed to the viewport. */
+  overflow: hidden;
+  min-height: 0;
+  align-items: stretch;
+}
+
+/* ── Record details card (left) ──────────────────────────── */
+.skr-record-card {
+  flex: 1;
+  min-width: 0;
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border-radius: var(--slds-g-radius-border-4, 20px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Tabs */
+.skr-tabs {
+  display: flex;
+  align-items: stretch;
+  padding: 0 var(--slds-g-spacing-4, 16px);
+  border-bottom: 1px solid var(--slds-g-color-border-1, #dddbda);
+  gap: 0;
+}
+
+.skr-tab {
+  padding: 12px 16px;
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  color: var(--slds-g-color-on-surface-2, #3e3e3c);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  user-select: none;
+  line-height: 1.4;
+}
+
+.skr-tab--active {
+  color: var(--slds-g-color-brand-1, #0176d3);
+  font-weight: var(--slds-g-font-weight-6, 600);
+  border-bottom-color: var(--slds-g-color-brand-1, #0176d3);
+}
+
+/* Tab panel */
+.skr-tab-panel {
+  padding: var(--slds-g-spacing-4, 16px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Expandable sections ─────────────────────────────────── */
+.skr-section {
+  margin-bottom: var(--slds-g-spacing-4, 16px);
+}
+
+.skr-section__header {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+  padding: 0 var(--slds-g-spacing-2, 8px);
+  height: 32px;
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+  border-radius: var(--slds-g-radius-border-2, 8px);
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: var(--slds-g-spacing-2, 8px);
+}
+
+.skr-section__chevron {
+  color: var(--slds-g-color-on-surface-2, #3e3e3c);
+  flex-shrink: 0;
+}
+
+.skr-section__title {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-2, 16px);
+  font-weight: var(--slds-g-font-weight-6, 600);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  line-height: 22px;
+}
+
+.skr-section__body {
+  padding: 0 var(--slds-g-spacing-2, 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.skr-section__body--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 var(--slds-g-spacing-4, 16px);
+}
+
+.skr-section__body--hidden {
+  display: none;
+}
+
+/* ── Read-only fields ────────────────────────────────────── */
+.skr-ro-field {
+  display: flex;
+  flex-direction: column;
+  padding: var(--slds-g-spacing-2, 8px) 0 0;
+}
+
+.skr-ro-field__label {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-1, 4px);
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-neg-1, 12px);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  line-height: 17px;
+  margin-bottom: 2px;
+}
+
+.skr-ro-field__info-icon {
+  --slds-c-icon-color-foreground: var(--slds-g-color-on-surface-1, #5c5c5c);
+  vertical-align: middle;
+}
+
+.skr-ro-field__value {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-3, #001e5b);
+  line-height: 18px;
+  min-height: 18px;
+  padding: 2px 0 6px;
+}
+
+.skr-ro-field__value--placeholder {
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.skr-ro-field__value--muted {
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.skr-ro-field__value--user {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-1, 4px);
+}
+
+.skr-ro-field__phone {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-1, 4px);
+  color: var(--slds-g-color-accent-2, #0250d9);
+  text-decoration: none;
+  font-size: var(--slds-g-font-size-base, 13px);
+  line-height: 18px;
+}
+
+.skr-ro-field__phone:hover {
+  text-decoration: underline;
+}
+
+.skr-ro-field__phone-icon {
+  --slds-c-icon-color-foreground: var(--slds-g-color-accent-2, #0250d9);
+  flex-shrink: 0;
+}
+
+.skr-ro-field--full {
+  grid-column: 1 / -1;
+}
+
+.skr-ro-field--empty {
+  visibility: hidden;
+}
+
+.skr-ro-field__rte {
+  line-height: 1.6;
+  font-size: var(--slds-g-font-size-base, 13px);
+}
+
+.skr-ro-field__rte b,
+.skr-ro-field__rte strong {
+  font-weight: var(--slds-g-font-weight-7, 700);
+}
+
+.skr-ro-field__rte ul,
+.skr-ro-field__rte ol {
+  padding-left: 20px;
+  margin: 4px 0;
+}
+
+.skr-ro-field__rte li {
+  margin: 2px 0;
+}
+
+/* Created-block markup from the editor: show as normal article text (no dashed frame). */
+.skr-ro-field__rte .nk-created-block-boundary {
+  display: contents !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+  vertical-align: unset !important;
+  cursor: inherit;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+}
+
+.skr-ro-field__line {
+  height: 1px;
+  background-color: var(--slds-g-color-border-1, #dddbda);
+  margin-top: 4px;
+}
+
+.skr-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--slds-g-color-surface-3, #ecebea);
+  flex-shrink: 0;
+}
+
+/* ── Tab placeholder ─────────────────────────────────────── */
+.skr-tab-placeholder {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  padding: var(--slds-g-spacing-4, 16px);
+}
+
+/* ── Related Lists card ──────────────────────────────────── */
+.skr-rl-card {
+  border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  border-radius: var(--slds-g-radius-border-3, 12px);
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  overflow: hidden;
+}
+
+.skr-rl-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+}
+
+.skr-rl-card__header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-2, 8px);
+}
+
+.skr-rl-card__icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.skr-rl-card__title {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-3, 20px);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  color: var(--slds-g-color-on-surface-3, #03234d);
+  line-height: 28px;
+  margin: 0;
+}
+
+.skr-rl-card__body {
+  overflow-x: auto;
+}
+
+.skr-rl-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+  border-top: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.skr-rl-card__view-all {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-accent-2, #0250d9);
+  text-decoration: none;
+  font-weight: var(--slds-g-font-weight-4, 400);
+}
+
+.skr-rl-card__view-all:hover {
+  text-decoration: underline;
+}
+
+/* ── Related Lists table ─────────────────────────────────── */
+.skr-rl-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.skr-rl-table__header-row {
+  background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.skr-rl-table__header-cell {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  font-weight: var(--slds-g-font-weight-6, 590);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  line-height: 18px;
+  padding: 0;
+  height: 36px;
+  text-align: left;
+  border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  white-space: nowrap;
+}
+
+.skr-rl-table__header-cell--checkbox {
+  width: 40px;
+  text-align: center;
+}
+
+.skr-rl-table__header-cell--actions {
+  width: 50px;
+}
+
+.skr-rl-table__header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--slds-g-spacing-2, 8px);
+  height: 100%;
+  border-left: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.skr-rl-table__header-cell:first-child + .skr-rl-table__header-cell .skr-rl-table__header-content {
+  border-left: none;
+}
+
+.skr-rl-table__row {
+  background-color: #fff;
+}
+
+.skr-rl-table__row:hover {
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+.skr-rl-table__cell {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  color: var(--slds-g-color-on-surface-3, #1d1c1d);
+  line-height: 18px;
+  padding: 0 var(--slds-g-spacing-2, 8px);
+  height: 36px;
+  border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+  border-left: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.skr-rl-table__cell--checkbox {
+  width: 40px;
+  text-align: center;
+  border-left: none;
+}
+
+.skr-rl-table__cell--actions {
+  width: 50px;
+  text-align: center;
+  border-left: none;
+}
+
+.skr-rl-table__link {
+  color: var(--slds-g-color-accent-2, #0250d9);
+  text-decoration: none;
+  font-size: var(--slds-g-font-size-base, 13px);
+}
+
+.skr-rl-table__link:hover {
+  text-decoration: underline;
+}
+
+.skr-rl-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--slds-g-color-brand-1, #0176d3);
+  cursor: pointer;
+}
+
+/* ── Side cards (right) ──────────────────────────────────── */
+.skr-side-cards {
+  width: 440px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-3, 12px);
+}
+
+.skr-side-card {
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border-radius: var(--slds-g-radius-border-4, 20px);
+  overflow: hidden;
+}
+
+.skr-side-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-2, 8px);
+}
+
+.skr-side-card__title {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-3, 20px);
+  font-weight: var(--slds-g-font-weight-6, 600);
+  color: var(--slds-g-color-on-surface-3, #001e5b);
+  line-height: 28px;
+}
+
+/* Table of Contents tree */
+.skr-toc {
+  padding: var(--slds-g-spacing-2, 8px) 0;
+}
+
+.skr-toc-item {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-1, 4px);
+  padding: 6px var(--slds-g-spacing-4, 16px);
+  cursor: pointer;
+}
+
+.skr-toc-item--active {
+  background-color: var(--slds-g-color-brand-container-1, #d6e6ff);
+}
+
+/* Tree-like indent: child rows sit further right so the hierarchy
+   reads at a glance. The base `.skr-toc-item` has 16px padding-left,
+   so 44px gives a clean ~28px nest under the parent's chevron. */
+.skr-toc-item--child {
+  padding-left: 44px;
+}
+
+.skr-toc-item__chevron {
+  flex-shrink: 0;
+  color: var(--slds-g-color-accent-2, #0250d9);
+}
+
+/* Spacer reserves the chevron slot for leaf rows so labels align
+   with sibling rows that DO render a chevron. */
+.skr-toc-item__chevron-spacer {
+  flex-shrink: 0;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+}
+
+.skr-toc-item__label {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-accent-2, #0250d9);
+  line-height: 18px;
+}
+
+.skr-toc-item--active .skr-toc-item__label {
+  font-weight: var(--slds-g-font-weight-6, 600);
+}
+
+/* "Was this article helpful?" */
+.skr-helpful-header {
+  padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+}
+
+.skr-helpful-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-3, 12px);
+  padding: 0 var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-3, 12px);
+}
+
+/* Categories */
+.skr-categories {
+  padding: var(--slds-g-spacing-2, 8px) 0;
+}
+
+.skr-category-item {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-1, 4px);
+  padding: 6px var(--slds-g-spacing-4, 16px);
+  cursor: pointer;
+}
+
+.skr-category-item__label {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-3, #001e5b);
+  line-height: 18px;
+}
+
+/* ══ Modal shared styles ═══════════════════════════════════════════ */
+.skr-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skr-modal {
+  background-color: var(--slds-g-color-surface-container-1, #fff);
+  border-radius: var(--slds-g-radius-border-4, 12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.skr-modal--edit {
+  width: 720px;
+  max-width: calc(100vw - 64px);
+}
+
+.skr-modal--confirm {
+  width: 540px;
+  max-width: calc(100vw - 64px);
+}
+
+.skr-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-5, 24px);
+  border-bottom: 1px solid var(--slds-g-color-border-1, #dddbda);
+  flex-shrink: 0;
+}
+
+.skr-modal__title {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-4, 20px);
+  font-weight: var(--slds-g-font-weight-6, 700);
+  color: var(--slds-g-color-on-surface-3, #001e5b);
+  line-height: 28px;
+  margin: 0;
+}
+
+.skr-modal__body {
+  padding: var(--slds-g-spacing-5, 24px);
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-4, 16px);
+}
+
+.skr-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--slds-g-spacing-3, 12px);
+  padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-5, 24px);
+  border-top: 1px solid var(--slds-g-color-border-1, #dddbda);
+  flex-shrink: 0;
+}
+
+/* ── Edit modal fields ─────────────────────────────────────────── */
+.skr-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--slds-g-spacing-1, 4px);
+}
+
+.skr-edit-field__label {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-neg-1, 12px);
+  font-weight: var(--slds-g-font-weight-6, 600);
+  color: var(--slds-g-color-on-surface-1, #5c5c5c);
+  line-height: 17px;
+}
+
+.skr-edit-field__input {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-3, #001e5b);
+  line-height: 18px;
+  padding: 8px 12px;
+  border: 1px solid var(--slds-g-color-border-2, #aeaeae);
+  border-radius: var(--slds-g-radius-border-2, 4px);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.skr-edit-field__input:focus {
+  border-color: var(--slds-g-color-brand-1, #0176d3);
+  box-shadow: 0 0 0 1px var(--slds-g-color-brand-1, #0176d3);
+}
+
+/* ── Rich text editor in edit modal ────────────────────────────── */
+.skr-edit-rte {
+  border: 1px solid var(--slds-g-color-border-2, #aeaeae);
+  border-radius: var(--slds-g-radius-border-2, 4px);
+  overflow: hidden;
+}
+
+.skr-edit-rte:focus-within {
+  border-color: var(--slds-g-color-brand-1, #0176d3);
+  box-shadow: 0 0 0 1px var(--slds-g-color-brand-1, #0176d3);
+}
+
+.skr-edit-rte__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  background-color: var(--slds-g-color-surface-2, #f3f3f3);
+  border-bottom: 1px solid var(--slds-g-color-border-1, #dddbda);
+}
+
+.skr-edit-rte__divider {
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background-color: var(--slds-g-color-border-1, #dddbda);
+  margin: 0 4px;
+}
+
+.skr-edit-rte__editor {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-size-base, 13px);
+  color: var(--slds-g-color-on-surface-3, #001e5b);
+  line-height: 1.6;
+  padding: 12px;
+  min-height: 200px;
+  max-height: 350px;
+  overflow-y: auto;
+  outline: none;
+}
+
+.skr-edit-rte__editor b,
+.skr-edit-rte__editor strong {
+  font-weight: var(--slds-g-font-weight-7, 700);
+}
+
+.skr-edit-rte__editor ul,
+.skr-edit-rte__editor ol {
+  padding-left: 20px;
+  margin: 4px 0;
+}
+
+.skr-edit-rte__editor li {
+  margin: 2px 0;
+}
+
+/* ── Confirmation modal ────────────────────────────────────────── */
+.skr-modal__body--confirm {
+  padding: var(--slds-g-spacing-4, 16px);
+  display: flex;
+  align-items: flex-start;
+}
+
+.skr-confirm-question {
+  font-family: var(--slds-g-font-family-base, 'Salesforce Sans', sans-serif);
+  font-size: var(--slds-g-font-scale-1, 14px);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
+  line-height: 19px;
+  text-align: center;
+  margin: 0;
+}

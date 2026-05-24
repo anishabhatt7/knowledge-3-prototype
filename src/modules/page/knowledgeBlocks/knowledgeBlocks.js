@@ -3,22 +3,23 @@ import { gsap } from 'gsap';
 import { navigate } from '../../../router';
 import 'ui/knowledgePageHeader';
 import 'ui/knowledgeDataTable';
+import 'ui/newKnowledgeBlockModal';
+import 'ui/savedKnowledgeBlockRecord';
 
-/**
- * Knowledge Base — list-view page (Recently Viewed Knowledge).
- *
- * Mirrors Flow 1 / Flow 2's `main-knowledge-page-header`
- * + `main-knowledge-data-table` pair, hosted in the Knowledge 3.0
- * shell with the same collapsible left rail used by Knowledge Home
- * and the Healing Graph page. Reached via the rail's
- * "Create > Knowledge Base" item (kb-base).
- */
-export default class KnowledgeBase extends LightningElement {
+export default class KnowledgeBlocks extends LightningElement {
     static renderMode = 'light';
 
-    // ── Left rail state ─────────────────────────────────────────────
     @track _railExpanded = true;
     _railAnimating = false;
+
+    // Views: 'list' | 'create' | 'saved'
+    @track _currentView = 'list';
+    @track _savedArticle = null;
+    @track _savedKbListItems = [];
+    @track _kbCreationDraftTitle = '';
+    @track showToast = false;
+    @track _toastMessage = '';
+    _toastTimer = null;
 
     _railTopItems = [
         { id: 'home', label: 'Home', icon: 'utility:home', active: false },
@@ -32,8 +33,8 @@ export default class KnowledgeBase extends LightningElement {
     ];
 
     railCreate = [
-        { id: 'kb-base', label: 'Knowledge Base', icon: 'utility:knowledge_base', active: true },
-        { id: 'kb-blocks', label: 'Knowledge Blocks', icon: 'utility:process' },
+        { id: 'kb-base', label: 'Knowledge Base', icon: 'utility:knowledge_base' },
+        { id: 'kb-blocks', label: 'Knowledge Blocks', icon: 'utility:process', active: true },
     ];
 
     get railTopItems() {
@@ -69,9 +70,32 @@ export default class KnowledgeBase extends LightningElement {
         return this._railExpanded ? 'Collapse navigation' : 'Expand navigation';
     }
 
-    // GSAP-driven width tween + label opacity stagger — copied from
-    // healingGraph / knowledgeHome so motion stays identical across
-    // pages that share the rail.
+    // ── View state getters ──────────────────────────────────────────
+    get isListView() {
+        return this._currentView === 'list';
+    }
+
+    get isCreateView() {
+        return this._currentView === 'create';
+    }
+
+    get isSavedView() {
+        return this._currentView === 'saved';
+    }
+
+    get showLeftRail() {
+        return this._currentView === 'list';
+    }
+
+    get toastMessage() {
+        if (this._toastMessage) return this._toastMessage;
+        const title = this._savedArticle && this._savedArticle.articleTitle
+            ? `"${this._savedArticle.articleTitle}"`
+            : 'Knowledge block';
+        return `${title} was saved as draft`;
+    }
+
+    // ── Rail animation ──────────────────────────────────────────────
     handleToggleRail() {
         if (this._railAnimating) return;
         const next = !this._railExpanded;
@@ -140,11 +164,59 @@ export default class KnowledgeBase extends LightningElement {
         } else if (id === 'healing-graph') {
             navigate('/healing-graph');
         } else if (id === 'kb-base') {
-            // already here — no-op
+            navigate('/knowledge-base');
         } else if (id === 'command-center') {
             navigate('/command-center');
-        } else if (id === 'kb-blocks') {
-            navigate('/knowledge-blocks');
         }
+    }
+
+    // ── Flow handlers ───────────────────────────────────────────────
+    handleOpenNewKnowledge() {
+        this._currentView = 'create';
+        this._kbCreationDraftTitle = 'New Block title';
+    }
+
+    handleCloseModal() {
+        this._currentView = 'list';
+        this._kbCreationDraftTitle = '';
+    }
+
+    handleSaveDraft(event) {
+        this._savedArticle = event.detail;
+        this._toastMessage = '';
+        const now = new Date();
+        const dateStr = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}, ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+        this._savedKbListItems = [
+            { id: `saved-kb-${Date.now()}`, title: event.detail.articleTitle || 'New Block title', date: dateStr, recordType: 'Knowledge Block' },
+            ...this._savedKbListItems,
+        ];
+        this._currentView = 'saved';
+        this._kbCreationDraftTitle = '';
+        this.showToast = true;
+        if (this._toastTimer) clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => {
+            this.showToast = false;
+        }, 4000);
+    }
+
+    handleViewKbRecord(event) {
+        const detail = event.detail;
+        this._savedArticle = {
+            articleTitle: detail.title,
+            summary: '',
+            detailsContent: '',
+            recordType: 'Knowledge Block',
+        };
+        this._currentView = 'saved';
+    }
+
+    handleKbToast(event) {
+        this._toastMessage = (event.detail && event.detail.message) || 'Knowledge block updated successfully.';
+        this.showToast = true;
+        if (this._toastTimer) clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => {
+            this.showToast = false;
+            this._toastMessage = '';
+        }, 4000);
     }
 }
