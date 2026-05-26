@@ -43,9 +43,9 @@ export default class App extends LightningElement {
           pm: 'http://localhost:8002/',
         }
       : {
-          v1: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/',
-          v2: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype-v2/',
-          pm: 'https://git.soma.salesforce.com/pages/nimit-khurana/AI-Ready-Knowledge/',
+          v1: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/v1/',
+          v2: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/v2/',
+          pm: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/pm/',
         };
     if (urls[newValue]) {
       window.location.href = urls[newValue];
