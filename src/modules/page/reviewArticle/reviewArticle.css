@@ -16,7 +16,7 @@ page-review-article.ra--entering .ra-shell__aside_left,
 page-review-article.ra--entering .ra-shell__main,
 page-review-article.ra--entering .ra-shell__aside_right,
 page-review-article.ra--entering .ra-article__head,
-page-review-article.ra--entering .ra-article__body ui-article-block {
+page-review-article.ra--entering .ra-editor {
     opacity: 0;
 }
 
@@ -47,11 +47,26 @@ page-review-article.ra--entering .ra-article__body ui-article-block {
     --ra-left-col: 56px;
 }
 
+/* Expanded assist panel — Figma 140:26133/140:26134. Widens the
+   left column so reviewers can read suggestion cards without
+   ellipsis and act on them in a single, comfortable column. The
+   editor canvas shrinks to fit; min-width: 0 on the grid track
+   keeps the article body scrollable rather than overflowing. */
+.ra-shell_assist-expanded {
+    --ra-left-col: 600px;
+}
+
 /* Responsive auto-collapse — below 1280px the assist panel folds to a
    fit-content rail; below 1100px the chat panel hides entirely; below
    820px the article takes the full width. */
 @media (max-width: 1280px) {
     .ra-shell {
+        --ra-left-col: 56px;
+    }
+    /* On narrow viewports the panel is auto-collapsed anyway, so the
+       wider expand state has nothing to anchor to — keep it at the
+       rail width until the user resizes back up. */
+    .ra-shell_assist-expanded {
         --ra-left-col: 56px;
     }
 }
@@ -184,19 +199,12 @@ page-review-article.ra--entering .ra-article__body ui-article-block {
     flex-shrink: 0;
 }
 
-/* History + Save split-button groups in the title row.
-   SLDS2 cosmos provides the visual styling (pill radius via
-   --slds-s-button-radius-border, blue text/icon via --slds-s-button-color,
-   gray border via --slds-g-color-border-2, 32x32 size for
-   .slds-button_icon-border-filled). We only enforce layout here. */
+/* History + Save split-button groups in the title row. */
 .ra-history-group,
 .ra-save-group {
     flex-shrink: 0;
 }
 
-/* Reset the right margin on header button-group icons so they sit at the
-   default spacing instead of overlapping the global shell-app
-   .slds-button-group gap. */
 .ra-article__title-row lightning-button-icon {
     margin-right: 0px;
 }
@@ -230,10 +238,7 @@ page-review-article.ra--entering .ra-article__body ui-article-block {
     line-height: 18px;
 }
 
-/* Resource pills — SLDS2 lightning-pill with token overrides to match
-   the Figma Resource Chip component. Each variant colors the pill's
-   media slot (the left-side icon container) so the puck carries the
-   category cue while the pill shell stays consistent. */
+/* Resource pills */
 .ra-pill {
     display: inline-flex;
     margin-right: 4px;
@@ -246,10 +251,6 @@ page-review-article.ra--entering .ra-article__body ui-article-block {
     --slds-c-pill-spacing-block-end: 0;
 }
 
-/* Give the standard-icon inside the pill a colored circular background,
-   mirroring the "Resource Chip" avatar puck. standard:* icons render a
-   16px icon with a per-variant background which we re-tint via the
-   SLDS icon tokens. */
 .ra-pill lightning-icon {
     --slds-c-icon-sizing: 16px;
     --slds-c-icon-radius-border: 50%;
@@ -270,36 +271,394 @@ page-review-article.ra--entering .ra-article__body ui-article-block {
     --slds-c-icon-color-foreground-default: #ffffff;
 }
 
-/* Article body — the scroll container. Notion-style block list sits
-   here. The 60px left gutter matches the Figma "Block Type" inset so
-   text aligns with the block boundary, while the card itself keeps a
-   32px outer gutter on the right. */
-.ra-article__body {
+/* ─── Editor toolbars (Figma 125:67886) ──────────────────────────
+   Two stacked toolbars between the article header and the body:
+     1. Menu bar (File ... Help)
+     2. Format bar — execCommand-driven controls matching Figma exactly:
+        Expand | Redo | Undo | sep | Paragraph dropdown | sep |
+        B I U S | sep | A(color) | highlight | Tx(clear) | sep |
+        align-left center right justify | sep | + (insert) */
+.ra-toolbar {
+    position: sticky;
+    top: 56px; /* sit below the sticky article header */
+    z-index: 1;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    border-bottom: 1px solid var(--slds-g-color-border-1, #ededed);
+    flex-shrink: 0;
+}
+
+.ra-toolbar__menubar,
+.ra-toolbar__formatbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    height: 40px;
+    box-sizing: border-box;
+}
+
+.ra-toolbar__menubar {
+    border-bottom: 1px solid var(--slds-g-color-border-1, #ededed);
+    gap: 0;
+    padding: 0 8px;
+}
+
+.ra-toolbar__menu-btn,
+.ra-toolbar__menu-icon {
+    height: 32px;
+    padding: 0 12px;
+    border: none;
+    background: transparent;
+    color: var(--slds-g-color-on-surface-2, #181818);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.ra-toolbar__menu-btn:hover,
+.ra-toolbar__menu-icon:hover {
+    background: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.ra-toolbar__menu-icon {
+    margin-left: auto;
+    width: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Format toolbar buttons share a base "tbtn" pattern: 32px square
+   icon-or-text button with hover/active states. */
+.ra-tbtn {
+    height: 32px;
+    min-width: 32px;
+    padding: 0 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--slds-g-color-on-surface-2, #181818);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ra-tbtn:hover {
+    background: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.ra-tbtn:active {
+    background: var(--slds-g-color-brand-base-95, #eef4ff);
+}
+
+.ra-tbtn_text strong,
+.ra-tbtn_text em,
+.ra-tbtn_text u,
+.ra-tbtn_text s {
+    font-style: normal;
+    font-weight: 600;
+}
+.ra-tbtn_text em { font-style: italic; }
+.ra-tbtn_text u { text-decoration: underline; }
+.ra-tbtn_text s { text-decoration: line-through; }
+
+/* Text color button with colored underline */
+.ra-tb-letter_color {
+    font-weight: 600;
+    border-bottom: 3px solid var(--slds-g-color-accent-1, #066afe);
+    line-height: 1;
+    padding-bottom: 1px;
+}
+
+/* Clear formatting "Tx" button */
+.ra-tb-letter_clear {
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1;
+}
+.ra-tb-letter_clear sub {
+    font-size: 9px;
+    vertical-align: baseline;
+    position: relative;
+    top: 2px;
+}
+
+/* Color picker buttons with dropdown chevron */
+.ra-tbtn_color-picker {
+    gap: 2px;
+    padding: 0 4px;
+}
+
+.ra-tb-chevron {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 4px solid var(--slds-g-color-on-surface-1, #5c5c5c);
+    margin-left: 2px;
+}
+
+/* Insert "+" button — circular border */
+.ra-tbtn_insert {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--slds-g-color-border-2, #c9c9c9);
+    padding: 0;
+}
+
+.ra-tbtn_insert:hover {
+    border-color: var(--slds-g-color-accent-1, #066afe);
+    background: var(--slds-g-color-brand-base-95, #eef4ff);
+}
+
+.ra-tbtn_ai {
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+    color: var(--slds-g-color-accent-1, #066afe);
+    border-color: var(--slds-g-color-border-1, #ededed);
+}
+
+.ra-tbtn_ai:hover {
+    background: var(--slds-g-color-brand-base-95, #eef4ff);
+}
+
+.ra-tb-divider {
+    display: inline-block;
+    width: 1px;
+    height: 20px;
+    background: var(--slds-g-color-border-1, #ededed);
+    margin: 0 6px;
+    flex-shrink: 0;
+}
+
+.ra-tb-select {
+    height: 32px;
+    padding: 0 28px 0 10px;
+    border: 1px solid var(--slds-g-color-border-1, #ededed);
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    color: var(--slds-g-color-on-surface-2, #181818);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 52' fill='%23444'><path d='M47.6 17.8L27.1 38.5c-.6.6-1.6.6-2.2 0L4.4 17.8c-.6-.6-.6-1.6 0-2.2l2.2-2.2c.6-.6 1.6-.6 2.2 0L26 30.2l17.2-16.8c.6-.6 1.6-.6 2.2 0l2.2 2.2c.6.6.6 1.5 0 2.2z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px;
+}
+
+.ra-tb-select:focus {
+    outline: 2px solid var(--slds-g-color-accent-1, #066afe);
+    outline-offset: -1px;
+}
+
+/* Below 1100px the toolbars collapse to a single horizontally
+   scrollable row each. */
+@media (max-width: 1100px) {
+    .ra-toolbar__menubar,
+    .ra-toolbar__formatbar {
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .ra-toolbar__menubar::-webkit-scrollbar,
+    .ra-toolbar__formatbar::-webkit-scrollbar { display: none; }
+}
+
+/* ─── Unified contenteditable editor ─────────────────────────────
+   Single scrollable contenteditable div replacing the block-based
+   approach. Styles the HTML content (h1-h3, p, ul/li, blockquote,
+   figure, video embed) so it looks like a proper article. */
+.ra-editor {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 24px 16px 64px 16px;
+    padding: 32px 48px 64px 48px;
     scroll-behavior: smooth;
-    font-size: 14px;
-    line-height: 1.55;
+    font-size: 15px;
+    line-height: 1.7;
     color: var(--slds-g-color-on-surface-2, #181818);
     position: relative;
+    outline: none;
+    cursor: text;
 }
 
-/* Collaborator avatar stack lives in the article header, between the
-   status badge and the history/save button groups. */
-.ra-collab-heads {
+.ra-editor:focus {
+    outline: none;
+}
+
+/* Typing content styles inside the editor */
+.ra-editor h1 {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 28px 0 12px 0;
+    color: var(--slds-g-color-on-surface-2, #181818);
+}
+
+.ra-editor h2 {
+    font-size: 21px;
+    font-weight: 650;
+    line-height: 1.35;
+    margin: 24px 0 10px 0;
+    color: var(--slds-g-color-on-surface-2, #181818);
+}
+
+.ra-editor h3 {
+    font-size: 17px;
+    font-weight: 620;
+    line-height: 1.4;
+    margin: 20px 0 8px 0;
+    color: var(--slds-g-color-on-surface-2, #181818);
+}
+
+.ra-editor p {
+    margin: 0 0 12px 0;
+    line-height: 1.7;
+}
+
+.ra-editor ul,
+.ra-editor ol {
+    margin: 0 0 12px 0;
+    padding-left: 24px;
+}
+
+.ra-editor li {
+    margin-bottom: 6px;
+    line-height: 1.6;
+}
+
+.ra-editor blockquote {
+    margin: 16px 0;
+    padding: 12px 20px;
+    border-left: 4px solid var(--slds-g-color-accent-1, #066afe);
+    background: var(--slds-g-color-surface-container-2, #f8f9fb);
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Image/figure styling inside editor */
+.ra-editor figure,
+.ra-editor .ra-editor-figure {
+    margin: 20px 0;
+    padding: 0;
+    text-align: center;
+}
+
+.ra-editor figure img,
+.ra-editor .ra-editor-figure img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    background: var(--slds-g-color-surface-container-2, #f3f3f3);
+    min-height: 120px;
+    display: block;
+    margin: 0 auto;
+}
+
+.ra-editor figcaption {
+    font-size: 12px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    margin-top: 8px;
+    font-style: italic;
+}
+
+/* Video embed styling inside editor */
+.ra-editor-video {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 10px;
+    color: #ffffff;
+    min-height: 72px;
+}
+
+.ra-editor-video__icon {
     flex-shrink: 0;
-    margin-left: var(--slds-g-spacing-1, 4px);
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
 }
 
-.ra-article__body::-webkit-scrollbar { width: 10px; }
-.ra-article__body::-webkit-scrollbar-track { background: transparent; }
-.ra-article__body::-webkit-scrollbar-thumb {
+.ra-editor-video__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ra-editor-video__info strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #ffffff;
+}
+
+.ra-editor-video__info p {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Scrollbar styling for the editor */
+.ra-editor::-webkit-scrollbar { width: 10px; }
+.ra-editor::-webkit-scrollbar-track { background: transparent; }
+.ra-editor::-webkit-scrollbar-thumb {
     background: var(--slds-g-color-neutral-base-90, #e5e5e5);
     border-radius: 999px;
     border: 3px solid var(--slds-g-color-surface-container-1, #ffffff);
+}
+
+/* Editor placeholder when empty */
+.ra-editor:empty::before {
+    content: 'Start writing your article...';
+    color: var(--slds-g-color-on-surface-1, #9e9e9e);
+    font-style: italic;
+    pointer-events: none;
+}
+
+/* Word count footer */
+.ra-editor__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 8px 16px;
+    border-top: 1px solid var(--slds-g-color-border-1, #ededed);
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    flex-shrink: 0;
+}
+
+.ra-editor__wordcount {
+    font-size: 12px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Collaborator avatar stack lives in the article header */
+.ra-collab-heads {
+    flex-shrink: 0;
+    margin-left: var(--slds-g-spacing-1, 4px);
 }
 
 /* Reopen affordances */

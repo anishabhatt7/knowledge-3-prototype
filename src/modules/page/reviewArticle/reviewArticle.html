@@ -15,8 +15,10 @@
                     toc-tree={knowledgeToc}
                     current-article-id={article.id}
                     collapsed={isAssistCollapsed}
+                    expanded={isAssistExpanded}
                     onclose={handleAssistClose}
                     onexpand={handleAssistExpand}
+                    ontogglewidth={handleAssistToggleWidth}
                     onupdateall={handleUpdateAll}
                     onapplysuggestion={handleApplySuggestion}
                     oninsertblock={handleInsertBlock}>
@@ -134,28 +136,120 @@
                         </div>
                     </div>
                 </header>
-                <div class="ra-article__body"
-                    onblockchange={handleBlockChange}
-                    onblockremove={handleBlockRemove}
-                    onblockkeydown={handleBlockKeyDown}
-                    onblockpaste={handleBlockPaste}
-                    onblockaiedit={handleBlockAiEdit}
-                    onblockselect={handleBlockSelect}
-                    onblockpromptopen={handleBlockPromptOpen}
-                    onblockpromptclose={handleBlockPromptClose}
-                    onblockconvertrequest={handleBlockConvertRequest}
-                    onblockdragstart={handleBlockDragStart}
-                    onblockdragover={handleBlockDragOver}
-                    onblockdrop={handleBlockDrop}
-                    onblockdragend={handleBlockDragEnd}
-                    onslashinsertblock={handleSlashInsertBlock}
-                    onslashcommand={handleSlashCommand}>
-                    <template for:each={enrichedBlocks} for:item="b" for:index="i">
-                        <ui-article-block key={b.id} block={b} index={i} data-id={b.id} selected={b.isSelected}></ui-article-block>
-                    </template>
-                    <template lwc:if={showCollaborators}>
-                        <ui-collaborator-cursors collaborators={activeCollaborators}></ui-collaborator-cursors>
-                    </template>
+                <!-- Editor toolbars (Figma 125:67886) ─────────────────
+                     Two-row toolbar above the article body: a menu bar
+                     (File, Edit, ...) and a format toolbar that drives
+                     execCommand on the unified contenteditable editor. -->
+                <div class="ra-toolbar" role="toolbar" aria-label="Editor toolbar">
+                    <div class="ra-toolbar__menubar">
+                        <template for:each={editorMenuItems} for:item="m">
+                            <button
+                                key={m.id}
+                                type="button"
+                                class="ra-toolbar__menu-btn"
+                                data-menu={m.id}
+                                onclick={handleEditorMenuClick}>{m.label}</button>
+                        </template>
+                        <button
+                            type="button"
+                            class="ra-toolbar__menu-icon"
+                            aria-label="Editor help"
+                            onclick={handleEditorMenuHelp}>
+                            <lightning-icon icon-name="utility:question_mark" size="xx-small"></lightning-icon>
+                        </button>
+                    </div>
+                    <div class="ra-toolbar__formatbar">
+                        <!-- Expand -->
+                        <button
+                            type="button"
+                            class="ra-tbtn ra-tbtn_icon"
+                            aria-label="Expand editor"
+                            onclick={handleToolbarExpand}>
+                            <lightning-icon icon-name="utility:expand_alt" size="xx-small"></lightning-icon>
+                        </button>
+                        <!-- Redo -->
+                        <button
+                            type="button"
+                            class="ra-tbtn ra-tbtn_icon"
+                            aria-label="Redo"
+                            onclick={handleRedo}>
+                            <lightning-icon icon-name="utility:redo" size="xx-small"></lightning-icon>
+                        </button>
+                        <!-- Undo -->
+                        <button
+                            type="button"
+                            class="ra-tbtn ra-tbtn_icon"
+                            aria-label="Undo"
+                            onclick={handleUndo}>
+                            <lightning-icon icon-name="utility:undo" size="xx-small"></lightning-icon>
+                        </button>
+                        <span class="ra-tb-divider" aria-hidden="true"></span>
+                        <!-- Paragraph style dropdown -->
+                        <select
+                            class="ra-tb-select"
+                            aria-label="Paragraph style"
+                            value={editorBlockStyle}
+                            onchange={handleEditorBlockStyle}>
+                            <option value="p">Paragraph</option>
+                            <option value="h1">Heading 1</option>
+                            <option value="h2">Heading 2</option>
+                            <option value="h3">Heading 3</option>
+                            <option value="quote">Quote</option>
+                        </select>
+                        <span class="ra-tb-divider" aria-hidden="true"></span>
+                        <!-- Bold / Italic / Underline / Strikethrough -->
+                        <button type="button" class="ra-tbtn ra-tbtn_text" aria-label="Bold" data-cmd="bold" onclick={handleFormatCommand}><strong>B</strong></button>
+                        <button type="button" class="ra-tbtn ra-tbtn_text" aria-label="Italic" data-cmd="italic" onclick={handleFormatCommand}><em>I</em></button>
+                        <button type="button" class="ra-tbtn ra-tbtn_text" aria-label="Underline" data-cmd="underline" onclick={handleFormatCommand}><u>U</u></button>
+                        <button type="button" class="ra-tbtn ra-tbtn_text" aria-label="Strikethrough" data-cmd="strikeThrough" onclick={handleFormatCommand}><s>S</s></button>
+                        <span class="ra-tb-divider" aria-hidden="true"></span>
+                        <!-- Text color -->
+                        <button type="button" class="ra-tbtn ra-tbtn_icon ra-tbtn_color-picker" aria-label="Text color" data-cmd="foreColor" data-arg="#066afe" onclick={handleFormatCommand}>
+                            <span class="ra-tb-letter ra-tb-letter_color" aria-hidden="true">A</span>
+                            <span class="ra-tb-chevron" aria-hidden="true"></span>
+                        </button>
+                        <!-- Highlight -->
+                        <button type="button" class="ra-tbtn ra-tbtn_icon ra-tbtn_color-picker" aria-label="Highlight" data-cmd="hiliteColor" data-arg="#fff3cd" onclick={handleFormatCommand}>
+                            <lightning-icon icon-name="utility:brush" size="xx-small"></lightning-icon>
+                            <span class="ra-tb-chevron" aria-hidden="true"></span>
+                        </button>
+                        <!-- Clear formatting -->
+                        <button type="button" class="ra-tbtn ra-tbtn_icon" aria-label="Clear formatting" data-cmd="removeFormat" onclick={handleFormatCommand}>
+                            <span class="ra-tb-letter ra-tb-letter_clear" aria-hidden="true">T<sub>x</sub></span>
+                        </button>
+                        <span class="ra-tb-divider" aria-hidden="true"></span>
+                        <!-- Alignment -->
+                        <button type="button" class="ra-tbtn ra-tbtn_icon" aria-label="Align left" data-cmd="justifyLeft" onclick={handleFormatCommand}>
+                            <lightning-icon icon-name="utility:left_align_text" size="xx-small"></lightning-icon>
+                        </button>
+                        <button type="button" class="ra-tbtn ra-tbtn_icon" aria-label="Align center" data-cmd="justifyCenter" onclick={handleFormatCommand}>
+                            <lightning-icon icon-name="utility:center_align_text" size="xx-small"></lightning-icon>
+                        </button>
+                        <button type="button" class="ra-tbtn ra-tbtn_icon" aria-label="Align right" data-cmd="justifyRight" onclick={handleFormatCommand}>
+                            <lightning-icon icon-name="utility:right_align_text" size="xx-small"></lightning-icon>
+                        </button>
+                        <button type="button" class="ra-tbtn ra-tbtn_icon" aria-label="Justify" data-cmd="justifyFull" onclick={handleFormatCommand}>
+                            <lightning-icon icon-name="utility:justify_text" size="xx-small"></lightning-icon>
+                        </button>
+                        <span class="ra-tb-divider" aria-hidden="true"></span>
+                        <!-- Insert button -->
+                        <button type="button" class="ra-tbtn ra-tbtn_insert" aria-label="Insert" onclick={handleToolbarInsert}>
+                            <lightning-icon icon-name="utility:add" size="xx-small"></lightning-icon>
+                        </button>
+                    </div>
+                </div>
+                <!-- Unified contenteditable editor body -->
+                <div class="ra-article__body ra-editor"
+                    contenteditable="true"
+                    spellcheck="true"
+                    oninput={handleEditorInput}
+                    onkeydown={handleEditorKeyDown}
+                    onfocus={handleEditorFocus}
+                    onblur={handleEditorBlur}>
+                </div>
+                <!-- Word count footer -->
+                <div class="ra-editor__footer">
+                    <span class="ra-editor__wordcount">{wordCount} words</span>
                 </div>
             </div>
         </main>

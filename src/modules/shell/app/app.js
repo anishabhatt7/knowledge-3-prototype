@@ -46,16 +46,17 @@ export default class App extends LightningElement {
     @track route;
     @track _sldsVersion = 2;
     @track _darkMode = false;
-    @track selectedFlow = 'flow3';
+    @track selectedFlow = 'v2';
     @track prototypeDropdownOpen = false;
     @track _workspaceTabs = [];
     _docClickHandler = null;
     _workspaceTabHandler = null;
 
     get prototypeOptions() {
-        // Flow 1 and Flow 2 intentionally omitted in this prototype copy.
         return [
-            { label: 'Flow 3 - Knowledge 3.0', value: 'flow3' },
+            { label: 'V1 - Knowledge 3.0', value: 'v1' },
+            { label: 'V2 - Knowledge 3.0', value: 'v2' },
+            { label: "PM's version - AI Ready Knowledge", value: 'pm' },
         ].map((opt) => ({
             ...opt,
             isSelected: opt.value === this.selectedFlow,
@@ -65,7 +66,7 @@ export default class App extends LightningElement {
 
     get selectedFlowLabel() {
         const match = this.prototypeOptions.find((o) => o.value === this.selectedFlow);
-        return match ? match.label : 'Flow 3 - Knowledge 3.0';
+        return match ? match.label : 'V2 - Knowledge 3.0';
     }
 
     handleTogglePrototypeDropdown(event) {
@@ -78,16 +79,17 @@ export default class App extends LightningElement {
         const newValue = event.currentTarget.dataset.value;
         this.prototypeDropdownOpen = false;
         if (newValue === this.selectedFlow) return;
-        // Flow 1 / Flow 2 are not exposed in this prototype copy, so the
-        // map only contains flow3. Keeping the redirect plumbing in place
-        // keeps it cheap to add more entries later.
         const isLocal = typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
         const urls = isLocal
             ? {
-                  flow3: 'http://localhost:5000/',
+                  v1: 'http://localhost:5001/',
+                  v2: 'http://localhost:8001/',
+                  pm: 'http://localhost:8002/',
               }
             : {
-                  flow3: 'https://knowledge-blocks-flow3-81a399c7ace2.herokuapp.com/',
+                  v1: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/',
+                  v2: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype-v2/',
+                  pm: 'https://git.soma.salesforce.com/pages/nimit-khurana/AI-Ready-Knowledge/',
               };
         if (urls[newValue]) {
             window.location.href = urls[newValue];

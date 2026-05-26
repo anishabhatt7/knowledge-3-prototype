@@ -147,6 +147,10 @@ page-knowledge-agents {
     justify-content: space-between;
     gap: var(--slds-g-spacing-4, 16px);
     min-height: 36px;
+    /* SLDS 2 base typography — page headers default to Regular (400). */
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
 }
 
 .ka-page-header__left {

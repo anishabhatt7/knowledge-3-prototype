@@ -17,3 +17,47 @@
 .lightning-button-menu_custom {
     border-inline-end-width: 1px;
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   Animated "Service" heart icon
+   Pure-CSS pulse on hover (no JS). Sized to ~2rem so it lines up
+   with the rest of the global-header utility icons that used to sit
+   here as <lightning-icon size="large">. The pulse keyframes use a
+   slight overshoot easing to land somewhere between "spring" and
+   "bounce" — matches the timing in the design snippet.
+   ─────────────────────────────────────────────────────────────── */
+.animated-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    cursor: pointer;
+}
+
+.animated-icon svg {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.3s ease;
+    transform-origin: 50% 50%;
+}
+
+.animated-icon:hover svg {
+    animation: animated-icon-pulse 1.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes animated-icon-pulse {
+    0%   { transform: scale(1); }
+    24%  { transform: scale(1.1); }
+    44%  { transform: scale(0.96); }
+    64%  { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animated-icon svg,
+    .animated-icon:hover svg {
+        transition: none;
+        animation: none;
+    }
+}

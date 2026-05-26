@@ -34,6 +34,14 @@ export default class KnowledgeAssist extends LightningElement {
     @api health;
     @api suggests = [];
     @api collapsed = false;
+    /**
+     * When true, the panel renders in the wider "expanded" state from
+     * Figma 140:26133/140:26134 — same content, larger real estate so
+     * reviewers can read suggestion cards without ellipsis and act on
+     * them in a single column. Width is owned by the parent shell via
+     * --ra-left-col; this prop only flips the panel's chrome to match.
+     */
+    @api expanded = false;
     @api knowledgeBlocks = [];
     @api insertedBlockIds = [];
     @api tocTree = [];
@@ -66,8 +74,28 @@ export default class KnowledgeAssist extends LightningElement {
         return this.collapsed === true || this.collapsed === 'true';
     }
 
+    get isExpanded() {
+        // Expanded only applies in the default (non-collapsed) state — a
+        // collapsed rail can't simultaneously be "expanded wider".
+        return !this.isCollapsed && (this.expanded === true || this.expanded === 'true');
+    }
+
     get panelClass() {
-        return `ka-panel${this.isCollapsed ? ' ka-panel_collapsed' : ''}`;
+        let cls = 'ka-panel';
+        if (this.isCollapsed) cls += ' ka-panel_collapsed';
+        else if (this.isExpanded) cls += ' ka-panel_expanded';
+        return cls;
+    }
+
+    // Expand/contract toggle in the panel header — swaps icon + label
+    // based on the current width state so the affordance matches the
+    // action it will perform on click.
+    get expandToggleIcon() {
+        return this.isExpanded ? 'utility:contract_alt' : 'utility:expand_alt';
+    }
+
+    get expandToggleLabel() {
+        return this.isExpanded ? 'Collapse Knowledge Assist panel' : 'Expand Knowledge Assist panel';
     }
 
     get railTabs() {
@@ -195,12 +223,34 @@ export default class KnowledgeAssist extends LightningElement {
         return new Set(path);
     }
 
+    // Map an RAG/AI score (0–100) to a CSS color band:
+    //  - <50  → red    (#ba0517)  Poor
+    //  - 50–74→ amber  (#fe9339)  Fair
+    //  - ≥75  → green  (#2e844a)  Healthy
+    // Returned as a CSS color string so the conic-gradient inline style
+    // and the gsap onUpdate callback both share the same rule of thumb.
+    get ringColor() {
+        const score = this.health?.score ?? 0;
+        if (score < 50) return '#ba0517';
+        if (score < 75) return '#fe9339';
+        return '#2e844a';
+    }
+
+    get ringTrackColor() {
+        const score = this.health?.score ?? 0;
+        if (score < 50) return '#fde7e9';
+        if (score < 75) return '#fef1e1';
+        return '#d6e6ff';
+    }
+
     get progressStyle() {
+        const color = this.ringColor;
+        const track = this.ringTrackColor;
         if (!this._ringAnimated) {
-            return `background: conic-gradient(#2e844a 0deg 0deg, var(--slds-g-color-brand-base-90, #d6e6ff) 0deg 360deg);`;
+            return `background: conic-gradient(${color} 0deg 0deg, ${track} 0deg 360deg);`;
         }
         const deg = Math.round(this._animProxy.deg);
-        return `background: conic-gradient(#2e844a 0deg ${deg}deg, var(--slds-g-color-brand-base-90, #d6e6ff) ${deg}deg 360deg);`;
+        return `background: conic-gradient(${color} 0deg ${deg}deg, ${track} ${deg}deg 360deg);`;
     }
 
     get scoreLabel() {
@@ -225,11 +275,41 @@ export default class KnowledgeAssist extends LightningElement {
         return this.health?.reasonNote || '';
     }
 
+    // "Overall Performance" label/badge per Figma 125:67812. Defaults
+    // map score → label/variant when the data model omits an explicit
+    // override (older fixtures), so the panel always renders a badge.
+    get performanceLabel() {
+        if (this.health?.performanceLabel) return this.health.performanceLabel;
+        const score = this.health?.score ?? 0;
+        if (score < 50) return 'Poor Score';
+        if (score < 75) return 'Fair Score';
+        return 'Healthy';
+    }
+
+    get performanceBadgeClass() {
+        const variant = this.health?.performanceVariant
+            || ((this.health?.score ?? 0) < 50 ? 'error'
+                : (this.health?.score ?? 0) < 75 ? 'warning' : 'success');
+        return `ka-perf-badge ka-perf-badge_${variant}`;
+    }
+
+    get performanceIcon() {
+        const variant = this.health?.performanceVariant
+            || ((this.health?.score ?? 0) < 50 ? 'error'
+                : (this.health?.score ?? 0) < 75 ? 'warning' : 'success');
+        if (variant === 'error') return 'utility:warning';
+        if (variant === 'warning') return 'utility:warning';
+        return 'utility:success';
+    }
+
     get suggestCards() {
         return (this.suggests || []).map((s) => ({
             ...s,
-            coverageLabel: `+${s.coverageDelta}%`,
-            confidenceLabel: `+${s.confidenceDelta}%`,
+            // `scoreDelta` is the new Figma-aligned field; fall back to
+            // `coverageDelta` to keep older fixtures rendering.
+            scoreLabel: `+${s.scoreDelta ?? s.coverageDelta ?? 0}%`,
+            coverageLabel: `+${s.coverageDelta ?? 0}%`,
+            confidenceLabel: `+${s.confidenceDelta ?? 0}%`,
             isUpdated: s.status === 'updated',
             isApplied: s.status === 'applied',
             isAvailable: s.status === 'available',
@@ -257,10 +337,13 @@ export default class KnowledgeAssist extends LightningElement {
 
         this._ringAnimated = true;
 
+        const ringColor = this.ringColor;
+        const trackColor = this.ringTrackColor;
+
         if (!this._gsapEnabled) {
             this._animProxy.deg = targetDeg;
             this._animProxy.pct = targetPct;
-            ring.style.background = `conic-gradient(#2e844a 0deg ${targetDeg}deg, var(--slds-g-color-brand-base-90, #d6e6ff) ${targetDeg}deg 360deg)`;
+            ring.style.background = `conic-gradient(${ringColor} 0deg ${targetDeg}deg, ${trackColor} ${targetDeg}deg 360deg)`;
             const inner = ring.querySelector('.ka-score__inner');
             if (inner) inner.textContent = `${targetPct}%`;
             return;
@@ -278,7 +361,7 @@ export default class KnowledgeAssist extends LightningElement {
             ease: 'power2.out',
             onUpdate: () => {
                 const d = Math.round(this._animProxy.deg);
-                ring.style.background = `conic-gradient(#2e844a 0deg ${d}deg, var(--slds-g-color-brand-base-90, #d6e6ff) ${d}deg 360deg)`;
+                ring.style.background = `conic-gradient(${ringColor} 0deg ${d}deg, ${trackColor} ${d}deg 360deg)`;
                 if (inner) inner.textContent = `${Math.round(this._animProxy.pct)}%`;
             },
             onComplete: () => {
@@ -308,11 +391,29 @@ export default class KnowledgeAssist extends LightningElement {
             this.dispatchEvent(new CustomEvent('expand', { detail: { id } }));
             return;
         }
+        // With the header close button removed, the rail tabs double as the
+        // close affordance: clicking the already-active tab folds the panel
+        // back to its 56px rail (works from both default 379px and expanded
+        // 600px states). Clicking a different tab still just swaps tabs.
+        if (id === this.activeRailTab) {
+            this.dispatchEvent(new CustomEvent('close'));
+            return;
+        }
         this.activeRailTab = id;
     }
 
-    handleClose() {
-        this.dispatchEvent(new CustomEvent('close'));
+    // Collapsed rail renders a single arrow-right button (Figma
+    // 125:67820/67822). Clicking it reopens the panel onto the default
+    // metrics tab — restores the score, perf banner, and suggestion
+    // list reviewers expect to see first.
+    handleExpandFromRail() {
+        this.dispatchEvent(new CustomEvent('expand', { detail: { id: 'metrics' } }));
+    }
+
+    // Fired when the user clicks the expand/contract toggle. The parent
+    // shell owns the actual width tween — we just announce intent.
+    handleToggleExpand() {
+        this.dispatchEvent(new CustomEvent('togglewidth'));
     }
 
     handleUpdateAll() {

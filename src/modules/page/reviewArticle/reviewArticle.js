@@ -1,5 +1,4 @@
 import { LightningElement, track } from 'lwc';
-import { gsap } from 'gsap';
 import { animate as motionAnimate, stagger as motionStagger } from 'motion';
 import {
     initialArticle,
@@ -18,25 +17,22 @@ import { consumeDraftSession } from 'data/draftSession';
 // Import child components so Vite + LWC register them eagerly
 import 'ui/knowledgeAssist';
 import 'ui/chatPanel';
-import 'ui/articleBlock';
 import 'ui/collaboratorCursors';
 import 'ui/collaboratorAvatars';
-import ConvertBlockModal from 'ui/convertBlockModal';
 import Toast from 'lightning/toast';
 
 /**
- * Review Article page — Figma DVS frame.
+ * Review Article page — Unified WYSIWYG Editor.
  *
- * Preserves the core Authoring Agent functionality from the React
- * Knowledge Builder app:
- *   - Block-based article editor (h1..h3 / p / li / blockquote / image / video)
+ * Replaces the block-based editor with a single contenteditable area
+ * driven by document.execCommand for formatting. The article's block
+ * data is converted to HTML on mount and rendered inside the editor.
+ *
+ * Preserves:
  *   - Inline Authoring Agent chat that proposes Apply-able actions
- *   - Smart suggestions in the left panel that insert / replace blocks
+ *   - Smart suggestions in the left panel
  *   - Article health metrics that react to edits
- *
- * No backend — this is an offline-editable demo. All chat/suggestion
- * "AI" behavior is implemented as deterministic local logic so the
- * UX matches the original app without an API key.
+ *   - Knowledge Assist panel + chat panel with animations
  */
 export default class ReviewArticle extends LightningElement {
     static renderMode = 'light';
@@ -51,32 +47,29 @@ export default class ReviewArticle extends LightningElement {
     knowledgeToc = knowledgeBaseToc;
     @track showAssistPanel = true;
     @track isAssistCollapsed = false;
+    // When true, the Knowledge Assist panel widens beyond its default
+    // 379px to give reviewers more reading/action real estate (Figma
+    // 140:26133). Mutually exclusive with the collapsed rail state.
+    @track isAssistExpanded = false;
     @track showChatPanel = false;
     _chatAnimating = false;
-    @track selectedBlockId = null;
     @track showCollaborators = false;
     @track activeCollaborators = [];
     @track extraCollaboratorCount = 0;
     @track animationEnabled = true;
+    @track wordCount = 0;
 
-    // Drag-and-drop state
-    _dragSourceId = null;
+    // Editor state
+    @track editorBlockStyle = 'p';
+    _editorInitialized = false;
 
-    // Prompt exclusivity — only one prompt bar open at a time
-    _promptBlockId = null;
-    _boundEscapeHandler = null;
-
-    // Entrance-animation flags. `_arrivedFromDraft` flips on if the
-    // user just came through the Draft-with-Agentforce modal flow,
-    // so renderedCallback can play the Motion entry exactly once.
+    // Entrance-animation flags
     _arrivedFromDraft = false;
     _didEntranceAnimation = false;
 
+    _boundEscapeHandler = null;
+
     connectedCallback() {
-        // Pick up { title, recordType, language } from the Draft-with-
-        // Agentforce flow on the home page (Flow 3 entry point). Read
-        // exactly once — subsequent visits to /new-knowledge fall back
-        // to the default initialArticle.
         const draft = consumeDraftSession();
         if (draft) {
             this.article = {
@@ -85,15 +78,13 @@ export default class ReviewArticle extends LightningElement {
                 status: 'draft',
             };
             if (draft.recordType) this.recordTypeLabel = draft.recordType;
-            // Mark the host so CSS hides the shell on first paint —
-            // prevents a one-frame flash before Motion takes over.
             this._arrivedFromDraft = true;
             this.classList.add('ra--entering');
         }
 
         this._boundEscapeHandler = (e) => {
-            if (e.key === 'Escape' && this._promptBlockId) {
-                this._dismissActivePrompt();
+            if (e.key === 'Escape') {
+                // no-op for now, kept for future prompt handling
             }
         };
         document.addEventListener('keydown', this._boundEscapeHandler);
@@ -123,26 +114,6 @@ export default class ReviewArticle extends LightningElement {
     dataCategoryList = dataCategories.map((d, i) => ({ key: `dc-${i}`, label: d.label }));
     audienceList = audiences.map((a, i) => ({ key: `a-${i}`, label: a.label }));
 
-    get enrichedBlocks() {
-        const blocks = this.article.blockData || [];
-        return blocks.map((b, i) => {
-            let syncPosition = null;
-            if (b.syncGroupId) {
-                const prevSame = i > 0 && blocks[i - 1].syncGroupId === b.syncGroupId;
-                const nextSame = i < blocks.length - 1 && blocks[i + 1].syncGroupId === b.syncGroupId;
-                if (prevSame && nextSame) syncPosition = 'middle';
-                else if (prevSame) syncPosition = 'last';
-                else if (nextSame) syncPosition = 'first';
-                else syncPosition = 'only';
-            }
-            return {
-                ...b,
-                isSelected: b.id === this.selectedBlockId,
-                syncPosition,
-            };
-        });
-    }
-
     get statusLabel() {
         return this.article.status?.charAt(0).toUpperCase() + this.article.status?.slice(1);
     }
@@ -158,13 +129,16 @@ export default class ReviewArticle extends LightningElement {
     get assistPanelClass() {
         const base = 'ra-shell__aside ra-shell__aside_left';
         if (!this.showAssistPanel) return `${base} ra-hidden`;
-        return this.isAssistCollapsed ? `${base} ra-shell__aside_collapsed` : base;
+        if (this.isAssistCollapsed) return `${base} ra-shell__aside_collapsed`;
+        if (this.isAssistExpanded) return `${base} ra-shell__aside_expanded`;
+        return base;
     }
 
     get shellClass() {
         let cls = 'ra-shell';
         if (!this.showAssistPanel) cls += ' ra-shell_no-left';
         else if (this.isAssistCollapsed) cls += ' ra-shell_assist-collapsed';
+        else if (this.isAssistExpanded) cls += ' ra-shell_assist-expanded';
         if (!this.showChatPanel) cls += ' ra-shell_no-right';
         return cls;
     }
@@ -178,362 +152,112 @@ export default class ReviewArticle extends LightningElement {
         return `ra-shell__main ${this.showAssistPanel ? '' : 'ra-shell__main_no-left'}`;
     }
 
-    // ─── Block edits ───────────────────────────────────────────────
-    // Pending focus target: after a render the child <ui-article-block>
-    // with this id is asked to focus its contenteditable. Consumed in
-    // renderedCallback() so we never double-focus.
-    focusBlockId = null;
-
-    handleBlockChange(event) {
-        const { id, content } = event.detail;
-        // Don't push undo on every keystroke — the contenteditable emits
-        // `input` events per character. Mutate in place so state stays
-        // in sync without resetting the DOM selection.
-        const idx = this.article.blockData.findIndex((b) => b.id === id);
-        if (idx === -1) return;
-        const current = this.article.blockData[idx];
-        if (current.content === content) return;
-        const nextBlocks = this.article.blockData.slice();
-        nextBlocks[idx] = { ...current, content };
-        this.article = { ...this.article, blockData: nextBlocks };
-    }
-
-    handleBlockRemove(event) {
-        const { id } = event.detail;
-        this.pushUndo();
-        this.article = {
-            ...this.article,
-            blockData: this.article.blockData.filter((b) => b.id !== id),
-        };
-    }
-
-    // ─── Notion-like block editor key handling ─────────────────────
-    // Ported from the React Knowledge Builder (components/ArticleView.tsx
-    // handleKeyDown). Enter → new block, Backspace on empty → merge,
-    // Space after markdown prefix → change type, Arrow → navigate.
-    handleBlockKeyDown(event) {
-        const { id, index, key, shiftKey, content } = event.detail;
-        const blocks = this.article.blockData;
-
-        if (key === 'Enter' && !shiftKey) {
-            this.pushUndo();
-            const newBlock = { id: freshId('b'), type: 'p', content: '' };
-            const next = blocks.slice();
-            next.splice(index + 1, 0, newBlock);
-            this.article = { ...this.article, blockData: next };
-            this.focusBlockId = newBlock.id;
-        } else if (key === 'Backspace' && content === '' && index > 0) {
-            this.pushUndo();
-            const prevId = blocks[index - 1].id;
-            this.article = {
-                ...this.article,
-                blockData: blocks.filter((b) => b.id !== id),
-            };
-            this.focusBlockId = prevId;
-        } else if (key === ' ') {
-            const map = { '#': 'h1', '##': 'h2', '###': 'h3', '-': 'li', '>': 'blockquote' };
-            const nextType = map[content];
-            if (nextType) {
-                this.pushUndo();
-                this.article = {
-                    ...this.article,
-                    blockData: blocks.map((b, i) =>
-                        i === index ? { ...b, type: nextType, content: '' } : b
-                    ),
-                };
-                this.focusBlockId = id;
+    // ─── Convert block data to HTML ───────────────────────────────────
+    _blocksToHtml(blocks) {
+        if (!blocks || !blocks.length) return '<p><br></p>';
+        return blocks.map((b) => {
+            const content = b.content || '';
+            switch (b.type) {
+                case 'h1':
+                    return `<h1>${content}</h1>`;
+                case 'h2':
+                    return `<h2>${content}</h2>`;
+                case 'h3':
+                    return `<h3>${content}</h3>`;
+                case 'p':
+                    return `<p>${content}</p>`;
+                case 'li':
+                    return `<ul><li>${content}</li></ul>`;
+                case 'blockquote':
+                    return `<blockquote>${content}</blockquote>`;
+                case 'image':
+                    return `<figure class="ra-editor-figure"><img src="images/baggage-measure.jpg" alt="${b.caption || ''}" /><figcaption>${b.caption || ''}</figcaption></figure>`;
+                case 'video':
+                    return `<div class="ra-editor-video"><div class="ra-editor-video__icon">&#9654;</div><div class="ra-editor-video__info"><strong>${b.title || ''}</strong><p>${content}</p></div></div>`;
+                default:
+                    return `<p>${content}</p>`;
             }
-        } else if (key === 'ArrowUp' && index > 0) {
-            this.focusBlockId = blocks[index - 1].id;
-        } else if (key === 'ArrowDown' && index < blocks.length - 1) {
-            this.focusBlockId = blocks[index + 1].id;
-        }
+        }).join('\n');
     }
 
-    handleBlockPaste(event) {
-        const { id, lines } = event.detail;
-        if (!lines || lines.length <= 1) return;
-        const blocks = this.article.blockData;
-        const idx = blocks.findIndex((b) => b.id === id);
-        if (idx === -1) return;
-        this.pushUndo();
-        const parsed = lines.map((line) => parseLineToBlock(line));
-        this.article = {
-            ...this.article,
-            blockData: [...blocks.slice(0, idx), ...parsed, ...blocks.slice(idx + 1)],
-        };
-        this.focusBlockId = parsed[parsed.length - 1].id;
-    }
-
-    // ─── Drag-and-drop block reordering ──────────────────────────
-    handleBlockDragStart(event) {
-        this._dragSourceId = event.detail.id;
-    }
-
-    handleBlockDragOver(event) {
-        if (!this._dragSourceId) return;
-        const { id: targetId } = event.detail;
-        if (targetId === this._dragSourceId) return;
-
-        const blocks = this.article.blockData;
-        const srcIdx = blocks.findIndex((b) => b.id === this._dragSourceId);
-        const tgtIdx = blocks.findIndex((b) => b.id === targetId);
-        if (srcIdx === -1 || tgtIdx === -1 || srcIdx === tgtIdx) return;
-
-        const next = blocks.slice();
-        const [moved] = next.splice(srcIdx, 1);
-        next.splice(tgtIdx, 0, moved);
-        this.article = { ...this.article, blockData: next };
-    }
-
-    handleBlockDrop() {
-        if (this._dragSourceId) {
-            this.pushUndo();
-        }
-        this._dragSourceId = null;
-    }
-
-    handleBlockDragEnd() {
-        this._dragSourceId = null;
-    }
-
-    handleSlashInsertBlock() {
-        if (!this.showAssistPanel) {
-            this.showAssistPanel = true;
-            this.isAssistCollapsed = false;
-        } else if (this.isAssistCollapsed) {
-            this._animatePanel(false);
-        }
-    }
-
-    handleSlashCommand(event) {
-        const { command } = event.detail;
-        this.addAgentMessage(
-            `Slash command "${command}" triggered — this feature is coming soon.`
-        );
-    }
-
-    handleBlockAiEdit(event) {
-        const { id, content, type } = event.detail;
-        const preview = content?.slice(0, 60) || type;
-        this.handleChatSend({
-            detail: { text: `Improve this ${type} block: "${preview}…"` },
-        });
-    }
-
-    handleBlockSelect(event) {
-        const { id } = event.detail;
-        this.selectedBlockId = this.selectedBlockId === id ? null : id;
-        this._dismissActivePrompt();
-    }
-
-    _dismissActivePrompt() {
-        if (!this._promptBlockId) return;
-        const el = this._getBlockEl(this._promptBlockId);
-        if (el) el.closePrompt();
-        this._promptBlockId = null;
-    }
-
-    handleBlockPromptOpen(event) {
-        const { id } = event.detail;
-        if (this._promptBlockId === id) return;
-
-        const closeOld = this._promptBlockId
-            ? this._getBlockEl(this._promptBlockId)?.closePrompt() || Promise.resolve()
-            : Promise.resolve();
-
-        this._promptBlockId = id;
-        this.selectedBlockId = id;
-
-        closeOld.then(() => {
-            const newEl = this._getBlockEl(id);
-            if (newEl) newEl.openPrompt();
-        });
-    }
-
-    handleBlockPromptClose(event) {
-        const { id } = event.detail;
-        if (this._promptBlockId === id) {
-            this._promptBlockId = null;
-        }
-    }
-
-    async handleBlockConvertRequest(event) {
-        const { id } = event.detail;
-        const block = this.article.blockData.find((b) => b.id === id);
-        if (!block || block.syncGroupId) return;
-
-        const result = await ConvertBlockModal.open({
-            size: 'small',
-            blockContent: block.content,
-        });
-
-        if (!result || !result.title) return;
-
-        this.pushUndo();
-
-        const newSyncGroupId = freshId('kb');
-
-        this.article = {
-            ...this.article,
-            blockData: this.article.blockData.map((b) =>
-                b.id === id ? { ...b, syncGroupId: newSyncGroupId } : b
-            ),
-        };
-
-        this.knowledgeBlockLibrary = [
-            ...this.knowledgeBlockLibrary,
-            {
-                syncGroupId: newSyncGroupId,
-                title: result.title,
-                description: result.description || '',
-                content: block.content,
-                instanceCount: 1,
-                blocks: [
-                    {
-                        id: freshId('kb-block'),
-                        type: block.type,
-                        content: block.content,
-                        syncGroupId: newSyncGroupId,
-                    },
-                ],
-            },
-        ];
-
-        this.addAgentMessage(
-            `Converted block to Knowledge Block "${result.title}" — it now appears in your Sources library.`
-        );
-        this.applyHealthBoost(3, 1);
-        this.showToast(`Knowledge Block "${result.title}" created`);
-    }
-
-    _getBlockEl(blockId) {
-        return this.querySelector(`ui-article-block[data-id="${blockId}"]`);
-    }
-
+    // ─── Editor initialization ────────────────────────────────────────
     renderedCallback() {
-        // Play the Motion entrance once — the first render after we
-        // arrived from the Draft-with-Agentforce flow. Runs before the
-        // focus pass below so the page composes into view before any
-        // contenteditable focus jumps the cursor.
+        // Play the Motion entrance once
         if (this._arrivedFromDraft && !this._didEntranceAnimation) {
             this._didEntranceAnimation = true;
             this._playEntranceAnimation();
         }
 
-        if (!this.focusBlockId) return;
-        const el = this.querySelector(
-            `ui-article-block[data-id="${this.focusBlockId}"]`
-        );
-        this.focusBlockId = null;
-        if (el && typeof el.focus === 'function') {
-            // Defer to next tick so LWC finishes committing any attribute
-            // changes before we read the contenteditable child.
-            Promise.resolve().then(() => el.focus());
+        // Initialize the contenteditable with HTML from block data
+        if (!this._editorInitialized) {
+            const editorEl = this._getEditorEl();
+            if (editorEl) {
+                this._editorInitialized = true;
+                const html = this._blocksToHtml(this.article.blockData);
+                editorEl.innerHTML = html;
+                this._updateWordCount();
+            }
         }
     }
 
-    /**
-     * Smooth Motion-driven entry for the new authoring experience.
-     * Triggered the first render after a Draft-with-Agentforce
-     * generation completes. Plays a 3-stage layered reveal:
-     *   1. The whole shell fades + glides up (sets the canvas).
-     *   2. Left assist / center article / right chat columns
-     *      stagger in for a layered feel.
-     *   3. Article header + body blocks ripple in last so the
-     *      content lands on top of the structure.
-     */
-    _playEntranceAnimation() {
-        const reduce =
-            !this.animationEnabled ||
-            (typeof window !== 'undefined' &&
-                window.matchMedia &&
-                window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-        if (reduce) {
-            this.classList.remove('ra--entering');
-            return;
-        }
+    _getEditorEl() {
+        return this.querySelector('.ra-editor[contenteditable]');
+    }
 
-        const shell = this.querySelector('.ra-shell');
-        if (!shell) {
-            this.classList.remove('ra--entering');
-            return;
-        }
+    // ─── Editor event handlers ────────────────────────────────────────
+    handleEditorInput() {
+        this._updateWordCount();
+    }
 
-        // Stage 1 — shell glides up + fades in.
-        const shellAnim = motionAnimate(
-            shell,
-            { opacity: [0, 1], y: [16, 0] },
-            { duration: 0.55, ease: [0.2, 0.8, 0.2, 1] }
-        );
-
-        // Once the shell starts settling, drop the gating class so any
-        // future rerender doesn't clamp opacity back to 0.
-        shellAnim.finished?.then?.(() => {
-            this.classList.remove('ra--entering');
-        }) ?? this.classList.remove('ra--entering');
-
-        // Stage 2 — major regions stagger in alongside the shell.
-        const regions = [
-            this.querySelector('.ra-shell__aside_left'),
-            this.querySelector('.ra-shell__main'),
-            this.querySelector('.ra-shell__aside_right'),
-        ].filter(Boolean);
-        if (regions.length) {
-            motionAnimate(
-                regions,
-                { opacity: [0, 1], y: [12, 0] },
-                {
-                    duration: 0.5,
-                    ease: 'easeOut',
-                    delay: motionStagger(0.08, { startDelay: 0.1 }),
-                }
-            );
-        }
-
-        // Stage 3 — article head + each body block ripple in last.
-        const head = this.querySelector('.ra-article__head');
-        if (head) {
-            motionAnimate(
-                head,
-                { opacity: [0, 1], y: [10, 0] },
-                { duration: 0.45, ease: 'easeOut', delay: 0.22 }
-            );
-        }
-
-        const blocks = this.querySelectorAll('.ra-article__body ui-article-block');
-        if (blocks.length) {
-            motionAnimate(
-                blocks,
-                { opacity: [0, 1], y: [10, 0] },
-                {
-                    duration: 0.42,
-                    ease: 'easeOut',
-                    delay: motionStagger(0.04, { startDelay: 0.3 }),
-                }
-            );
+    handleEditorKeyDown(event) {
+        // Ctrl/Cmd+B/I/U are handled natively by contenteditable
+        // We just track undo for larger changes
+        if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+            // Let the browser handle native undo in contenteditable
         }
     }
 
+    handleEditorFocus() {
+        // Could be used to show active state on toolbar
+    }
+
+    handleEditorBlur() {
+        // Could be used to save state
+    }
+
+    _updateWordCount() {
+        const editorEl = this._getEditorEl();
+        if (!editorEl) {
+            this.wordCount = 0;
+            return;
+        }
+        const text = editorEl.innerText || '';
+        const words = text.trim().split(/\s+/).filter((w) => w.length > 0);
+        this.wordCount = words.length;
+    }
+
+    // ─── Undo / Redo ──────────────────────────────────────────────────
     pushUndo() {
         this.undoStack = [...this.undoStack, deepClone(this.article)].slice(-20);
         this.redoStack = [];
     }
 
     handleUndo() {
-        if (this.undoStack.length === 0) return;
-        const prev = this.undoStack[this.undoStack.length - 1];
-        this.redoStack = [...this.redoStack, deepClone(this.article)];
-        this.undoStack = this.undoStack.slice(0, -1);
-        this.article = prev;
+        // Use execCommand undo for the contenteditable
+        try {
+            document.execCommand('undo', false, null);
+        } catch (_) {
+            // fallback: no-op
+        }
     }
 
     handleRedo() {
-        if (this.redoStack.length === 0) return;
-        const next = this.redoStack[this.redoStack.length - 1];
-        this.undoStack = [...this.undoStack, deepClone(this.article)];
-        this.redoStack = this.redoStack.slice(0, -1);
-        this.article = next;
+        // Use execCommand redo for the contenteditable
+        try {
+            document.execCommand('redo', false, null);
+        } catch (_) {
+            // fallback: no-op
+        }
     }
 
     handleTitleInput(event) {
@@ -577,41 +301,134 @@ export default class ReviewArticle extends LightningElement {
         event.preventDefault();
     }
 
+    // ─── Editor toolbar (Figma 125:67886) ───────────────────────────
+    editorMenuItems = [
+        { id: 'file', label: 'File' },
+        { id: 'edit', label: 'Edit' },
+        { id: 'insert', label: 'Insert' },
+        { id: 'view', label: 'View' },
+        { id: 'format', label: 'Format' },
+        { id: 'table', label: 'Table' },
+        { id: 'tools', label: 'Tools' },
+        { id: 'help', label: 'Help' },
+    ];
+
+    handleEditorMenuClick(event) {
+        const menu = event.currentTarget.dataset.menu;
+        if (!menu) return;
+        this.showToast(`${menu.charAt(0).toUpperCase()}${menu.slice(1)} menu (prototype)`);
+    }
+
+    handleEditorMenuHelp() {
+        this.showToast('Help (prototype)');
+    }
+
+    handleToolbarExpand() {
+        if (this.showAssistPanel && !this.isAssistCollapsed) {
+            this._animatePanel(true);
+        }
+        if (this.showChatPanel) {
+            this._animateChatPanel(false);
+        }
+    }
+
+    handleToolbarInsert() {
+        // Open the Knowledge Assist panel to let the user insert blocks
+        if (!this.showAssistPanel) {
+            this.showAssistPanel = true;
+            this.isAssistCollapsed = false;
+        } else if (this.isAssistCollapsed) {
+            this._animatePanel(false);
+        }
+        this.showToast('Select a Knowledge Block to insert');
+    }
+
+    handleToolbarAskAi() {
+        if (!this.showChatPanel) {
+            this._animateChatPanel(true);
+        }
+    }
+
+    handleEditorBlockStyle(event) {
+        const value = event.target?.value;
+        if (!value) return;
+        this.editorBlockStyle = value;
+        try {
+            const tag = value === 'quote' ? 'blockquote' : value;
+            document.execCommand('formatBlock', false, tag);
+        } catch (_) {
+            /* execCommand throws if no selection */
+        }
+        // Refocus the editor after applying style
+        const editorEl = this._getEditorEl();
+        if (editorEl) editorEl.focus();
+    }
+
+    handleFormatCommand(event) {
+        const btn = event.currentTarget;
+        const cmd = btn?.dataset?.cmd;
+        const arg = btn?.dataset?.arg || null;
+        if (!cmd) return;
+        try {
+            document.execCommand(cmd, false, arg);
+        } catch (_) {
+            /* execCommand throws if no selection */
+        }
+        // Refocus the editor after applying format
+        const editorEl = this._getEditorEl();
+        if (editorEl) editorEl.focus();
+    }
+
     // ─── Knowledge Block insertion ──────────────────────────────────
     handleInsertBlock(event) {
         const { syncGroupId } = event.detail;
         const entry = this.knowledgeBlockLibrary.find((kb) => kb.syncGroupId === syncGroupId);
         if (!entry || !entry.blocks) return;
 
-        this.pushUndo();
+        // Convert the knowledge block's blocks to HTML and insert at cursor
+        const html = entry.blocks.map((b) => {
+            const content = b.content || '';
+            switch (b.type) {
+                case 'h1': return `<h1>${content}</h1>`;
+                case 'h2': return `<h2>${content}</h2>`;
+                case 'h3': return `<h3>${content}</h3>`;
+                case 'li': return `<ul><li>${content}</li></ul>`;
+                case 'blockquote': return `<blockquote>${content}</blockquote>`;
+                default: return `<p>${content}</p>`;
+            }
+        }).join('');
 
-        const newBlocks = entry.blocks.map((b) => ({
-            ...b,
-            id: freshId('b'),
-            syncGroupId: entry.syncGroupId,
-            isNew: true,
-        }));
-
-        const insertIdx = this.selectedBlockId
-            ? this.article.blockData.findIndex((b) => b.id === this.selectedBlockId) + 1
-            : this.article.blockData.length;
-
-        const next = this.article.blockData.slice();
-        next.splice(insertIdx, 0, ...newBlocks);
-        this.article = { ...this.article, blockData: next };
+        this._insertHtmlAtCursor(html);
 
         this.addAgentMessage(
-            `Inserted knowledge block "${entry.title}" — ${newBlocks.length} synced block(s) added.`
+            `Inserted knowledge block "${entry.title}" — ${entry.blocks.length} synced block(s) added.`
         );
         this.applyHealthBoost(4, 2);
         this.showToast(`"${entry.title}" block inserted`);
+        this._updateWordCount();
+    }
 
-        window.setTimeout(() => {
-            this.article = {
-                ...this.article,
-                blockData: this.article.blockData.map((b) => ({ ...b, isNew: false })),
-            };
-        }, 800);
+    /**
+     * Insert HTML at the current cursor position in the contenteditable.
+     * Falls back to appending at the end if there is no selection inside
+     * the editor.
+     */
+    _insertHtmlAtCursor(html) {
+        const editorEl = this._getEditorEl();
+        if (!editorEl) return;
+
+        editorEl.focus();
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            // Check if selection is inside our editor
+            if (editorEl.contains(range.commonAncestorContainer)) {
+                document.execCommand('insertHTML', false, html);
+                return;
+            }
+        }
+        // Fallback: append at end
+        editorEl.innerHTML += html;
     }
 
     // ─── Animation toggle ──────────────────────────────────────────
@@ -643,24 +460,67 @@ export default class ReviewArticle extends LightningElement {
         this._animatePanel(false);
     }
 
-    /**
-     * Collapse / expand the Knowledge Assist (left) panel using Motion.
-     *
-     * The grid track width is driven by the `--ra-left-col` CSS variable
-     * on `.ra-shell` (see reviewArticle.css). Motion tweens that variable
-     * frame-by-frame so `grid-template-columns` interpolates smoothly,
-     * and concurrently morphs the panel's border-radius / padding / gap
-     * plus the inner card's opacity + slight x-shift for a layered feel.
-     *
-     * Collapse → fade card out, shrink track 379px → 56px, morph panel.
-     * Expand   → grow track 56px → 379px, morph panel back, fade card in.
-     *
-     * Honors prefers-reduced-motion + the in-app animation toggle.
-     */
+    // Toggle between the default 379px panel and the wider 600px panel
+    // (Figma 140:26133/140:26134). Only meaningful when the panel is in
+    // its non-collapsed state — otherwise the user has to expand from
+    // the rail first via handleAssistExpand.
+    handleAssistToggleWidth() {
+        if (this.isAssistCollapsed) return;
+        this._animateAssistWidth(!this.isAssistExpanded);
+    }
+
+    _animateAssistWidth(toExpanded) {
+        const shell = this.querySelector('.ra-shell');
+        const fromWidth = toExpanded ? '379px' : '600px';
+        const toWidth = toExpanded ? '600px' : '379px';
+
+        const skipAnimation = !shell ||
+            !this.animationEnabled ||
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (skipAnimation) {
+            this.isAssistExpanded = toExpanded;
+            return;
+        }
+
+        // Flip the @track flag first so the class flip (.ra-shell_assist-expanded)
+        // owns the *final* width. Then pin the previous width inline and tween it
+        // toward the new width; the cleanup in `.finally()` removes the inline
+        // style so the class-driven CSS variable wins again.
+        this.isAssistExpanded = toExpanded;
+        shell.style.setProperty('--ra-left-col', fromWidth);
+
+        this._panelAnims?.forEach((a) => { try { a.stop?.(); } catch (_) {} });
+
+        const easeTrack = [0.22, 0.61, 0.36, 1];
+        const trackAnim = motionAnimate(
+            shell,
+            { '--ra-left-col': [fromWidth, toWidth] },
+            { duration: 0.36, ease: easeTrack },
+        );
+        this._panelAnims = [trackAnim];
+
+        const awaitDone = (anim) => (anim?.finished ? anim.finished : Promise.resolve(anim));
+        awaitDone(trackAnim)
+            .catch(() => {})
+            .finally(() => {
+                shell.style.removeProperty('--ra-left-col');
+                this._panelAnims = [];
+            });
+    }
+
     _animatePanel(collapse) {
         if (this._panelAnimating) return;
         const shell = this.querySelector('.ra-shell');
         if (!shell) return;
+
+        // Snapshot the expanded state so the collapse tween starts from the
+        // right width (600px if we were expanded, else 379px). We DO NOT
+        // flip isAssistExpanded here — doing so mid-animation drops the
+        // .ra-shell_assist-expanded class, collapses the CSS variable back
+        // to the 379px default, and confuses motion's "from" interpolation,
+        // leaving the panel stuck at 379px instead of 56px. We clear
+        // isAssistExpanded inside `settle()` after isAssistCollapsed flips.
+        const wasExpanded = this.isAssistExpanded;
 
         const skipAnimation = !this.animationEnabled ||
             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -670,14 +530,10 @@ export default class ReviewArticle extends LightningElement {
             return;
         }
 
-        // Cancel any in-flight tweens so a rapid re-toggle doesn't pile up
-        // callbacks competing over --ra-left-col / panel styles.
         this._panelAnims?.forEach((a) => { try { a.stop?.(); } catch (_) {} });
         this._panelAnims = [];
         this._panelAnimating = true;
 
-        // Same easing curve used for the Agentforce panel — keeps both
-        // side-panels feeling like part of the same motion language.
         const easeTrack = [0.22, 0.61, 0.36, 1];
         const easeFade = [0.4, 0, 0.2, 1];
 
@@ -711,9 +567,13 @@ export default class ReviewArticle extends LightningElement {
                     { duration: 0.2, ease: easeFade },
                 ));
             }
+            // Tween from whichever width the panel is sitting at right
+            // now (600px if expanded, otherwise 379px) so the collapse
+            // animation never jumps before sliding in.
+            const fromCol = wasExpanded ? '600px' : '379px';
             const trackAnim = motionAnimate(
                 shell,
-                { '--ra-left-col': ['379px', '56px'] },
+                { '--ra-left-col': [fromCol, '56px'] },
                 { duration: 0.36, ease: easeTrack, delay: 0.04 },
             );
             anims.push(trackAnim);
@@ -730,13 +590,14 @@ export default class ReviewArticle extends LightningElement {
             }
             this._panelAnims = anims;
 
-            // The track tween defines the visible "done" moment; commit
-            // state once it lands so the class swap to assist-collapsed
-            // happens at the same instant.
             awaitDone(trackAnim)
                 .catch(() => {})
                 .finally(() => {
                     this.isAssistCollapsed = true;
+                    // Drop the expanded flag now that the rail has taken
+                    // over — when the user reopens, they should land on the
+                    // default 379px width, not the prior 600px expanded one.
+                    if (wasExpanded) this.isAssistExpanded = false;
                     settle();
                 });
             return;
@@ -744,8 +605,6 @@ export default class ReviewArticle extends LightningElement {
 
         // Expand path
         this.isAssistCollapsed = false;
-        // Wait one frame so the collapsed-class style is removed before
-        // we apply our inline starting state, then animate up to 379px.
         requestAnimationFrame(() => {
             const c = this.querySelector('.ka-card');
             const p = this.querySelector('.ka-panel');
@@ -800,21 +659,6 @@ export default class ReviewArticle extends LightningElement {
         this.isAssistCollapsed = false;
     }
 
-    /**
-     * Slide the Agentforce (chat) panel open or closed using Motion.
-     *
-     * Implementation note: animating `grid-template-columns` directly
-     * doesn't interpolate reliably across browsers, so we drive the
-     * track width via the `--ra-right-col` CSS variable on `.ra-shell`
-     * (see reviewArticle.css). Motion tweens the variable, the grid
-     * picks up the new width every frame, and the aside content fades
-     * in / out slightly offset for a layered feel.
-     *
-     * Open  → mount aside, expand track 0 → 410px, fade aside in (delay).
-     * Close → fade aside out, collapse track 410 → 0px, then unmount.
-     *
-     * Honors prefers-reduced-motion + the in-app animation toggle.
-     */
     _animateChatPanel(open) {
         if (this._chatAnimating) return;
         const shell = this.querySelector('.ra-shell');
@@ -828,14 +672,10 @@ export default class ReviewArticle extends LightningElement {
             return;
         }
 
-        // Cancel any in-flight micro-animations from a previous toggle so we
-        // don't pile up callbacks fighting over --ra-right-col / opacity.
         this._chatAnims?.forEach((a) => { try { a.stop?.(); } catch (_) {} });
         this._chatAnims = [];
         this._chatAnimating = true;
 
-        // Smooth, slightly emphatic ease for the track expansion (matches
-        // the "smart, swift" feel of the Agentforce surface elsewhere).
         const easeTrack = [0.22, 0.61, 0.36, 1];
 
         const trackToOpen = () => motionAnimate(
@@ -860,7 +700,6 @@ export default class ReviewArticle extends LightningElement {
 
         if (open) {
             this.showChatPanel = true;
-            // Wait one frame so the aside is in the DOM before Motion grabs it.
             requestAnimationFrame(() => {
                 const aside = this.querySelector('.ra-shell__aside_right');
                 if (aside) aside.style.opacity = '0';
@@ -874,7 +713,6 @@ export default class ReviewArticle extends LightningElement {
                     .finally(() => {
                         this._chatAnimating = false;
                         this._chatAnims = [];
-                        // Drop the inline var so the CSS fallback (410px) takes over.
                         shell.style.removeProperty('--ra-right-col');
                         if (aside) aside.style.opacity = '';
                     });
@@ -891,9 +729,6 @@ export default class ReviewArticle extends LightningElement {
         awaitDone(trackAnim)
             .catch(() => {})
             .finally(() => {
-                // Re-apply the closed state via class (`ra-shell_no-right`),
-                // which sets --ra-right-col: 0px in CSS, then drop our inline
-                // override so the cascade keeps the panel collapsed.
                 this.showChatPanel = false;
                 this._chatAnimating = false;
                 this._chatAnims = [];
@@ -904,7 +739,6 @@ export default class ReviewArticle extends LightningElement {
 
     handleUpdateAll() {
         this.pushUndo();
-        // Apply every available suggestion in sequence.
         this.suggests.forEach((s) => {
             if (s.status === 'available') this.applySuggestionById(s.id, false);
         });
@@ -927,74 +761,35 @@ export default class ReviewArticle extends LightningElement {
 
         this.pushUndo();
 
-        const newBlocks = this.blocksForSuggestion(suggestion);
-        if (newBlocks.length > 0) {
-            this.article = {
-                ...this.article,
-                blockData: [...this.article.blockData, ...newBlocks.map((b) => ({ ...b, isNew: true }))],
-            };
+        const htmlChunks = this._htmlForSuggestion(suggestion);
+        if (htmlChunks) {
+            this._insertHtmlAtCursor(htmlChunks);
         }
 
-        // Mark suggestion as applied
         this.suggests = this.suggests.map((s, i) => (i === idx ? { ...s, status: 'applied' } : s));
 
         this.applyHealthBoost(suggestion.coverageDelta, suggestion.confidenceDelta);
 
         if (announce) {
             this.addAgentMessage(
-                `Applied "${suggestion.label}". ${newBlocks.length} block${newBlocks.length === 1 ? '' : 's'} added to the article draft.`
+                `Applied "${suggestion.label}". Content added to the article draft.`
             );
         }
-
-        // Remove the "isNew" highlight after animation
-        window.setTimeout(() => {
-            this.article = {
-                ...this.article,
-                blockData: this.article.blockData.map((b) => ({ ...b, isNew: false })),
-            };
-        }, 800);
+        this._updateWordCount();
     }
 
-    blocksForSuggestion(s) {
+    _htmlForSuggestion(s) {
         switch (s.actionKind) {
             case 'update-video':
-                return [
-                    {
-                        id: freshId('b'),
-                        type: 'video',
-                        title: 'Video Explainer: Baggage size and weight',
-                        content: 'A short walkthrough showing how to measure bags and avoid fees.',
-                    },
-                ];
+                return `<div class="ra-editor-video"><div class="ra-editor-video__icon">&#9654;</div><div class="ra-editor-video__info"><strong>Video Explainer: Baggage size and weight</strong><p>A short walkthrough showing how to measure bags and avoid fees.</p></div></div>`;
             case 'add-knowledge-block':
-                return [
-                    { id: freshId('b'), type: 'h3', content: 'Login & account basics' },
-                    {
-                        id: freshId('b'),
-                        type: 'p',
-                        content:
-                            'If you are a returning passenger, sign in to view your saved trip details before checking your baggage allowance. Your frequent-flyer tier may grant additional weight or bag count.',
-                    },
-                ];
+                return `<h3>Login &amp; account basics</h3><p>If you are a returning passenger, sign in to view your saved trip details before checking your baggage allowance. Your frequent-flyer tier may grant additional weight or bag count.</p>`;
             case 'add-wizard':
-                return [
-                    { id: freshId('b'), type: 'h3', content: 'Interactive packing wizard' },
-                    {
-                        id: freshId('b'),
-                        type: 'p',
-                        content:
-                            'Follow the voice-guided steps to size, weigh, and log each bag. The wizard checks your fare rules and flags anything that exceeds your allowance before you leave for the airport.',
-                    },
-                ];
+                return `<h3>Interactive packing wizard</h3><p>Follow the voice-guided steps to size, weigh, and log each bag. The wizard checks your fare rules and flags anything that exceeds your allowance before you leave for the airport.</p>`;
             case 'add-faq':
-                return [
-                    { id: freshId('b'), type: 'h3', content: 'Frequently asked questions' },
-                    { id: freshId('b'), type: 'li', content: 'What counts as a personal item vs a carry-on?' },
-                    { id: freshId('b'), type: 'li', content: 'How are oversized fees calculated?' },
-                    { id: freshId('b'), type: 'li', content: 'Can I pre-pay for extra weight online?' },
-                ];
+                return `<h3>Frequently asked questions</h3><ul><li>What counts as a personal item vs a carry-on?</li><li>How are oversized fees calculated?</li><li>Can I pre-pay for extra weight online?</li></ul>`;
             default:
-                return [];
+                return null;
         }
     }
 
@@ -1015,13 +810,11 @@ export default class ReviewArticle extends LightningElement {
         const text = event.detail?.text?.trim();
         if (!text) return;
 
-        // Append user turn
         this.chatMessages = [
             ...this.chatMessages,
             { id: freshId('msg'), role: 'user', content: text, timestamp: Date.now() },
         ];
 
-        // Generate a deterministic agent response with Apply-able suggestions.
         window.setTimeout(() => {
             const suggestion = this.buildSuggestionFromPrompt(text);
             const reply = this.buildAgentReply(text, suggestion);
@@ -1093,39 +886,33 @@ export default class ReviewArticle extends LightningElement {
         if (lower.includes('shorten') || lower.includes('shorter') || lower.includes('condense')) {
             return {
                 id: freshId('s'),
-                actionKind: 'rewrite',
+                actionKind: 'rewrite-shorten',
                 label: 'Shorten introduction',
                 description: 'Rewrite the opening paragraph to be ~50% shorter.',
-                targetBlockId: 'b-p-1',
             };
         }
         if (lower.includes('simplify') || lower.includes('simpler') || lower.includes('plain')) {
             return {
                 id: freshId('s'),
-                actionKind: 'rewrite',
+                actionKind: 'rewrite-simplify',
                 label: 'Simplify language',
                 description: 'Rewrite using plainer language and shorter sentences.',
-                targetBlockId: 'b-p-1',
             };
         }
         if (lower.includes('expand') || lower.includes('more detail') || lower.includes('elaborate')) {
-            const targetBlock = this.selectedBlockId || 'b-p-2';
             return {
                 id: freshId('s'),
-                actionKind: 'expand',
+                actionKind: 'add-expand',
                 label: 'Expand with more detail',
                 description: 'Baggage policies can vary further by route, alliance partnerships, and seasonal promotions — always confirm with the airline before departure.',
-                targetBlockId: targetBlock,
             };
         }
         if (lower.includes('rewrite') || lower.includes('improve') || lower.includes('update')) {
-            const targetBlock = this.selectedBlockId || 'b-p-1';
             return {
                 id: freshId('s'),
-                actionKind: 'rewrite',
+                actionKind: 'rewrite-general',
                 label: 'Rewrite block',
                 description: `Improve the content based on: "${text.slice(0, 60)}"`,
-                targetBlockId: targetBlock,
             };
         }
         return {
@@ -1144,20 +931,12 @@ export default class ReviewArticle extends LightningElement {
         const suggestion = (msg.suggestions || []).find((s) => s.id === suggestionId);
         if (!suggestion) return;
 
-        this.pushUndo();
-
-        if (suggestion.actionKind === 'rewrite' && suggestion.targetBlockId) {
-            this.applyRewrite(suggestion);
-        } else if (suggestion.actionKind === 'expand' && suggestion.targetBlockId) {
-            this.applyExpand(suggestion);
-        } else {
-            const blocks = this.blocksForChatSuggestion(suggestion);
-            this.article = {
-                ...this.article,
-                blockData: [...this.article.blockData, ...blocks.map((b) => ({ ...b, isNew: true }))],
-            };
-            this.addAgentMessage(`Applied "${suggestion.label}" — ${blocks.length} block(s) added to the draft.`);
+        const html = this._htmlForChatSuggestion(suggestion);
+        if (html) {
+            this._insertHtmlAtCursor(html);
         }
+
+        this.addAgentMessage(`Applied "${suggestion.label}" — content inserted into the article.`);
 
         // Remove the suggestion from the message
         this.chatMessages = this.chatMessages.map((m, i) =>
@@ -1170,93 +949,29 @@ export default class ReviewArticle extends LightningElement {
         );
 
         this.applyHealthBoost(3, 1);
-
-        window.setTimeout(() => {
-            this.article = {
-                ...this.article,
-                blockData: this.article.blockData.map((b) => ({ ...b, isNew: false })),
-            };
-        }, 800);
+        this._updateWordCount();
     }
 
-    applyRewrite(suggestion) {
-        const targetId = suggestion.targetBlockId;
-        const idx = this.article.blockData.findIndex((b) => b.id === targetId);
-        if (idx === -1) return;
-        const original = this.article.blockData[idx];
-        const rewritten = this.rewriteContent(original.content, suggestion);
-        this.article = {
-            ...this.article,
-            blockData: this.article.blockData.map((b, i) =>
-                i === idx ? { ...b, content: rewritten, isNew: true } : b
-            ),
-        };
-        this.addAgentMessage(`Rewrote the "${original.type}" block: "${suggestion.label}".`);
-    }
-
-    applyExpand(suggestion) {
-        const targetId = suggestion.targetBlockId;
-        const idx = this.article.blockData.findIndex((b) => b.id === targetId);
-        const insertIdx = idx !== -1 ? idx + 1 : this.article.blockData.length;
-        const newBlocks = [
-            { id: freshId('b'), type: 'p', content: suggestion.description, isNew: true },
-        ];
-        const next = this.article.blockData.slice();
-        next.splice(insertIdx, 0, ...newBlocks);
-        this.article = { ...this.article, blockData: next };
-        this.addAgentMessage(`Expanded content after block — 1 block added.`);
-    }
-
-    rewriteContent(original, suggestion) {
-        const label = (suggestion.label || '').toLowerCase();
-        if (label.includes('shorten') || label.includes('condense')) {
-            const sentences = original.split('. ').filter(Boolean);
-            return sentences.slice(0, Math.ceil(sentences.length / 2)).join('. ') + '.';
-        }
-        if (label.includes('simplify')) {
-            return original
-                .replace(/utilize/gi, 'use')
-                .replace(/approximately/gi, 'about')
-                .replace(/in order to/gi, 'to')
-                .replace(/a large number of/gi, 'many');
-        }
-        return `${original} Additionally, ${suggestion.description.toLowerCase()}`;
-    }
-
-    blocksForChatSuggestion(s) {
+    _htmlForChatSuggestion(s) {
         switch (s.actionKind) {
             case 'add-image':
-                return [
-                    {
-                        id: freshId('b'),
-                        type: 'image',
-                        content: '',
-                        caption: 'Measurement diagram — check both linear inches and weight.',
-                    },
-                ];
+                return `<figure class="ra-editor-figure"><img src="images/baggage-measure.jpg" alt="Measurement diagram" /><figcaption>Measurement diagram — check both linear inches and weight.</figcaption></figure>`;
             case 'add-quote':
-                return [
-                    {
-                        id: freshId('b'),
-                        type: 'blockquote',
-                        content:
-                            '"Most overweight fees we see are from bags that missed the limit by under a pound. A cheap luggage scale pays for itself on the first trip." — Travel policy desk',
-                    },
-                ];
+                return `<blockquote>"Most overweight fees we see are from bags that missed the limit by under a pound. A cheap luggage scale pays for itself on the first trip." — Travel policy desk</blockquote>`;
             case 'add-list':
-                return [
-                    { id: freshId('b'), type: 'h3', content: 'Measurement tips' },
-                    { id: freshId('b'), type: 'li', content: 'Weigh every bag the night before — at peak travel weight.' },
-                    { id: freshId('b'), type: 'li', content: 'Measure external pockets, wheels, and handles.' },
-                    { id: freshId('b'), type: 'li', content: 'Keep the airline fare rules screenshot handy at check-in.' },
-                ];
-            case 'rewrite':
-                return [];
+                return `<h3>Measurement tips</h3><ul><li>Weigh every bag the night before — at peak travel weight.</li><li>Measure external pockets, wheels, and handles.</li><li>Keep the airline fare rules screenshot handy at check-in.</li></ul>`;
+            case 'rewrite-shorten':
+                return `<p>Airlines set strict weight and size limits on luggage. Exceeding them can cost 10-12 euros per extra kilogram on budget carriers, turning a cheap trip expensive.</p>`;
+            case 'rewrite-simplify':
+                return `<p>Airlines limit how heavy and large your bags can be. Going over these limits means extra fees that change based on the airline and where you're flying.</p>`;
+            case 'add-expand':
+                return `<p>Baggage policies can vary further by route, alliance partnerships, and seasonal promotions — always confirm with the airline before departure.</p>`;
+            case 'rewrite-general':
+                return `<p>${s.description}</p>`;
+            case 'add-section':
+                return `<h2>${s.label}</h2><p>${s.description}</p>`;
             default:
-                return [
-                    { id: freshId('b'), type: 'h2', content: s.label },
-                    { id: freshId('b'), type: 'p', content: s.description },
-                ];
+                return `<h2>${s.label}</h2><p>${s.description}</p>`;
         }
     }
 
@@ -1296,15 +1011,6 @@ export default class ReviewArticle extends LightningElement {
     }
 
     showToast(message, variant = 'success') {
-        // The platform default lifetime for lightning-toast is 4800ms
-        // (no link) / 9600ms (with link) and is not configurable
-        // through the public API. We want every toast in this app to
-        // feel snappy (~2.2s), so after handing the toast off to the
-        // platform we look it up inside the global toast container's
-        // shadow root and trigger the same `close` flow the close
-        // button does. The container listens for `close` on each
-        // toast element, so dispatching it cleans up `_displayToasts`
-        // and surfaces the next queued toast — no leak.
         Toast.show(
             {
                 label: message,
@@ -1316,6 +1022,70 @@ export default class ReviewArticle extends LightningElement {
 
         window.setTimeout(() => closeOldestToast(), TOAST_DISMISS_MS);
     }
+
+    // ─── Entrance animation ───────────────────────────────────────────
+    _playEntranceAnimation() {
+        const reduce =
+            !this.animationEnabled ||
+            (typeof window !== 'undefined' &&
+                window.matchMedia &&
+                window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        if (reduce) {
+            this.classList.remove('ra--entering');
+            return;
+        }
+
+        const shell = this.querySelector('.ra-shell');
+        if (!shell) {
+            this.classList.remove('ra--entering');
+            return;
+        }
+
+        const shellAnim = motionAnimate(
+            shell,
+            { opacity: [0, 1], y: [16, 0] },
+            { duration: 0.55, ease: [0.2, 0.8, 0.2, 1] }
+        );
+
+        shellAnim.finished?.then?.(() => {
+            this.classList.remove('ra--entering');
+        }) ?? this.classList.remove('ra--entering');
+
+        const regions = [
+            this.querySelector('.ra-shell__aside_left'),
+            this.querySelector('.ra-shell__main'),
+            this.querySelector('.ra-shell__aside_right'),
+        ].filter(Boolean);
+        if (regions.length) {
+            motionAnimate(
+                regions,
+                { opacity: [0, 1], y: [12, 0] },
+                {
+                    duration: 0.5,
+                    ease: 'easeOut',
+                    delay: motionStagger(0.08, { startDelay: 0.1 }),
+                }
+            );
+        }
+
+        const head = this.querySelector('.ra-article__head');
+        if (head) {
+            motionAnimate(
+                head,
+                { opacity: [0, 1], y: [10, 0] },
+                { duration: 0.45, ease: 'easeOut', delay: 0.22 }
+            );
+        }
+
+        const editorEl = this._getEditorEl();
+        if (editorEl) {
+            motionAnimate(
+                editorEl,
+                { opacity: [0, 1], y: [10, 0] },
+                { duration: 0.42, ease: 'easeOut', delay: 0.3 }
+            );
+        }
+    }
 }
 
 const TOAST_DISMISS_MS = 1500;
@@ -1323,8 +1093,6 @@ const TOAST_DISMISS_MS = 1500;
 function closeOldestToast() {
     const container = document.querySelector('lightning-toast-container');
     if (!container) return;
-    // Synthetic shadow exposes `shadowRoot`; native shadow does too.
-    // Fall back to the host in the rare case neither is present.
     const root = container.shadowRoot || container;
     const toasts = root.querySelectorAll('lightning-toast');
     if (!toasts.length) return;
@@ -1341,51 +1109,10 @@ function deepClone(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-// Visible cursors + avatars. Each entry uses a `color` token that both
-// `ui-collaborator-cursors` and `ui-collaborator-avatars` map to their
-// own per-component class (e.g. `cc-cursor_teal`, `cca-avatar_teal`).
 const COLLABORATOR_ROSTER = [
     { id: 'shana', name: 'Shana Goldman', color: 'teal', initials: 'SG' },
     { id: 'laura', name: 'Laura Borghesi', color: 'pink', initials: 'LB' },
     { id: 'daniel', name: 'Daniel Sim', color: 'amber', initials: 'DS' },
 ];
 
-// Off-screen invitee — surfaces in the avatar stack as "+1" and in the
-// agent-panel notice as "John Chipchase and 3 others have joined…".
 const COLLABORATOR_EXTRA_COUNT = 1;
-
-/**
- * Turn a single line of user-pasted text into a block. Ported from
- * `components/ArticleView.tsx` in the parent React Knowledge Builder
- * so the dvs editor recognises the same markdown-style shortcuts when
- * pasting multi-line content.
- */
-function parseLineToBlock(line) {
-    let type = 'p';
-    let content = line;
-
-    const imgMatch = line.match(/^!\[([^\]]*)\]\((.+)\)$/);
-    if (imgMatch) {
-        return { id: freshId('b'), type: 'image', content: imgMatch[2], caption: imgMatch[1] };
-    }
-
-    if (line.startsWith('### ')) {
-        type = 'h3';
-        content = line.slice(4);
-    } else if (line.startsWith('## ')) {
-        type = 'h2';
-        content = line.slice(3);
-    } else if (line.startsWith('# ')) {
-        type = 'h1';
-        content = line.slice(2);
-    } else if (line.startsWith('- ') || line.startsWith('* ')) {
-        type = 'li';
-        content = line.slice(2);
-    } else if (line.startsWith('> ')) {
-        type = 'blockquote';
-        content = line.slice(2);
-    }
-
-    content = content.replace(/^\*\*(.+)\*\*$/, '$1');
-    return { id: freshId('b'), type, content };
-}

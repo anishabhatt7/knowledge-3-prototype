@@ -82,7 +82,7 @@ export default defineConfig({
   },
   appType: 'spa',
   server: {
-    port: 5001,
+    port: 8001,
     open: false,
     strictPort: true,
   },

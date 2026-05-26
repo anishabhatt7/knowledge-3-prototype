@@ -160,6 +160,10 @@ page-healing-graph {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    /* SLDS 2 base typography — page headers default to Regular (400). */
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
     gap: var(--slds-g-spacing-5, 24px);
     padding: var(--slds-g-spacing-5, 24px) 40px;
     background-color: var(--slds-g-color-surface-1, #fff);

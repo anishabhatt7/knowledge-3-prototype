@@ -208,63 +208,73 @@ export const inlineAISuggestions = [
 ];
 
 // ─── Article Health Score shown in the left panel ───────────────────
+// ─── Article RAG/AI Score (left panel) ─────────────────────────────
+// New shape per Figma 125:67812. Replaces the prior "Article Health Score"
+// model (donut + cases averted + delta) with an Article RAG/AI Score view:
+// a red donut for a poor score plus an "Overall Performance" row with a
+// badge + reason note. `casesAverted`/`delta` are retained on the model
+// for compatibility but no longer rendered in V2.
 export const articleHealth = {
-    score: 78,
+    score: 48,
     delta: 8,
     casesAverted: 40,
     contactReason: { id: 'baggage', label: 'Baggage allowance' },
+    performanceLabel: 'Poor Score',
+    performanceVariant: 'error',
     reasonNote:
         'Detected from a 25% spike in customer cases regarding baggage allowance policy change at various San Francisco airports.',
 };
 
-// ─── Smart Suggests (left panel) ────────────────────────────────────
-// Each suggestion can produce blocks / field changes when "Apply" is clicked.
-// Mirrors the Authoring Agent action contract from the React app:
-// - add-section, update-section, add-image, add-video, add-quote, add-list
+// ─── Structural Suggestion (left panel) ─────────────────────────────
+// New shape per Figma 125:67812. Each card surfaces an answer-first
+// structural recommendation tied to a specific section in the article,
+// plus the projected score increase if the writer accepts the change.
+//
+// The `actionKind` values still drive the existing Authoring Agent
+// pipeline in reviewArticle.js — the new cards reuse `update-section`
+// so accepting one rewrites that section's first two sentences.
 export const smartSuggests = [
     {
-        id: 'suggest-video',
-        label: 'Switch to Explainer Video',
-        description: 'Add a video to explain the types of warranties for solar panel.',
-        coverageDelta: 6,
-        confidenceDelta: 2,
-        badge: 'Best',
-        status: 'updated',
-        icon: 'utility:video',
-        actionKind: 'update-video',
-    },
-    {
-        id: 'suggest-knowledge-block',
-        label: 'Add Knowledge Block',
-        description: 'Add a knowledge block to provide the basic Login information.',
+        id: 'suggest-structure-open-flow-builder',
+        label: 'No answer-first structure',
+        description:
+            'First 2 sentences should state the direct answer in "Open Flow Builder" section',
+        section: 'Open Flow Builder',
+        scoreDelta: 6,
         coverageDelta: 6,
         confidenceDelta: 2,
         badge: null,
         status: 'available',
-        icon: 'utility:knowledge_base',
-        actionKind: 'add-knowledge-block',
+        icon: 'utility:page_structure',
+        actionKind: 'update-section',
     },
     {
-        id: 'suggest-wizard',
-        label: 'Add Interactive Wizard',
-        description: 'Let users follow along with voice instructions. Hands-free help, anywhere.',
+        id: 'suggest-structure-add-flow-elements',
+        label: 'No answer-first structure',
+        description:
+            'First 2 sentences should state the direct answer in "Add Flow Elements" section',
+        section: 'Add Flow Elements',
+        scoreDelta: 6,
         coverageDelta: 6,
         confidenceDelta: 2,
         badge: null,
         status: 'available',
-        icon: 'utility:magicwand',
-        actionKind: 'add-wizard',
+        icon: 'utility:page_structure',
+        actionKind: 'update-section',
     },
     {
-        id: 'suggest-faq',
-        label: 'Add FAQ Block',
-        description: 'Surface the top 5 customer questions from recent cases as a Q&A list.',
-        coverageDelta: 4,
-        confidenceDelta: 3,
+        id: 'suggest-structure-activate-the-flow',
+        label: 'No answer-first structure',
+        description:
+            'First 2 sentences should state the direct answer in "Activate the Flow" section',
+        section: 'Activate the Flow',
+        scoreDelta: 6,
+        coverageDelta: 6,
+        confidenceDelta: 2,
         badge: null,
         status: 'available',
-        icon: 'utility:question',
-        actionKind: 'add-faq',
+        icon: 'utility:page_structure',
+        actionKind: 'update-section',
     },
 ];
 
