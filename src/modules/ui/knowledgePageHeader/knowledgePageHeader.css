@@ -6,6 +6,12 @@ ui-knowledge-page-header {
 .page-header {
   background-color: var(--slds-g-color-surface-2, #f3f3f3);
   padding: var(--slds-g-spacing-4, 16px);
+  /* SLDS 2 base typography — self-contained so the shared
+     ui-knowledge-page-header renders the same regardless of which
+     page mounts it. All text inside defaults to Regular (400). */
+  font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+  font-weight: var(--slds-g-font-weight-4, 400);
+  color: var(--slds-g-color-on-surface-2, #2e2e2e);
 }
 
 .page-header-row {
@@ -46,7 +52,9 @@ ui-knowledge-page-header {
 }
 
 .page-header-entity-name {
+  font-family: inherit;
   font-size: var(--slds-g-font-scale-base, 13px);
+  font-weight: var(--slds-g-font-weight-4, 400);
   line-height: 18px;
   color: var(--slds-g-color-on-surface-1, #5c5c5c);
   white-space: nowrap;
@@ -63,6 +71,7 @@ ui-knowledge-page-header {
 }
 
 .page-header-title {
+  font-family: inherit;
   font-size: var(--slds-g-font-scale-5, 28px);
   font-weight: var(--slds-g-font-weight-4, 400);
   line-height: 35px;
@@ -150,7 +159,9 @@ ui-knowledge-page-header {
 .page-header-meta {
   flex: 1;
   min-width: 0;
+  font-family: inherit;
   font-size: var(--slds-g-font-scale-base, 13px);
+  font-weight: var(--slds-g-font-weight-4, 400);
   line-height: 18px;
   color: var(--slds-g-color-on-surface-1, #5c5c5c);
   white-space: nowrap;
