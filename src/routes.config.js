@@ -11,15 +11,15 @@
 export const routes = [
     {
         path: '/',
-        component: 'page-knowledge-home',
-        title: 'Knowledge | Service Console',
+        component: 'page-review-article',
+        title: 'New Knowledge Article',
         navPage: 'knowledge',
         navLabel: 'Knowledge',
     },
     {
-        path: '/new-knowledge',
-        component: 'page-review-article',
-        title: 'New Knowledge Article',
+        path: '/home',
+        component: 'page-knowledge-home',
+        title: 'Knowledge | Service Console',
         navHighlight: 'knowledge',
     },
     {
