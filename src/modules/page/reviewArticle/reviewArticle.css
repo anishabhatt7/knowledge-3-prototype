@@ -480,6 +480,19 @@ page-review-article.ra--entering .ra-editor {
    Single scrollable contenteditable div replacing the block-based
    approach. Styles the HTML content (h1-h3, p, ul/li, blockquote,
    figure, video embed) so it looks like a proper article. */
+/* Positioning context for the unified editor + Grammarly-style
+   suggestion popover. The popover lives here as a sibling of the
+   contenteditable so it survives the editor's innerHTML reset at init
+   and so we can position it absolutely against a non-scrolling
+   container. */
+.ra-editor-host {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
 .ra-editor {
     flex: 1;
     min-height: 0;
@@ -748,4 +761,205 @@ page-review-article.ra--entering .ra-editor {
     .ra-anim-toggle__track {
         transition: none !important;
     }
+}
+
+/* ─── Inline AI suggestions (Grammarly-style) ─────────────────────
+   Per-type modifiers set --ai-suggest-color. The default state shows a
+   faded straight underline (color-mix lowers the alpha on the type
+   color); hover swaps to the full-strength color so the suggestion
+   "pops" only when the user is actively considering it. Mirrors the
+   v2 articleBlock implementation so the affordance is consistent
+   across the two authoring experiences. */
+.ai-suggest {
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-thickness: 1.5px;
+    text-decoration-skip-ink: none;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(
+        in srgb,
+        var(--ai-suggest-color, currentColor) 32%,
+        transparent
+    );
+    cursor: help;
+    border-radius: 2px;
+    padding: 0 1px;
+    transition:
+        text-decoration-color 140ms ease-out,
+        background-color 120ms ease-out;
+}
+
+.ai-suggest:hover {
+    text-decoration-color: var(--ai-suggest-color, currentColor);
+    background-color: color-mix(
+        in srgb,
+        var(--ai-suggest-color, currentColor) 8%,
+        transparent
+    );
+}
+
+.ai-suggest_spelling     { --ai-suggest-color: var(--slds-g-color-error-base-50, #ba0517); }
+.ai-suggest_grammar      { --ai-suggest-color: var(--slds-g-color-warning-base-50, #ca8501); }
+.ai-suggest_readability  { --ai-suggest-color: var(--slds-g-color-accent-2, #0250d9); }
+.ai-suggest_tone         { --ai-suggest-color: #5867e8; }
+
+/* SLDS 2 card-style popover: surface-1 fill, radius-3, spacing-4
+   padding, base font family + scale tokens throughout. Border is
+   replaced by an elevated shadow so the card "floats" above the
+   article body. Width is roomy enough for sentence-length suggestions
+   to read comfortably. */
+.ai-popover {
+    position: absolute;
+    z-index: 50;
+    width: 400px;
+    max-width: calc(100vw - 32px);
+    background-color: var(--slds-g-color-surface-1, #fff);
+    border: none;
+    border-radius: var(--slds-g-radius-border-3, 12px);
+    box-shadow:
+        0 12px 32px rgba(0, 0, 0, 0.16),
+        0 4px 12px rgba(0, 0, 0, 0.10);
+    padding: var(--slds-g-spacing-4, 16px);
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 1.45;
+    color: var(--slds-g-color-on-surface-1, #181818);
+    cursor: default;
+    animation: ai-popover-in 140ms ease-out both;
+}
+
+/* Suppress the brand-blue border / focus ring on the Accept button.
+   SLDS-2 styling hooks override the underlying lightning-button styles
+   without piercing its shadow DOM. */
+.ai-popover__btn_accept {
+    --slds-c-button-brand-color-border: transparent;
+    --slds-c-button-brand-color-border-hover: transparent;
+    --slds-c-button-brand-color-border-focus: transparent;
+    --slds-c-button-brand-color-border-active: transparent;
+    --slds-c-button-brand-shadow-focus: none;
+    --slds-c-button-shadow-focus: none;
+}
+
+@keyframes ai-popover-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.ai-popover__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--slds-g-spacing-2, 8px);
+}
+
+.ai-popover__type {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    font-size: var(--slds-g-font-scale-neg-2, 11px);
+    font-weight: var(--slds-g-font-weight-7, 600);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--slds-g-color-on-surface-2, #444);
+}
+
+.ai-popover__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.ai-popover_spelling     .ai-popover__dot { background: var(--slds-g-color-error-base-50, #ba0517); }
+.ai-popover_grammar      .ai-popover__dot { background: var(--slds-g-color-warning-base-50, #ca8501); }
+.ai-popover_readability  .ai-popover__dot { background: var(--slds-g-color-accent-2, #0250d9); }
+.ai-popover_tone         .ai-popover__dot { background: #5867e8; }
+
+.ai-popover__brand-icon {
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-accent-2, #0250d9);
+    opacity: 0.9;
+    /* Sit slightly closer to the type-color dot than the default flex gap. */
+    margin-right: 2px;
+}
+
+/* Bare close button anchored top-right of the popover. Hides the card
+   without marking the suggestion as dismissed. */
+.ai-popover__close {
+    --slds-c-button-icon-color-foreground: var(--slds-g-color-on-surface-2, #444);
+    --slds-c-button-icon-color-foreground-hover: var(--slds-g-color-on-surface-1, #181818);
+    --slds-c-button-icon-radius-border: 4px;
+    margin-left: var(--slds-g-spacing-2, 8px);
+    flex-shrink: 0;
+}
+
+/* Stacked labeled diff so sentence-length rewrites stay legible. */
+.ai-popover__diff {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+    margin: var(--slds-g-spacing-1, 4px) 0 var(--slds-g-spacing-3, 12px);
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+}
+
+.ai-popover__diff-block {
+    padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+}
+
+.ai-popover__diff-block_from {
+    background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.ai-popover__diff-block_to {
+    background-color: var(--slds-g-color-success-base-90, #ecfaf2);
+}
+
+.ai-popover__diff-label {
+    display: block;
+    margin-bottom: var(--slds-g-spacing-1, 4px);
+    font-size: var(--slds-g-font-scale-neg-2, 11px);
+    font-weight: var(--slds-g-font-weight-7, 600);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--slds-g-color-on-surface-2, #444);
+}
+
+.ai-popover__from {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 1.5;
+    color: var(--slds-g-color-on-surface-2, #444);
+    text-decoration: line-through;
+    text-decoration-color: var(--slds-g-color-on-surface-3, #747474);
+    text-decoration-thickness: 1px;
+    word-break: break-word;
+}
+
+.ai-popover__to {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 1.5;
+    font-weight: var(--slds-g-font-weight-7, 600);
+    color: var(--slds-g-color-success-base-30, #2e844a);
+    word-break: break-word;
+}
+
+.ai-popover__explanation {
+    margin: 0 0 var(--slds-g-spacing-3, 12px);
+    color: var(--slds-g-color-on-surface-2, #444);
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 1.5;
+}
+
+.ai-popover__actions {
+    display: flex;
+    gap: var(--slds-g-spacing-2, 8px);
+    justify-content: flex-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ai-popover { animation: none; }
+    .ai-suggest { transition: none; }
 }

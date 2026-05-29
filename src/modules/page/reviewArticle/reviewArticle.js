@@ -11,7 +11,11 @@ import {
     knowledgeBlocks,
     knowledgeBaseToc,
     freshId,
+    inlineAISuggestions,
 } from 'data/knowledge';
+
+// Grammarly-style popover dwell time before it closes after a mouse-leave.
+const SUGGESTION_POPOVER_HIDE_DELAY = 220;
 import { consumeDraftSession } from 'data/draftSession';
 
 // Import child components so Vite + LWC register them eagerly
@@ -63,6 +67,16 @@ export default class ReviewArticle extends LightningElement {
     @track editorBlockStyle = 'p';
     _editorInitialized = false;
 
+    // Grammarly-style inline AI suggestions. `_activeSuggestion` is the
+    // currently visible popover descriptor (null when hidden);
+    // `_dismissedSuggestionIds` keeps ids we've already dismissed so we
+    // don't re-wrap them on later renderedCallback passes;
+    // `_suggestionsApplied` gates the initial decoration pass.
+    @track _activeSuggestion = null;
+    _dismissedSuggestionIds = new Set();
+    _suggestionsApplied = false;
+    _popoverHideTimer = null;
+
     // Entrance-animation flags
     _arrivedFromDraft = false;
     _didEntranceAnimation = false;
@@ -107,6 +121,11 @@ export default class ReviewArticle extends LightningElement {
             window.removeEventListener('agentforce:toggle', this._boundAgentforceToggle);
             this._boundAgentforceToggle = null;
         }
+        if (this._popoverHideTimer) {
+            clearTimeout(this._popoverHideTimer);
+            this._popoverHideTimer = null;
+        }
+        this._activeSuggestion = null;
     }
 
     // Top-level nav/chrome
@@ -198,6 +217,18 @@ export default class ReviewArticle extends LightningElement {
                 this._updateWordCount();
             }
         }
+
+        // Decorate the editor with Grammarly-style underlines once the
+        // editor has its initial HTML. We guard with _suggestionsApplied
+        // so subsequent renderedCallbacks (e.g. when the popover state
+        // changes) don't re-wrap and duplicate spans.
+        if (this._editorInitialized && !this._suggestionsApplied) {
+            const editorEl = this._getEditorEl();
+            if (editorEl) {
+                this._applyInlineSuggestions(editorEl);
+                this._suggestionsApplied = true;
+            }
+        }
     }
 
     _getEditorEl() {
@@ -223,6 +254,181 @@ export default class ReviewArticle extends LightningElement {
 
     handleEditorBlur() {
         // Could be used to save state
+    }
+
+    // The Grammarly-style popover is anchored inside .ra-editor-host (a
+    // sibling of the contenteditable), but the underline spans live
+    // inside the contenteditable, which scrolls. Once the editor scrolls
+    // the popover would visually detach from its underline, so we close
+    // it — Grammarly behaves the same way.
+    handleEditorScroll() {
+        if (this._activeSuggestion) {
+            if (this._popoverHideTimer) {
+                clearTimeout(this._popoverHideTimer);
+                this._popoverHideTimer = null;
+            }
+            this._activeSuggestion = null;
+        }
+    }
+
+    // ─── Inline AI suggestions (Grammarly-style) ──────────────────
+    /**
+     * Walk all text nodes inside the editor and wrap the first
+     * occurrence of each suggestion's `original` string with a styled
+     * span that carries hover/click listeners. The wrapping happens
+     * exactly once per page-mount (see _suggestionsApplied) so user
+     * edits don't keep re-wrapping.
+     */
+    _applyInlineSuggestions(root) {
+        if (!root || !inlineAISuggestions || !inlineAISuggestions.length) return;
+        const suggestions = inlineAISuggestions.filter(
+            (s) => !this._dismissedSuggestionIds.has(s.id)
+        );
+        suggestions.forEach((s) => this._wrapFirstOccurrence(root, s));
+    }
+
+    _wrapFirstOccurrence(root, suggestion) {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+            acceptNode: (node) =>
+                node.parentElement && node.parentElement.closest('.ai-suggest')
+                    ? NodeFilter.FILTER_REJECT
+                    : NodeFilter.FILTER_ACCEPT,
+        });
+        let node;
+        while ((node = walker.nextNode())) {
+            const idx = node.nodeValue.indexOf(suggestion.original);
+            if (idx === -1) continue;
+            try {
+                const range = document.createRange();
+                range.setStart(node, idx);
+                range.setEnd(node, idx + suggestion.original.length);
+                const span = document.createElement('span');
+                span.className = `ai-suggest ai-suggest_${suggestion.type}`;
+                span.dataset.suggestId = suggestion.id;
+                range.surroundContents(span);
+                this._attachSuggestionListeners(span, suggestion);
+                return true;
+            } catch (_e) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    _attachSuggestionListeners(span, suggestion) {
+        span.addEventListener('mouseenter', () => this._openPopoverFor(span, suggestion));
+        span.addEventListener('mouseleave', () => this._schedulePopoverClose());
+        span.addEventListener('click', (e) => {
+            // Don't let the click bubble — it would steal focus from any
+            // inline buttons inside the popover that might be opening.
+            e.stopPropagation();
+            this._openPopoverFor(span, suggestion);
+        });
+    }
+
+    _openPopoverFor(span, suggestion) {
+        if (this._popoverHideTimer) {
+            clearTimeout(this._popoverHideTimer);
+            this._popoverHideTimer = null;
+        }
+        const host = this.querySelector('.ra-editor-host');
+        if (!host) return;
+        const hostRect = host.getBoundingClientRect();
+        const spanRect = span.getBoundingClientRect();
+        const top = spanRect.bottom - hostRect.top + 8;
+        const left = Math.max(0, spanRect.left - hostRect.left);
+        this._activeSuggestion = {
+            id: suggestion.id,
+            type: suggestion.type,
+            label: suggestion.label,
+            explanation: suggestion.explanation,
+            original: suggestion.original,
+            replacement: suggestion.replacement,
+            popoverClass: `ai-popover ai-popover_${suggestion.type}`,
+            style: `top: ${top}px; left: ${left}px;`,
+        };
+    }
+
+    _schedulePopoverClose() {
+        if (this._popoverHideTimer) clearTimeout(this._popoverHideTimer);
+        this._popoverHideTimer = setTimeout(() => {
+            this._activeSuggestion = null;
+            this._popoverHideTimer = null;
+        }, SUGGESTION_POPOVER_HIDE_DELAY);
+    }
+
+    handlePopoverEnter() {
+        if (this._popoverHideTimer) {
+            clearTimeout(this._popoverHideTimer);
+            this._popoverHideTimer = null;
+        }
+    }
+
+    handlePopoverLeave() {
+        this._schedulePopoverClose();
+    }
+
+    /**
+     * Close the popover without dismissing the suggestion. The
+     * underline stays in the editor and the popover will reopen the
+     * next time the user hovers the same span.
+     */
+    handleSuggestionClose(event) {
+        event?.stopPropagation();
+        this._activeSuggestion = null;
+        if (this._popoverHideTimer) {
+            clearTimeout(this._popoverHideTimer);
+            this._popoverHideTimer = null;
+        }
+    }
+
+    handleSuggestionAccept(event) {
+        event?.stopPropagation();
+        const s = this._activeSuggestion;
+        if (!s) return;
+        const editorEl = this._getEditorEl();
+        if (editorEl) {
+            const span = editorEl.querySelector(
+                `.ai-suggest[data-suggest-id="${s.id}"]`
+            );
+            if (span && span.parentNode) {
+                const parent = span.parentNode;
+                const textNode = document.createTextNode(s.replacement);
+                parent.replaceChild(textNode, span);
+                if (parent.normalize) parent.normalize();
+            }
+        }
+        this._dismissedSuggestionIds.add(s.id);
+        this._activeSuggestion = null;
+        if (this._popoverHideTimer) {
+            clearTimeout(this._popoverHideTimer);
+            this._popoverHideTimer = null;
+        }
+        this._updateWordCount();
+    }
+
+    handleSuggestionDismiss(event) {
+        event?.stopPropagation();
+        const s = this._activeSuggestion;
+        if (!s) return;
+        this._dismissedSuggestionIds.add(s.id);
+        const editorEl = this._getEditorEl();
+        if (editorEl) {
+            const span = editorEl.querySelector(
+                `.ai-suggest[data-suggest-id="${s.id}"]`
+            );
+            if (span && span.parentNode) {
+                const parent = span.parentNode;
+                while (span.firstChild) parent.insertBefore(span.firstChild, span);
+                parent.removeChild(span);
+                if (parent.normalize) parent.normalize();
+            }
+        }
+        this._activeSuggestion = null;
+        if (this._popoverHideTimer) {
+            clearTimeout(this._popoverHideTimer);
+            this._popoverHideTimer = null;
+        }
     }
 
     _updateWordCount() {
