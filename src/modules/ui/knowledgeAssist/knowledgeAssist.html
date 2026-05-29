@@ -1,6 +1,9 @@
 <template lwc:render-mode="light">
     <aside class={panelClass}>
         <nav class="ka-rail" aria-label="Knowledge Assist views">
+            <template lwc:if={showRailIndicator}>
+                <span class="ka-rail__indicator" aria-hidden="true"></span>
+            </template>
             <template for:each={railTabs} for:item="tab">
                 <button
                     key={tab.id}

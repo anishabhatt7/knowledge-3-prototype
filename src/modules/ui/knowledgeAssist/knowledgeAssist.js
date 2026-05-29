@@ -19,6 +19,17 @@ import { gsap } from 'gsap';
  * In collapsed mode the rail acts as an "expand" affordance: clicking
  * any rail button fires `expand` with the tab id so the parent can
  * widen the aside and set the active tab.
+ *
+ * Tab-switch motion (expanded state):
+ *  1. The `.ka-rail__indicator` pill slides from the old tab's button
+ *     to the new one on an `expo.out` ease (~0.42s) — JS animates
+ *     `top:` only so the tween stays compositor-friendly.
+ *  2. The outgoing tab's body fades up and out briefly (~0.14s).
+ *  3. `activeRailTab` flips inside the outgoing tween's `onComplete`.
+ *  4. The new tab's body fades in with a tiny stagger (~0.32s), and
+ *     the newly active rail button does a `back.out` scale pop (~0.45s).
+ * All four motions short-circuit to instant swaps when `_gsapEnabled`
+ * is false (driven by the `gsap:toggle` reduced-motion event).
  */
 const RAIL_TABS = [
     { id: 'metrics', icon: 'utility:metrics', ariaLabel: 'Analytics' },
@@ -66,6 +77,18 @@ export default class KnowledgeAssist extends LightningElement {
     _gsapEnabled = true;
     _boundGsapToggle = null;
 
+    // Rail-indicator + tab-switch animation bookkeeping. The indicator
+    // is a single absolutely-positioned pill in the rail that GSAP
+    // slides between active button positions. Section content cross-
+    // fades by first animating the outgoing section out, swapping
+    // `activeRailTab` in `onComplete`, then animating the incoming
+    // section back in from `renderedCallback`. The newly active rail
+    // button gets a small `back.out` scale pop for click feedback.
+    _railIndicatorTween = null;
+    _outgoingTween = null;
+    _pendingInAnimation = false;
+    _pendingButtonPopId = null;
+
     connectedCallback() {
         this._boundGsapToggle = (e) => {
             this._gsapEnabled = e.detail?.enabled !== false;
@@ -109,6 +132,13 @@ export default class KnowledgeAssist extends LightningElement {
                 btnClass: `ka-rail__btn${isActive ? ' ka-rail__btn_active' : ''}`,
             };
         });
+    }
+
+    // Only show the sliding indicator pill while the rail is expanded.
+    // The collapsed layout paints every button instead, so a single
+    // moving highlight would look out of place there.
+    get showRailIndicator() {
+        return !this.isCollapsed;
     }
 
     get isMetricsTab() {
@@ -321,6 +351,31 @@ export default class KnowledgeAssist extends LightningElement {
     }
 
     renderedCallback() {
+        // ─── Rail indicator + tab-switch animations ────────────────
+        // These run regardless of which tab is active. The indicator
+        // snap is gated on `_railIndicatorTween` so the sliding tween
+        // from handleRailClick owns the pill during a transition; on
+        // incidental re-renders we just confirm the position (a no-op
+        // visually). The in-tween and button-pop are pending-flag
+        // driven so they only fire once per tab switch.
+        if (!this.isCollapsed) {
+            if (!this._railIndicatorTween) {
+                this._moveIndicatorToTab(this.activeRailTab, { animate: false });
+            }
+
+            if (this._pendingInAnimation) {
+                this._pendingInAnimation = false;
+                this._runSectionInTween();
+            }
+
+            if (this._pendingButtonPopId) {
+                const popId = this._pendingButtonPopId;
+                this._pendingButtonPopId = null;
+                this._popRailButton(popId);
+            }
+        }
+
+        // ─── Score-ring animation ──────────────────────────────────
         if (this.isCollapsed || this.activeRailTab !== 'metrics') {
             this._ringAnimated = false;
             if (this._ringTween) {
@@ -378,6 +433,14 @@ export default class KnowledgeAssist extends LightningElement {
             this._ringTween.kill();
             this._ringTween = null;
         }
+        if (this._railIndicatorTween) {
+            this._railIndicatorTween.kill();
+            this._railIndicatorTween = null;
+        }
+        if (this._outgoingTween) {
+            this._outgoingTween.kill();
+            this._outgoingTween = null;
+        }
         if (this._boundGsapToggle) {
             window.removeEventListener('gsap:toggle', this._boundGsapToggle);
             this._boundGsapToggle = null;
@@ -402,7 +465,120 @@ export default class KnowledgeAssist extends LightningElement {
             this.dispatchEvent(new CustomEvent('close'));
             return;
         }
-        this.activeRailTab = id;
+        // Coordinated tab switch: indicator slides immediately so the
+        // pill leads the content swap; the outgoing section briefly
+        // fades up; then `activeRailTab` flips in onComplete and
+        // renderedCallback animates the new section in and pops the
+        // newly active button.
+        this._moveIndicatorToTab(id, { animate: true });
+        this._fadeOutAndSwap(id);
+    }
+
+    // ─── Tab-switch animation helpers ──────────────────────────────
+    // Positions the indicator pill over the rail button for `tabId`.
+    // When `animate` is false (initial render, reduced-motion, etc.)
+    // we snap with `gsap.set`; otherwise we tween `top` for an iOS-
+    // tabbar-like slide. The tween is tracked on `_railIndicatorTween`
+    // so renderedCallback can avoid snapping while a slide is mid-flight.
+    _moveIndicatorToTab(tabId, { animate } = { animate: false }) {
+        const rail = this.querySelector('.ka-rail');
+        const indicator = this.querySelector('.ka-rail__indicator');
+        const btn = this.querySelector(`.ka-rail__btn[data-id="${tabId}"]`);
+        if (!rail || !indicator || !btn) return;
+
+        const railRect = rail.getBoundingClientRect();
+        const btnRect = btn.getBoundingClientRect();
+        const targetTop = btnRect.top - railRect.top;
+
+        if (this._railIndicatorTween) {
+            this._railIndicatorTween.kill();
+            this._railIndicatorTween = null;
+        }
+
+        if (!animate || !this._gsapEnabled) {
+            gsap.set(indicator, { top: targetTop });
+            return;
+        }
+
+        this._railIndicatorTween = gsap.to(indicator, {
+            top: targetTop,
+            duration: 0.42,
+            ease: 'expo.out',
+            onComplete: () => {
+                this._railIndicatorTween = null;
+            },
+        });
+    }
+
+    // Fades the current tab's body content out, then commits the tab
+    // switch. The in-tween is handled in renderedCallback after LWC
+    // re-renders the swapped section(s).
+    _fadeOutAndSwap(newTabId) {
+        const targets = this._getCardBodyTargets();
+
+        const commit = () => {
+            this._outgoingTween = null;
+            this._pendingInAnimation = true;
+            this._pendingButtonPopId = newTabId;
+            this.activeRailTab = newTabId;
+        };
+
+        if (!this._gsapEnabled || targets.length === 0) {
+            commit();
+            return;
+        }
+
+        if (this._outgoingTween) this._outgoingTween.kill();
+        this._outgoingTween = gsap.to(targets, {
+            opacity: 0,
+            y: -6,
+            duration: 0.14,
+            ease: 'power2.in',
+            onComplete: commit,
+        });
+    }
+
+    _runSectionInTween() {
+        const targets = this._getCardBodyTargets();
+        if (!targets.length || !this._gsapEnabled) return;
+        gsap.fromTo(
+            targets,
+            { opacity: 0, y: 8 },
+            {
+                opacity: 1,
+                y: 0,
+                duration: 0.32,
+                ease: 'power2.out',
+                stagger: 0.04,
+                clearProps: 'transform',
+            }
+        );
+    }
+
+    _popRailButton(tabId) {
+        const btn = this.querySelector(`.ka-rail__btn[data-id="${tabId}"]`);
+        if (!btn || !this._gsapEnabled) return;
+        gsap.fromTo(
+            btn,
+            { scale: 0.82 },
+            {
+                scale: 1,
+                duration: 0.45,
+                ease: 'back.out(2.4)',
+                clearProps: 'transform',
+            }
+        );
+    }
+
+    // Animatable body children inside `.ka-card`: every `<section>`,
+    // the divider `<hr>`, and the empty placeholder. The `<header>`
+    // is excluded so the panel title stays anchored across switches.
+    _getCardBodyTargets() {
+        const card = this.querySelector('.ka-card');
+        if (!card) return [];
+        return Array.from(card.children).filter(
+            (child) => !child.matches('header')
+        );
     }
 
     // Fired when the user clicks the expand/contract toggle. The parent

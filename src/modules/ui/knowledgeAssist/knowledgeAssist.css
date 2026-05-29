@@ -60,6 +60,7 @@ ui-knowledge-assist {
 
 /* ─── Rail ─────────────────────────────────────────────────────── */
 .ka-rail {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -67,7 +68,33 @@ ui-knowledge-assist {
     padding: 12px 4px 4px;
 }
 
+/* GSAP-driven pill that tracks the active rail tab. Sits behind the
+   buttons (z-index 0) so the icons stay legible on top. JS positions
+   it via `top:` so we can tween a single property; on tab switches
+   handleRailClick animates it with an `expo.out` ease for the iOS-
+   tabbar feel. Collapsed mode paints every button instead of
+   highlighting one, so the pill is hidden in that state. */
+.ka-rail__indicator {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    margin-left: -16px;
+    border-radius: 999px;
+    background: var(--slds-g-color-brand-base-95, #eef4ff);
+    z-index: 0;
+    pointer-events: none;
+    will-change: top, transform;
+}
+
+.ka-panel_collapsed .ka-rail__indicator {
+    display: none;
+}
+
 .ka-rail__btn {
+    position: relative;
+    z-index: 1;
     width: 32px;
     height: 32px;
     border-radius: 999px;
@@ -85,12 +112,12 @@ ui-knowledge-assist {
     background: var(--slds-g-color-surface-container-2, #f3f3f3);
 }
 
-.ka-rail__btn_active {
-    background: var(--slds-g-color-brand-base-95, #eef4ff);
-}
-
+/* Active state owns no background of its own — the indicator pill
+   paints the fill so it can slide between positions. Hover stays
+   transparent on the active button to avoid covering the pill. */
+.ka-rail__btn_active,
 .ka-rail__btn_active:hover {
-    background: var(--slds-g-color-brand-base-95, #eef4ff);
+    background: transparent;
 }
 
 .ka-rail__btn lightning-icon {
