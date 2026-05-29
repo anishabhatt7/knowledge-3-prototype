@@ -41,37 +41,21 @@ ui-knowledge-assist {
     align-items: center;
 }
 
-/* ─── Collapsed rail "open" button (Figma 125:67820 / 125:67822) ──
-   In the closed/rail state we now render a single SLDS 2 Button Icon
-   carrying the utility:arrow_right glyph. Clicking it reopens the
-   panel onto the metrics tab. Sized 32x32 with a circular hit-target
-   and brand-blue foreground to match the design system spec. */
-.ka-rail__open {
-    width: 32px;
-    height: 32px;
-    border-radius: 9999px;
-    border: 0;
-    padding: 0;
+/* In collapsed mode every rail button shows the accent pill so the
+   rail reads as a single blue-filled navigation strip — matches the
+   V1 panel's Figma spec (1:92800). Clicking any of them dispatches
+   `expand` with the tab id so the parent widens the aside and sets
+   the active tab. */
+.ka-panel_collapsed .ka-rail__btn {
     background: var(--slds-g-color-brand-base-95, #eef4ff);
-    color: var(--slds-g-color-accent-1, #066afe);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.15s ease;
-    --sds-c-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+}
+
+.ka-panel_collapsed .ka-rail__btn lightning-icon {
     --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
-    --slds-c-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
-    --slds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
 }
 
-.ka-rail__open:hover {
+.ka-panel_collapsed .ka-rail__btn:hover {
     background: var(--slds-g-color-brand-base-90, #d6e6ff);
-}
-
-.ka-rail__open:focus-visible {
-    outline: 2px solid var(--slds-g-color-accent-1, #066afe);
-    outline-offset: 2px;
 }
 
 /* ─── Rail ─────────────────────────────────────────────────────── */

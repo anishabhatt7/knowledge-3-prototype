@@ -7,8 +7,11 @@ import { gsap } from 'gsap';
  * Renders two visual states driven by the @api `collapsed` flag:
  *  - Expanded (Figma 1:131481): 44px icon rail + nested analytics card
  *    (health donut, contact reason, Smart Suggests).
- *  - Collapsed (Figma 1:92800): 40px icon rail only, inside a 56px
- *    `rounded-16` white shell. No analytics card is rendered.
+ *  - Collapsed (Figma 1:92800): same 40px icon rail (Analytics /
+ *    Sources mapping / Table of contents), inside a 56px
+ *    `rounded-16` white shell. The analytics card is hidden via CSS
+ *    (`.ka-panel_collapsed .ka-card { display: none }`) so the rail
+ *    stays as the only visible content.
  *
  * Props:  @api health, @api suggests, @api collapsed
  * Events: close, expand, updateall, applysuggestion
@@ -400,14 +403,6 @@ export default class KnowledgeAssist extends LightningElement {
             return;
         }
         this.activeRailTab = id;
-    }
-
-    // Collapsed rail renders a single arrow-right button (Figma
-    // 125:67820/67822). Clicking it reopens the panel onto the default
-    // metrics tab — restores the score, perf banner, and suggestion
-    // list reviewers expect to see first.
-    handleExpandFromRail() {
-        this.dispatchEvent(new CustomEvent('expand', { detail: { id: 'metrics' } }));
     }
 
     // Fired when the user clicks the expand/contract toggle. The parent

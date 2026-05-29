@@ -1,33 +1,17 @@
 <template lwc:render-mode="light">
     <aside class={panelClass}>
         <nav class="ka-rail" aria-label="Knowledge Assist views">
-            <template lwc:if={isCollapsed}>
+            <template for:each={railTabs} for:item="tab">
                 <button
+                    key={tab.id}
+                    class={tab.btnClass}
+                    data-id={tab.id}
                     type="button"
-                    class="ka-rail__open"
-                    aria-label="Open Knowledge Assist panel"
-                    title="Open Knowledge Assist panel"
-                    onclick={handleExpandFromRail}>
-                    <lightning-icon
-                        icon-name="utility:arrow_right"
-                        size="x-small"
-                        alternative-text="Open Knowledge Assist panel">
-                    </lightning-icon>
+                    title={tab.ariaLabel}
+                    aria-label={tab.ariaLabel}
+                    onclick={handleRailClick}>
+                    <lightning-icon icon-name={tab.icon} size="x-small" alternative-text={tab.ariaLabel}></lightning-icon>
                 </button>
-            </template>
-            <template lwc:else>
-                <template for:each={railTabs} for:item="tab">
-                    <button
-                        key={tab.id}
-                        class={tab.btnClass}
-                        data-id={tab.id}
-                        type="button"
-                        title={tab.ariaLabel}
-                        aria-label={tab.ariaLabel}
-                        onclick={handleRailClick}>
-                        <lightning-icon icon-name={tab.icon} size="x-small" alternative-text={tab.ariaLabel}></lightning-icon>
-                    </button>
-                </template>
             </template>
         </nav>
 
