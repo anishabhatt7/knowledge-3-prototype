@@ -9,7 +9,7 @@ export default class App extends LightningElement {
   get prototypeOptions() {
     return [
       { label: 'V1 - Knowledge 3.0', value: 'v1' },
-      { label: 'V2 - Knowledge 3.0', value: 'v2' },
+      { label: 'V2 - AI ready Knowledge', value: 'v2' },
       { label: "PM's version - AI Ready Knowledge", value: 'pm' },
     ].map((opt) => ({
       ...opt,
