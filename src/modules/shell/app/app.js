@@ -84,7 +84,7 @@ export default class App extends LightningElement {
             ? {
                   v1: 'http://localhost:5001/',
                   v2: 'http://localhost:8001/',
-                  pm: 'http://localhost:8002/',
+                  pm: 'http://localhost:3000/',
               }
             : {
                   v1: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/v1/',
