@@ -33,20 +33,29 @@ export default class App extends LightningElement {
     const newValue = event.currentTarget.dataset.value;
     this.prototypeDropdownOpen = false;
     if (newValue === this.selectedFlow) return;
-    const isLocal =
-      typeof window !== 'undefined' &&
-      /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
-    const urls = isLocal
-      ? {
-          v1: 'http://localhost:5001/',
-          v2: 'http://localhost:8001/',
-          pm: 'http://localhost:8002/',
-        }
-      : {
-          v1: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/v1/',
-          v2: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/v2/',
-          pm: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/pm/',
-        };
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    const isLocal = /^(localhost|127\.0\.0\.1)$/.test(host);
+    const isGithubPages = host === 'anishabhatt7.github.io';
+    let urls;
+    if (isLocal) {
+      urls = {
+        v1: 'http://localhost:5001/',
+        v2: 'http://localhost:8001/',
+        pm: 'http://localhost:8002/',
+      };
+    } else if (isGithubPages) {
+      urls = {
+        v1: 'https://anishabhatt7.github.io/knowledge-3-prototype/v1/',
+        v2: 'https://anishabhatt7.github.io/knowledge-3-prototype/v2/',
+        pm: 'https://anishabhatt7.github.io/knowledge-3-prototype/pm/',
+      };
+    } else {
+      urls = {
+        v1: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/v1/',
+        v2: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/v2/',
+        pm: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/pm/',
+      };
+    }
     if (urls[newValue]) {
       window.location.href = urls[newValue];
     }
