@@ -1,6 +1,7 @@
 import { LightningElement, track } from 'lwc';
 import { gsap } from 'gsap';
 import { navigate } from '../../../router';
+import { setRecord } from 'data/recordSession';
 import 'ui/knowledgePageHeader';
 import 'ui/knowledgeDataTable';
 
@@ -25,10 +26,7 @@ export default class KnowledgeBase extends LightningElement {
     ];
 
     railMaintain = [
-        { id: 'command-center', label: 'Command Center', icon: 'utility:trending' },
-        { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro' },
-        { id: 'healing-graph', label: 'Healing Graph', icon: 'utility:graph' },
-        { id: 'decision-hub', label: 'Decision Hub', icon: 'utility:dataspaces' },
+        { id: 'command-center', label: 'Knowledge Health', icon: 'utility:graph' },
     ];
 
     railCreate = [
@@ -146,5 +144,33 @@ export default class KnowledgeBase extends LightningElement {
         } else if (id === 'kb-blocks') {
             navigate('/knowledge-blocks');
         }
+    }
+
+    /**
+     * Open a Knowledge Article record (from the list-view's "Account
+     * Name" button cell) as a workspace tab. The flow mirrors V1's
+     * Review Draft → tab pattern: stash record metadata for the page,
+     * dispatch `workspace:addtab` so the global navigation shows the
+     * tab, then navigate to a parametric path so multiple articles can
+     * be open simultaneously and route changes correctly differentiate
+     * them. The shell's existing close-handler restores `originPath`
+     * (which is `/knowledge-base` for tabs opened from here).
+     */
+    handleViewRecord(event) {
+        const detail = event.detail || {};
+        if (!detail.id || !detail.title) return;
+        setRecord({
+            id: detail.id,
+            title: detail.title,
+            publishedDate: detail.date,
+            language: detail.language,
+            articleRecordType: detail.articleRecordType,
+            isKnowledgeBlock: detail.isKnowledgeBlock,
+        });
+        const path = `/knowledge-record/${encodeURIComponent(detail.id)}`;
+        window.dispatchEvent(new CustomEvent('workspace:addtab', {
+            detail: { label: detail.title, path },
+        }));
+        navigate(path);
     }
 }

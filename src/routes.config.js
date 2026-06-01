@@ -17,6 +17,19 @@ export const routes = [
         navLabel: 'Knowledge',
     },
     {
+        // Alias route used by the workspace tab system. Command Center's
+        // "Review Draft" (and similar Healing Graph / Knowledge Home flows)
+        // stash a payload via `setDraftSession()` and then
+        // `navigate('/new-knowledge')` so the review-article page mounts
+        // fresh, picks up the draft title via `consumeDraftSession()`, and
+        // is tracked as a closable tab in <shell-global-navigation>.
+        // Mirrors V1's `/new-knowledge` route.
+        path: '/new-knowledge',
+        component: 'page-review-article',
+        title: 'New Knowledge Article',
+        navHighlight: 'knowledge',
+    },
+    {
         path: '/home',
         component: 'page-knowledge-home',
         title: 'Knowledge | Service Console',
@@ -39,6 +52,31 @@ export const routes = [
         path: '/knowledge-base',
         component: 'page-knowledge-base',
         title: 'Knowledge Base | Knowledge',
+        navHighlight: 'knowledge',
+    },
+    {
+        // Parametric record route opened from the Knowledge Base list
+        // view. Each article id maps to a distinct workspace tab whose
+        // close action returns to `/knowledge-base` via the shell's
+        // `originPath` mechanism. The `:id` lookup resolves against
+        // `data/recordSession` which the table populates on row-click.
+        path: '/knowledge-record/:id',
+        component: 'page-knowledge-record',
+        title: 'Knowledge Article',
+        navHighlight: 'knowledge',
+    },
+    {
+        // Edit-mode entry into the Review Article (active authoring)
+        // page. Knowledge Record's "Edit Article" / "Edit Article to
+        // Resolve" actions stash a payload via `setEditSession()` and
+        // then `navigate('/edit-article/:id')`. The page consumes the
+        // payload once on mount, reuses the same `page-review-article`
+        // component as the new-knowledge flow, and writes back to
+        // `data/articleEdits` on save so the Knowledge Record reflects
+        // the changes immediately.
+        path: '/edit-article/:id',
+        component: 'page-review-article',
+        title: 'Edit Knowledge Article',
         navHighlight: 'knowledge',
     },
     {

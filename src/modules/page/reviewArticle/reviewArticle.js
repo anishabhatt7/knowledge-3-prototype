@@ -17,6 +17,9 @@ import {
 // Grammarly-style popover dwell time before it closes after a mouse-leave.
 const SUGGESTION_POPOVER_HIDE_DELAY = 220;
 import { consumeDraftSession } from 'data/draftSession';
+import { consumeEditSession } from 'data/editSession';
+import { setArticleEdit } from 'data/articleEdits';
+import { setRecord, getRecord } from 'data/recordSession';
 
 // Import child components so Vite + LWC register them eagerly
 import 'ui/knowledgeAssist';
@@ -83,17 +86,47 @@ export default class ReviewArticle extends LightningElement {
 
     _boundEscapeHandler = null;
 
+    // Edit-mode state — set when the user enters via Knowledge Record's
+    // "Edit Article" / "Edit Article to Resolve" actions. Drives the
+    // initial editor seed (`_seedEditorHtml`) and the save write-back.
+    _editingArticleId = null;
+    _seedEditorHtml = null;
+
     connectedCallback() {
-        const draft = consumeDraftSession();
-        if (draft) {
+        // Edit-mode entry from the Knowledge Record page wins over the
+        // draft-from-Agentforce flow. The session was stashed by
+        // KnowledgeRecord._launchActiveAuthoring before navigating, and
+        // is read-and-cleared here so a hard refresh of the editor
+        // route doesn't loop.
+        const edit = consumeEditSession();
+        if (edit && edit.id) {
+            this._editingArticleId = String(edit.id);
             this.article = {
                 ...this.article,
-                title: draft.title || this.article.title,
+                id: this._editingArticleId,
+                title: edit.title || this.article.title,
                 status: 'draft',
+                // Empty out blockData — the seed HTML below replaces
+                // the demo baggage-allowance content that ships with
+                // `initialArticle`.
+                blockData: [],
             };
-            if (draft.recordType) this.recordTypeLabel = draft.recordType;
+            if (edit.recordType) this.recordTypeLabel = edit.recordType;
+            this._seedEditorHtml = edit.html || null;
             this._arrivedFromDraft = true;
             this.classList.add('ra--entering');
+        } else {
+            const draft = consumeDraftSession();
+            if (draft) {
+                this.article = {
+                    ...this.article,
+                    title: draft.title || this.article.title,
+                    status: 'draft',
+                };
+                if (draft.recordType) this.recordTypeLabel = draft.recordType;
+                this._arrivedFromDraft = true;
+                this.classList.add('ra--entering');
+            }
         }
 
         this._boundEscapeHandler = (e) => {
@@ -207,12 +240,17 @@ export default class ReviewArticle extends LightningElement {
             this._playEntranceAnimation();
         }
 
-        // Initialize the contenteditable with HTML from block data
+        // Initialize the contenteditable with HTML. Edit-mode entries
+        // from Knowledge Record stash a pre-built `_seedEditorHtml` so
+        // we honour that first; everything else falls back to the
+        // block-to-HTML conversion of the article's `blockData`.
         if (!this._editorInitialized) {
             const editorEl = this._getEditorEl();
             if (editorEl) {
                 this._editorInitialized = true;
-                const html = this._blocksToHtml(this.article.blockData);
+                const html = this._seedEditorHtml
+                    ? this._seedEditorHtml
+                    : this._blocksToHtml(this.article.blockData);
                 editorEl.innerHTML = html;
                 this._updateWordCount();
             }
@@ -482,6 +520,30 @@ export default class ReviewArticle extends LightningElement {
 
     handleSave() {
         this.article = { ...this.article, status: 'draft' };
+        // When the user opened this editor via Knowledge Record's
+        // "Edit Article" / "Edit Article to Resolve" actions, we have
+        // an `_editingArticleId` and need to push the new title + body
+        // HTML back into `data/articleEdits`. The Knowledge Record
+        // page listens for `article:saved` and re-renders, so the user
+        // sees their changes the moment they switch tabs back.
+        if (this._editingArticleId) {
+            const editorEl = this._getEditorEl();
+            const html = editorEl ? editorEl.innerHTML : this._seedEditorHtml || '';
+            const title = (this.article.title || '').trim();
+            setArticleEdit(this._editingArticleId, {
+                title,
+                html,
+            });
+            // Keep the source-of-truth record metadata up to date too,
+            // so a fresh visit to /knowledge-record/:id picks up the
+            // new title without depending on the in-memory edit map.
+            const existing = getRecord(this._editingArticleId) || {};
+            setRecord({
+                ...existing,
+                id: this._editingArticleId,
+                title: title || existing.title,
+            });
+        }
         this.addAgentMessage('Article draft saved successfully.');
         this.showToast('Article draft saved');
     }

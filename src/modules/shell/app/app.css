@@ -174,8 +174,14 @@ shell-app lightning-badge {
 }
 
 /* ── Workspace tab close button ──────────────────────────────────── */
+/* Vertically centers the label-action and close button so the close
+ * glyph sits on the same baseline as the truncated tab title. SLDS
+ * lays out the row but doesn't enforce cross-axis alignment, so the
+ * button otherwise pins to the top of the li. */
 .slds-context-bar__item {
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .slds-context-bar__close {

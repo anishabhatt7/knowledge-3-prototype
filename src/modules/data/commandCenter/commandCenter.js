@@ -95,6 +95,71 @@ export const seedPlatformMetrics = {
     },
 };
 
+/**
+ * Structural Violations seed data for the Knowledge Health page
+ * (Figma frame 214-32880 / 217-48425). Each entry is a row in the
+ * compact violations table; ids double as route ids when the user
+ * picks "Edit to Resolve" from the row actions menu and we hand off
+ * to the Review Article (active authoring) experience.
+ *
+ * `aiTone` is the colour bucket for the AI Score cell — `positive`
+ * renders the figma green (#2e844a), `warning` renders the amber
+ * (#a96504). The Last Updated column uses pre-formatted strings so
+ * the prototype stays date-shape agnostic.
+ */
+export const seedStructuralViolations = [
+    {
+        id: 'sv-mfa-reset',
+        article: 'Resetting two-factor authentication',
+        description:
+            'Conflicts with 3 sibling articles — agents return inconsistent reset steps to customers.',
+        violations: 14,
+        aiScore: '− 4%',
+        aiTone: 'warning',
+        lastUpdated: '03/18/2026',
+    },
+    {
+        id: 'sv-refund-international',
+        article: 'Refund policy — international orders',
+        description:
+            'Missing canonical tag and required compliance label; last full review 187 days ago.',
+        violations: 11,
+        aiScore: '+ 6%',
+        aiTone: 'positive',
+        lastUpdated: '02/02/2026',
+    },
+    {
+        id: 'sv-workspace-onboarding',
+        article: 'Onboarding a new team workspace',
+        description:
+            "78% content overlap with 'Workspace setup checklist' — duplicate candidate flagged.",
+        violations: 9,
+        aiScore: '+ 3%',
+        aiTone: 'positive',
+        lastUpdated: '04/04/2026',
+    },
+    {
+        id: 'sv-sso-okta',
+        article: 'Configuring SSO with Okta',
+        description:
+            'Heading hierarchy skips H2 → H4; screenshots reference the legacy admin UI.',
+        violations: 8,
+        aiScore: '− 2%',
+        aiTone: 'warning',
+        lastUpdated: '01/27/2026',
+    },
+    {
+        id: 'sv-salesforce-crm-connect',
+        article: 'Connecting Salesforce to your CRM',
+        description:
+            '4 broken external links; instructions reference the deprecated v2 API.',
+        violations: 6,
+        aiScore: '− 1%',
+        aiTone: 'warning',
+        lastUpdated: '12/11/2025',
+    },
+];
+
 export const seedActionItems = [
     {
         id: 'action-1',

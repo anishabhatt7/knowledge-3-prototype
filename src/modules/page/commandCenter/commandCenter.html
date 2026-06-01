@@ -82,18 +82,18 @@
 
         <!-- ═══ MAIN CONTENT ═══ -->
         <main class="cc-main">
-            <!-- Header — matches Figma 42:3911 (Command Center / Header) -->
+            <!-- Page header (Figma 214:32880 / "Knowledge Health") -->
             <section class="cc-section cc-section--header">
                 <div class="cc-header">
                     <div class="cc-header__left">
                         <lightning-icon
-                            icon-name="standard:agent_astro"
+                            icon-name="standard:lightning_usage"
                             size="medium"
-                            alternative-text="Command Center"
+                            alternative-text="Knowledge Health"
                             class="cc-header__icon"
                         ></lightning-icon>
                         <div class="cc-header__text">
-                            <h1 class="cc-header__title">Command Center</h1>
+                            <h1 class="cc-header__title">Knowledge Health</h1>
                             <p class="cc-header__subtitle">Unified view of decisions, expertise, and organizational knowledge</p>
                         </div>
                     </div>
@@ -108,10 +108,11 @@
                 </div>
             </section>
 
-            <!-- AI Readiness Card — matches Figma 42:4090 (Metric Card) -->
+            <!-- Two-card overview row: AI Readiness + Total Articles -->
             <section class="cc-section">
-                <div class="cc-readiness-card">
-                    <div class="cc-readiness-card__left">
+                <div class="cc-overview-row">
+                    <!-- Knowledge AI Readiness -->
+                    <article class="cc-readiness-card">
                         <h2 class="cc-readiness-card__title">Knowledge AI Readiness</h2>
                         <div class="cc-donut-wrapper">
                             <svg class="cc-donut-svg" viewBox="0 0 160 160">
@@ -140,203 +141,191 @@
                             </div>
                         </div>
                         <p class="cc-readiness-card__copy">
-                            Improving the articles with targeted walkthroughs and richer content will help users resolve issues faster and reduce support case volume.
+                            Completeness and clarity are above target, but duplication risk is dragging the score. Resolve the flagged articles to push readiness past 85%.
                         </p>
                         <lightning-button
                             variant="brand-outline"
-                            label="Ask Agentforce"
-                            icon-name="utility:sparkles"
-                            class="cc-agentforce-btn"
+                            label="Review Suggestions"
+                            class="cc-readiness-card__cta"
                         ></lightning-button>
-                    </div>
-                    <div class="cc-readiness-card__right">
-                        <template for:each={dimensionsComputed} for:item="dim">
-                            <div key={dim.key} class="cc-dimension">
-                                <span class="cc-dimension__label">{dim.label}</span>
-                                <div class="cc-dimension__score-row">
-                                    <span class="cc-dimension__score">{dim.score}%</span>
-                                    <span class="cc-dimension__desc">{dim.description}</span>
+                    </article>
+
+                    <!-- Total Articles -->
+                    <article class="cc-articles-card">
+                        <header class="cc-articles-card__head">
+                            <h2 class="cc-articles-card__title">Total Articles</h2>
+                        </header>
+                        <div class="cc-articles-card__metric-row">
+                            <span class="cc-articles-card__value">{totalArticlesValue}</span>
+                            <lightning-badge
+                                class="cc-articles-card__badge"
+                                label={totalArticlesBadge}
+                            ></lightning-badge>
+                        </div>
+                        <div class="cc-articles-card__delta">
+                            <span class="cc-articles-card__delta-value">{totalArticlesDelta}</span>
+                            <span class="cc-articles-card__delta-label">{totalArticlesPeriod}</span>
+                        </div>
+                        <div class="cc-articles-card__chart" aria-hidden="true">
+                            <div class="cc-spark-y-axis">
+                                <span class="cc-spark-y-axis__label">##</span>
+                                <span class="cc-spark-y-axis__rule"></span>
+                                <span class="cc-spark-y-axis__label">##</span>
+                            </div>
+                            <div class="cc-spark-plot">
+                                <svg class="cc-spark-svg" viewBox="0 0 480 110" preserveAspectRatio="none">
+                                    <defs>
+                                        <linearGradient id="cc-spark-grad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#066afe" stop-opacity="0.18"></stop>
+                                            <stop offset="100%" stop-color="#066afe" stop-opacity="0"></stop>
+                                        </linearGradient>
+                                    </defs>
+                                    <line class="cc-spark-goal" x1="0" y1={sparkGoalY} x2="480" y2={sparkGoalY}></line>
+                                    <path class="cc-spark-forecast" d={sparkForecastPath}></path>
+                                    <path class="cc-spark-line" d={sparkPath}></path>
+                                    <path class="cc-spark-line cc-spark-line--projected" d={sparkProjectedPath}></path>
+                                </svg>
+                                <span class="cc-spark-goal-label" aria-hidden="true">Goal</span>
+                            </div>
+                            <div class="cc-spark-x-axis">
+                                <span class="cc-spark-x-axis__rule"></span>
+                                <div class="cc-spark-x-axis__labels">
+                                    <span>##</span>
+                                    <span>##</span>
                                 </div>
-                                <div class="cc-dimension__bar-bg">
-                                    <div class="cc-dimension__bar-fill" style={dim.barStyle}></div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <!-- Structural Violations table -->
+            <section class="cc-section">
+                <div class="cc-violations">
+                    <header class="cc-violations__header">
+                        <div class="cc-violations__heading">
+                            <h2 class="cc-violations__title">Structural Violations</h2>
+                            <p class="cc-violations__subtitle">Unified view of decisions, expertise, and organizational knowledge</p>
+                        </div>
+                        <lightning-button-group class="cc-violations__actions">
+                            <lightning-button
+                                variant="brand-outline"
+                                label="Review in Queue"
+                                class="cc-violations__action cc-violations__action--left"
+                            ></lightning-button>
+                            <lightning-button
+                                variant="brand-outline"
+                                label="Approve All"
+                                class="cc-violations__action cc-violations__action--right"
+                            ></lightning-button>
+                        </lightning-button-group>
+                    </header>
+
+                    <div class="cc-vt" role="table" aria-label="Structural violations">
+                        <!-- Header row -->
+                        <div class="cc-vt__row cc-vt__row--head" role="row">
+                            <div class="cc-vt__cell cc-vt__cell--check" role="columnheader">
+                                <input
+                                    type="checkbox"
+                                    class="cc-vt__checkbox"
+                                    aria-label="Select all violations"
+                                    onchange={handleSelectAll}
+                                />
+                            </div>
+                            <div class="cc-vt__cell cc-vt__cell--article" role="columnheader">
+                                <span class="cc-vt__head-label">Article</span>
+                                <lightning-icon icon-name="utility:chevrondown" size="xx-small" alternative-text="Sort"></lightning-icon>
+                            </div>
+                            <div class="cc-vt__cell cc-vt__cell--desc" role="columnheader">
+                                <span class="cc-vt__head-label">Description</span>
+                                <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
+                            </div>
+                            <div class="cc-vt__cell cc-vt__cell--num" role="columnheader">
+                                <span class="cc-vt__head-label">No. of Violations</span>
+                                <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
+                            </div>
+                            <div class="cc-vt__cell cc-vt__cell--ai" role="columnheader">
+                                <span class="cc-vt__head-label">AI Score</span>
+                                <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
+                            </div>
+                            <div class="cc-vt__cell cc-vt__cell--date" role="columnheader">
+                                <span class="cc-vt__head-label">Last Updated on</span>
+                                <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
+                            </div>
+                            <div class="cc-vt__cell cc-vt__cell--actions" role="columnheader" aria-label="Row actions"></div>
+                        </div>
+
+                        <!-- Body rows -->
+                        <template for:each={violationsComputed} for:item="v">
+                            <div key={v.id} class="cc-vt__row" role="row">
+                                <div class="cc-vt__cell cc-vt__cell--check" role="cell">
+                                    <input
+                                        type="checkbox"
+                                        class="cc-vt__checkbox"
+                                        data-id={v.id}
+                                        checked={v.selected}
+                                        aria-label="Select violation"
+                                        onchange={handleSelectRow}
+                                    />
+                                </div>
+                                <div class="cc-vt__cell cc-vt__cell--article" role="cell">
+                                    <a
+                                        href="javascript:void(0);"
+                                        class="cc-vt__article-link"
+                                        data-id={v.id}
+                                        onclick={handleArticleOpen}
+                                    >{v.article}</a>
+                                </div>
+                                <div class="cc-vt__cell cc-vt__cell--desc" role="cell">
+                                    <span class="cc-vt__desc">{v.description}</span>
+                                </div>
+                                <div class="cc-vt__cell cc-vt__cell--num" role="cell">
+                                    <span>{v.violations}</span>
+                                </div>
+                                <div class="cc-vt__cell cc-vt__cell--ai" role="cell">
+                                    <span class={v.aiCellClass}>{v.aiScore}</span>
+                                </div>
+                                <div class="cc-vt__cell cc-vt__cell--date" role="cell">
+                                    <span>{v.lastUpdated}</span>
+                                </div>
+                                <div class={v.actionsCellClass} role="cell">
+                                    <button
+                                        type="button"
+                                        class="cc-vt__actions-btn"
+                                        data-id={v.id}
+                                        aria-haspopup="menu"
+                                        aria-expanded={v.menuOpen}
+                                        aria-label="Show row actions"
+                                        onclick={handleViolationMenuToggle}
+                                    >
+                                        <lightning-icon
+                                            icon-name="utility:down"
+                                            size="xx-small"
+                                            alternative-text=""
+                                        ></lightning-icon>
+                                    </button>
+                                    <template lwc:if={v.menuOpen}>
+                                        <div class={v.menuClass} role="menu">
+                                            <button
+                                                type="button"
+                                                class="cc-vt__menu-item"
+                                                role="menuitem"
+                                                data-id={v.id}
+                                                onclick={handleApproveChanges}
+                                            >Approve changes</button>
+                                            <button
+                                                type="button"
+                                                class="cc-vt__menu-item"
+                                                role="menuitem"
+                                                data-id={v.id}
+                                                onclick={handleEditToResolve}
+                                            >Edit to Resolve</button>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </template>
                     </div>
-                </div>
-            </section>
-
-            <!-- Capability Summary Cards -->
-            <section class="cc-section">
-                <div class="cc-capability-row">
-                    <template for:each={capabilitySummariesComputed} for:item="cap">
-                        <article key={cap.key}
-                            class={cap.cardClass}
-                            data-key={cap.key}
-                            role={cap.cardRole}
-                            tabindex={cap.cardTabIndex}
-                            aria-label={cap.cardAriaLabel}
-                            onclick={handleCapabilityClick}
-                            onkeydown={handleCapabilityKeyDown}>
-                            <div class="cc-capability-card__top">
-                                <div class="cc-capability-card__info">
-                                    <p class="cc-capability-card__metric">{cap.metric}</p>
-                                </div>
-                            </div>
-                            <div class="cc-capability-card__value">{cap.metricValue}</div>
-                            <div class={cap.trendClass}>
-                                <lightning-icon icon-name={cap.trendIcon} size="xx-small" alternative-text="" class="cc-capability-card__trend-icon"></lightning-icon>
-                                <span class="cc-capability-card__trend-number">{cap.trendNumber}</span>
-                                <span class="cc-capability-card__trend-label">{cap.trendLabel}</span>
-                            </div>
-                        </article>
-                    </template>
-                </div>
-            </section>
-
-            <!-- My Watchlist -->
-            <section class="cc-section cc-section--watchlist">
-                <h2 class="cc-section__title">Knowledge Metrics</h2>
-                <div class="cc-watch-row">
-                    <template for:each={watchlist} for:item="w">
-                        <article key={w.id} class="cc-metric-card">
-                            <header class="cc-metric-card__header">
-                                <div class="cc-metric-card__heading">
-                                    <h3 class="cc-metric-card__title">{w.title}</h3>
-                                </div>
-                                <lightning-button-icon
-                                    icon-name="utility:down"
-                                    variant="border-filled"
-                                    size="x-small"
-                                    alternative-text="Filter"
-                                ></lightning-button-icon>
-                            </header>
-                            <div class="cc-metric-card__details">
-                                <div class="cc-metric-card__value">{w.value}</div>
-                                <div class="cc-metric-card__delta">
-                                    <span class="cc-metric-card__delta-value">{w.delta}</span>
-                                    <span class="cc-metric-card__delta-label">period vs period</span>
-                                </div>
-                            </div>
-                            <div class="cc-metric-card__actions">
-                                <lightning-button
-                                    variant="brand-outline"
-                                    label={w.footerLink}
-                                    icon-name="utility:sparkles"
-                                    class="cc-metric-card__cta"
-                                ></lightning-button>
-                            </div>
-                        </article>
-                    </template>
-                </div>
-            </section>
-
-            <!-- Knowledge Updates -->
-            <section class="cc-section">
-                <div class="cc-updates-grid">
-                    <!-- Actions for you — matches Figma 45:10479 -->
-                    <div class="cc-actions-panel">
-                        <header class="cc-actions-panel__header">
-                            <h3 class="cc-actions-panel__title">Knowledge Actions for you</h3>
-                            <div class="cc-actions-panel__tools">
-                                <lightning-button-icon
-                                    icon-name="utility:filterList"
-                                    variant="border-filled"
-                                    size="medium"
-                                    alternative-text="Filter"
-                                    class="cc-actions-panel__icon-btn"
-                                ></lightning-button-icon>
-                                <lightning-button-icon
-                                    icon-name="utility:refresh"
-                                    variant="border-filled"
-                                    size="medium"
-                                    alternative-text="Refresh"
-                                    class="cc-actions-panel__icon-btn"
-                                ></lightning-button-icon>
-                            </div>
-                        </header>
-                        <div class="cc-actions-list">
-                            <template for:each={actionItemsComputed} for:item="action">
-                                <div key={action.id} class={action.rowClass}>
-                                    <div class="cc-action-row__main">
-                                        <button type="button" class="cc-action__toggle" data-id={action.id} onclick={handleToggleAction}>
-                                            <lightning-icon icon-name={action.chevronIcon} size="xx-small" alternative-text="Toggle"></lightning-icon>
-                                        </button>
-                                        <lightning-icon
-                                            icon-name={action.icon}
-                                            size="medium"
-                                            class="cc-action__icon"
-                                            alternative-text=""
-                                        ></lightning-icon>
-                                        <div class="cc-action__body">
-                                            <div class="cc-action__title-row">
-                                                <span class="cc-action__title">{action.title}</span>
-                                                <template lwc:if={action.hasPriority}>
-                                                    <span class={action.priorityBadgeClass}>{action.priorityLabel}</span>
-                                                </template>
-                                            </div>
-                                            <div class="cc-action__subline">
-                                                <span class="cc-action__meta">{action.timestamp}</span>
-                                                <span class="cc-action__sep">&bull;</span>
-                                                <a href="#" class="cc-action__link">{action.domain}</a>
-                                            </div>
-                                        </div>
-                                        <lightning-button
-                                            variant="brand-outline"
-                                            label={action.ctaLabel}
-                                            icon-name="utility:sparkles"
-                                            class="cc-action__cta"
-                                        ></lightning-button>
-                                        <template lwc:if={action.highlighted}>
-                                            <lightning-button-icon
-                                                icon-name="utility:close"
-                                                variant="bare"
-                                                size="small"
-                                                alternative-text="Dismiss"
-                                                class="cc-action__dismiss"
-                                            ></lightning-button-icon>
-                                        </template>
-                                    </div>
-                                    <template lwc:if={action.showTable}>
-                                        <div class="cc-action__detail">
-                                            <table class="cc-action-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Article Number</th>
-                                                        <th>Article Title</th>
-                                                        <th>Views</th>
-                                                        <th>Viewers</th>
-                                                        <th>Linked Cases</th>
-                                                        <th>Last Modified Date</th>
-                                                        <th class="cc-action-table__actions-th"></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <template for:each={action.tableData} for:item="row">
-                                                        <tr key={row.articleNumber}>
-                                                            <td class="cc-action-table__link">{row.articleNumber}</td>
-                                                            <td class="cc-action-table__title">{row.articleTitle}</td>
-                                                            <td>{row.views}</td>
-                                                            <td>{row.viewers}</td>
-                                                            <td>{row.linkedCases}</td>
-                                                            <td>{row.lastModified}</td>
-                                                            <td class="cc-action-table__action-cell">
-                                                                <button type="button" class="cc-action-table__btn" data-title={row.articleTitle} onclick={handleReviewDraft}>
-                                                                    <lightning-icon icon-name="utility:sparkles" size="xx-small" alternative-text=""></lightning-icon>
-                                                                    <span>Review Draft</span>
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    </template>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </template>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-
                 </div>
             </section>
         </main>

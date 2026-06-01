@@ -1,0 +1,706 @@
+page-knowledge-record {
+    display: block;
+    height: 100%;
+}
+
+/* ════════ PAGE SHELL ════════════════════════════════════════════════
+ * Full-height column with a fixed bottom utility bar, mirroring the
+ * Figma "Knowledge Record" frame. The body region (header + meta +
+ * 2-col split) scrolls internally so the utility bar stays pinned.
+ */
+.kr-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    overflow: hidden;
+}
+
+/* ════════ PAGE HEADER ═══════════════════════════════════════════════ */
+.kr-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-5, 20px);
+    padding: var(--slds-g-spacing-5, 20px) var(--slds-g-spacing-6, 24px);
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+    border-bottom: 1px solid var(--slds-g-color-neutral-base-95, #e5e5e5);
+    flex-shrink: 0;
+}
+
+.kr-header__main {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-4, 16px);
+    min-width: 0;
+}
+
+/* Figma frame 182:35022 → "Icon - Object" uses a 32px square with a
+ * vivid #cb65ff magenta fill. The Knowledge book icon is rendered
+ * white inside; we hide the SLDS icon's own swatch via the icon
+ * color hook so the wrapper bg is what shows through. */
+.kr-header__icon-wrapper {
+    width: var(--slds-g-sizing-9, 32px);
+    height: var(--slds-g-sizing-9, 32px);
+    border-radius: var(--slds-g-radius-border-2, 4px);
+    background-color: #cb65ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-surface-1, #fff);
+    --slds-c-icon-color-foreground: var(--slds-g-color-surface-1, #fff);
+}
+
+.kr-header__title-block {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.kr-header__overline {
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 17px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    margin: 0;
+}
+
+/* Figma title is 28px (font-scale-5), regular weight, navy
+ * on-surface-3 (#001e5b in this token set). Mirrored exactly. */
+.kr-header__title {
+    font-size: var(--slds-g-font-scale-5, 28px);
+    line-height: 35px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kr-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    flex-shrink: 0;
+}
+
+/* Pill-shape the header action buttons (Figma uses fully rounded
+ * pills). We target the LWC's underlying <button> via the
+ * `lightning-button` host selector instead of `.slds-button` so we
+ * don't override a Lightning Base Component class. */
+.kr-header__actions lightning-button button {
+    border-radius: 999px;
+}
+
+/* ════════ METADATA STRIP ════════════════════════════════════════════ */
+.kr-meta {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    column-gap: var(--slds-g-spacing-5, 20px);
+    row-gap: var(--slds-g-spacing-2, 8px);
+    padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-6, 24px);
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+    border-bottom: 1px solid var(--slds-g-color-neutral-base-95, #e5e5e5);
+    flex-shrink: 0;
+}
+
+.kr-meta__item {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.kr-meta__label {
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 16px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    margin: 0 0 2px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kr-meta__value {
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+    margin: 0;
+    font-weight: var(--slds-g-font-weight-4, 400);
+}
+
+/* "Is Latest Version" indicator: Figma renders a Lightning checkbox
+ * in its CHECKED state — a 16px rounded square filled with the
+ * electric-blue accent and a white check glyph inside. We replicate
+ * the visual with a small flexbox wrapper + inset lightning-icon. */
+.kr-meta__check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--slds-g-sizing-base, 16px);
+    height: var(--slds-g-sizing-base, 16px);
+    border-radius: var(--slds-g-radius-border-1, 2px);
+    background-color: var(--slds-g-color-accent-2, #0250d9);
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-surface-1, #fff);
+    --slds-c-icon-color-foreground: var(--slds-g-color-surface-1, #fff);
+}
+
+.kr-meta__link {
+    color: var(--slds-g-color-accent-1, #066afe);
+    text-decoration: none;
+}
+
+.kr-meta__link:hover,
+.kr-meta__link:focus {
+    text-decoration: underline;
+}
+
+/* ════════ BODY — 2-column split ═════════════════════════════════════ */
+.kr-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 436px;
+    column-gap: var(--slds-g-spacing-4, 16px);
+    padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-6, 24px);
+    overflow: auto;
+    align-items: start;
+    min-height: 0;
+}
+
+/* ════════ LEFT — MAIN ARTICLE CARD ═══════════════════════════════════
+ * The card chrome (surface color, border, radius, shadow, body
+ * padding) is provided by `<lightning-card>` itself, so we only
+ * need to make sure the host stretches to fill the grid column and
+ * the inner wrapper keeps the vertical flex/gap rhythm between the
+ * tab bar and tab content.
+ */
+.kr-main {
+    display: block;
+}
+
+.kr-main__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-3, 12px);
+}
+
+/* ── Tab bar ─────────────────────────────────────────────────────── */
+.kr-tabs {
+    display: flex;
+    align-items: stretch;
+    gap: var(--slds-g-spacing-5, 20px);
+    border-bottom: 1px solid var(--slds-g-color-neutral-base-95, #e5e5e5);
+    padding-inline: var(--slds-g-spacing-2, 8px);
+}
+
+.kr-tabs__item {
+    background: transparent;
+    border: 0;
+    padding: var(--slds-g-spacing-3, 12px) 0;
+    margin: 0;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    cursor: pointer;
+    position: relative;
+}
+
+.kr-tabs__item:hover,
+.kr-tabs__item:focus-visible {
+    color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.kr-tabs__item--active {
+    color: var(--slds-g-color-accent-1, #066afe);
+    font-weight: var(--slds-g-font-weight-6, 600);
+}
+
+.kr-tabs__item--active::after {
+    content: '';
+    position: absolute;
+    inset-block-end: -1px;
+    inset-inline: 0;
+    height: 2px;
+    background-color: var(--slds-g-color-accent-1, #066afe);
+    border-radius: 999px;
+}
+
+/* ── Collapsible section ─────────────────────────────────────────── */
+.kr-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.kr-section__header {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    width: 100%;
+    padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+    border: 0;
+    border-radius: var(--slds-g-radius-border-1, 2px);
+    cursor: pointer;
+    text-align: left;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.kr-section__header:hover {
+    background-color: var(--slds-g-color-neutral-base-95, #e5e5e5);
+}
+
+.kr-section__chevron {
+    flex-shrink: 0;
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.kr-section__title {
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.kr-section__body {
+    padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-2, 8px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-3, 12px);
+}
+
+/* ── Field rows inside sections ──────────────────────────────────── */
+.kr-field {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid var(--slds-g-color-neutral-base-95, #e5e5e5);
+    padding-block-end: var(--slds-g-spacing-3, 12px);
+}
+
+.kr-field:last-child {
+    border-bottom: 0;
+    padding-block-end: 0;
+}
+
+.kr-field__label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 16px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    margin: 0 0 var(--slds-g-spacing-1, 4px) 0;
+}
+
+.kr-field__info {
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.kr-field__value {
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    margin: 0;
+}
+
+.kr-field__value--muted {
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* ── Rich text body for the Details section ──────────────────────── */
+.kr-rich {
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 20px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.kr-rich p {
+    margin: 0;
+}
+
+.kr-rich ul {
+    margin: 0;
+    padding-inline-start: var(--slds-g-spacing-5, 20px);
+    list-style: disc;
+}
+
+.kr-rich li {
+    margin-block-end: var(--slds-g-spacing-1, 4px);
+}
+
+.kr-rich__region {
+    margin-block-start: var(--slds-g-spacing-2, 8px);
+}
+
+.kr-rich__country {
+    font-weight: var(--slds-g-font-weight-6, 600);
+    margin-block-start: var(--slds-g-spacing-2, 8px);
+}
+
+/* ════════ ANALYSIS TAB — AI READINESS DASHBOARD ═════════════════════
+ * Figma frame 182:34320. A bordered white card containing a static
+ * conic-style donut chart (rendered with SVG to avoid pulling in a
+ * chart library) on the left, plus stacked KPI rows + summary copy
+ * + a "Review Suggestions" CTA on the right. Sits inside the main
+ * `.kr-main` card to mirror the Details-tab visual rhythm; the inner
+ * border + 20px radius let it read as a nested card.
+ */
+.kr-ai {
+    background-color: var(--slds-g-color-surface-1, #fff);
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-4, 16px)
+        var(--slds-g-spacing-5, 24px) var(--slds-g-spacing-5, 24px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.kr-ai__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.kr-ai__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-3, 16px);
+    line-height: 28px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+}
+
+.kr-ai__body {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--slds-g-spacing-6, 32px);
+}
+
+/* ── Donut chart ───────────────────────────────────────────────────── */
+.kr-donut {
+    position: relative;
+    width: 173px;
+    height: 173px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kr-donut__svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(0deg);
+}
+
+/* Background ring — light grey track behind the green arc. */
+.kr-donut__track {
+    fill: none;
+    stroke: var(--slds-g-color-neutral-base-95, #e5e5e5);
+    stroke-width: 14;
+}
+
+/* Foreground arc — sea-green progress at the readiness percentage.
+ * Using stroke-dasharray (computed for 78% of 326.726 = 254.469) so
+ * the arc renders without JavaScript-driven canvas redraws. */
+.kr-donut__arc {
+    fill: none;
+    stroke: #2e844a;
+    stroke-width: 14;
+    stroke-linecap: butt;
+    transition: stroke-dasharray 0.6s ease;
+}
+
+.kr-donut__label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--slds-g-font-scale-6, 32px);
+    line-height: var(--slds-g-font-line-height-1, 1);
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* ── Right column: KPIs + summary + CTA ────────────────────────────── */
+.kr-ai__right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+    align-self: stretch;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+.kr-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.kr-kpi__row {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    flex-wrap: wrap;
+}
+
+.kr-kpi__label {
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+}
+
+.kr-kpi__value {
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+    min-width: 24px;
+    text-align: end;
+}
+
+/* Override `slds-theme_warning` is not allowed — we keep the LBC's own
+ * theming and only pill-round the surrounding wrapper. The Figma
+ * "Trending below baseline" badge uses an error-style pink-90 pill,
+ * which the Lightning badge ships as `slds-theme_error`. */
+.kr-kpi__badge {
+    flex-shrink: 0;
+}
+
+.kr-kpi__badge--error {
+    /* Tint the Lightning badge surface to the Figma's pink-90 (#fdde3)
+     * without touching the LBC class. The badge component reads its
+     * background from this hook. */
+    --slds-c-badge-color-background: #fddde3;
+    --slds-c-badge-color: var(--slds-g-color-error-base-30, #ba0517);
+}
+
+.kr-ai__summary {
+    background-color: var(--slds-g-color-brand-base-95, #edf4ff);
+    border-radius: 10px;
+    padding: var(--slds-g-spacing-2, 8px);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.kr-ai__actions {
+    display: flex;
+}
+
+/* Match the Figma's pill shape for the brand-outline CTA. */
+.kr-ai__cta lightning-button button {
+    border-radius: 999px;
+}
+
+/* ════════ ANALYSIS TAB — STRUCTURAL VIOLATIONS TABLE ════════════════
+ * The Figma renders a 5-column data table with a grey header strip,
+ * blue link text in the Article + Action columns, and sort arrows
+ * per header. `<lightning-datatable>` gives us all of that out of
+ * the box (button-base columns render text as links), so the only
+ * tuning we do here is the heading typography + the rounded outer
+ * border to match the 12px radius shown in the design.
+ */
+.kr-violations {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+    margin-block-start: var(--slds-g-spacing-3, 12px);
+}
+
+/* Header row — title block on the left, brand-outline pill CTA on
+ * the right. Mirrors Figma frame 207:33626. */
+.kr-violations__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.kr-violations__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.kr-violations__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.kr-violations__subtitle {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 17px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Pill the brand-outline CTA so it matches the Figma's rounded
+ * "Edit Article to Resolve" button. */
+.kr-violations__cta lightning-button button {
+    border-radius: 999px;
+}
+
+.kr-violations__table {
+    border-radius: var(--slds-g-radius-border-3, 12px);
+    overflow: hidden;
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+/* AI Score deltas — `cellAttributes.class` binds these per row so
+ * the +7% reads green and the smaller +1/+2 lifts read amber, as in
+ * the Figma. The class lands on the cell wrapper inside the
+ * datatable, so we target the inner truncate span to override its
+ * default neutral colour and pick up the bold weight. */
+.kr-violations__delta .slds-truncate,
+.kr-violations__delta lightning-formatted-text,
+.kr-violations__delta {
+    font-weight: var(--slds-g-font-weight-7, 700);
+}
+
+.kr-violations__delta--up,
+.kr-violations__delta--up .slds-truncate {
+    color: var(--slds-g-color-palette-green-50, #2e844a);
+}
+
+.kr-violations__delta--warn,
+.kr-violations__delta--warn .slds-truncate {
+    color: var(--slds-g-color-warning-base-50, #a96504);
+}
+
+/* ════════ RIGHT — CONTEXT CARDS ═════════════════════════════════════ */
+.kr-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-3, 12px);
+}
+
+/* Sidebar cards now use `<lightning-card>` for the surface, border,
+ * radius, shadow, header bar, and title typography. The only piece
+ * we still own is the round, brand-coloured chevron toggle that
+ * sits in the card's `actions` slot. */
+.kr-card {
+    display: block;
+}
+
+.kr-card__toggle {
+    width: var(--slds-g-sizing-8, 28px);
+    height: var(--slds-g-sizing-8, 28px);
+    border-radius: 999px;
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    background-color: var(--slds-g-color-surface-1, #fff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+.kr-card__toggle:hover {
+    background-color: var(--slds-g-color-brand-base-95, #eef4ff);
+    border-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+/* ── Table of Content / Categories list ──────────────────────────── */
+.kr-toc {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-1, 4px);
+}
+
+.kr-toc__item {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    margin: 0 var(--slds-g-spacing-4, 16px);
+    padding: var(--slds-g-spacing-1, 4px) 0;
+}
+
+/* Mirrors the Figma where the first 3 TOC entries (Electrical
+ * Failures / Environmental Factors / Software and Control Issues)
+ * sit visibly indented under an implicit parent node, while the
+ * remaining four read as top-level children. */
+.kr-toc__item--child {
+    padding-inline-start: var(--slds-g-spacing-5, 20px);
+}
+
+.kr-toc__expander {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+}
+
+.kr-toc__chevron {
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+    --slds-c-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+    flex-shrink: 0;
+}
+
+.kr-toc__link {
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    color: var(--slds-g-color-accent-1, #066afe);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.kr-toc__link:hover,
+.kr-toc__link:focus {
+    text-decoration: underline;
+}
+
+/* ── Helpful? card ───────────────────────────────────────────────── */
+/* Sits in the default slot of `<lightning-card>`, whose body has no
+ * built-in inline/block-end padding — so we own the inset here. */
+.kr-helpful {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    padding: 0;
+}
+
+.kr-helpful__btn lightning-button button {
+    border-radius: 999px;
+}
+
+/* ════════ RESPONSIVE COMPRESSION (narrow shells) ════════════════════
+ * On screens below ~1100px the metadata row goes from 7 columns to a
+ * wrapped 3-column grid, and the right sidebar drops below the main
+ * column. Mirrors how Lightning Record pages reflow.
+ */
+@media (max-width: 1100px) {
+    .kr-meta {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .kr-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

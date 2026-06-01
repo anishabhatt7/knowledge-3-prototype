@@ -10,15 +10,23 @@ import { LightningElement, api } from 'lwc';
 
 const COLUMNS = [
   {
+    // `type: 'button'` with `variant: 'base'` renders an in-cell link
+    // that fires a `rowaction` event (vs. `type: 'url'` which hard-
+    // navigates the browser). The host wires `onrowaction` to a
+    // `viewrecord` dispatcher so the Knowledge Base page can open the
+    // record as a workspace tab without changing the browser URL until
+    // it has stashed the record metadata.
     label: 'Account Name',
-    fieldName: 'accountNameUrl',
-    type: 'url',
+    fieldName: 'accountName',
+    type: 'button',
     sortable: true,
     initialWidth: 400,
     wrapText: false,
     cellAttributes: { class: 'nk-kb-name-cell' },
     typeAttributes: {
       label: { fieldName: 'accountName' },
+      variant: 'base',
+      name: 'view_record',
     },
   },
   {
@@ -232,6 +240,9 @@ export default class KnowledgeDataTable extends LightningElement {
     const actionName = event.detail.action.name;
     if (actionName === 'view_record') {
       const row = event.detail.row;
+      // Same `viewrecord` event for both flows (article list + KB list);
+      // host decides what to do with it (open a workspace tab in the
+      // Knowledge Base case).
       this.dispatchEvent(
         new CustomEvent('viewrecord', {
           bubbles: true,
@@ -241,9 +252,11 @@ export default class KnowledgeDataTable extends LightningElement {
             title: row.accountName,
             date: row.publishedDate,
             language: row.language,
+            articleRecordType: row.articleRecordType,
             articlesUsed: row.articlesUsed,
             publishedStatus: row.publishedStatus,
             currentVersion: row.currentVersion,
+            isKnowledgeBlock: !!this.isKbCreationFlow,
           },
         })
       );

@@ -86,7 +86,7 @@ page-command-center {
     min-width: 0;
     font-family: inherit;
     font-size: var(--slds-g-font-scale-base, 13px);
-    line-height: 18px;
+    line-height: var(--slds-g-line-height-3, 1.4);
     font-weight: var(--slds-g-font-weight-4, 400);
     color: var(--slds-g-color-on-surface-1, #5c5c5c);
     white-space: nowrap;
@@ -114,7 +114,7 @@ page-command-center {
     padding-inline-end: var(--slds-g-spacing-4, 16px);
     font-family: inherit;
     font-size: var(--slds-g-font-scale-neg-1, 12px);
-    line-height: 16px;
+    line-height: var(--slds-g-line-height-3, 1.4);
     font-weight: var(--slds-g-font-weight-7, 700);
     color: var(--slds-g-color-on-surface-3, #03234d);
     text-transform: none;
@@ -128,12 +128,13 @@ page-command-center {
 }
 
 /* ── MAIN CONTENT ──────────────────────────────────────────────── */
+/* Page-level padding matches Figma frame 214:33111 (24px on every
+   side, 24px between sections). */
 .cc-main {
     flex: 1;
     min-width: 0;
     overflow: auto;
-    padding: var(--slds-g-spacing-6, 24px) var(--slds-g-spacing-8, 32px);
-    padding-bottom: var(--slds-g-spacing-10, 48px);
+    padding: var(--slds-g-spacing-6, 24px);
     display: flex;
     flex-direction: column;
     gap: var(--slds-g-spacing-6, 24px);
@@ -146,23 +147,7 @@ page-command-center {
     gap: var(--slds-g-spacing-4, 16px);
 }
 
-.cc-section--watchlist {
-    margin-top: var(--slds-g-spacing-6, 24px);
-    margin-bottom: var(--slds-g-spacing-7, 32px);
-}
-
-.cc-section__title {
-    margin: 0;
-    font-size: var(--slds-g-font-scale-3, 20px);
-    line-height: 28px;
-    font-weight: var(--slds-g-font-weight-6, 600);
-    color: var(--slds-g-color-on-surface-2, #2e2e2e);
-}
-
-/* ── Header — Figma 42:3911 ─────────────────────────────────────
-   32px circular agent_astro icon + stacked title/subtitle, with a
-   pill-shaped Search input pinned to the right. No bottom divider —
-   the readiness card directly below provides its own visual edge. */
+/* ── Header — Knowledge Health (Figma 214:32880) ───────────────── */
 .cc-section--header {
     padding-bottom: 0;
     border-bottom: 0 none transparent;
@@ -174,7 +159,6 @@ page-command-center {
     align-items: center;
     justify-content: space-between;
     gap: var(--slds-g-spacing-4, 16px);
-    /* SLDS 2 base typography — page headers default to Regular (400). */
     font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
     font-weight: var(--slds-g-font-weight-4, 400);
     color: var(--slds-g-color-on-surface-2, #2e2e2e);
@@ -190,8 +174,6 @@ page-command-center {
     padding-inline-end: var(--slds-g-spacing-3, 12px);
 }
 
-/* Standard 32px icon (medium) — agent_astro renders dark navy + white glyph
-   by default in SLDS 2; we just lock the sizing hooks. */
 .cc-header__icon {
     --slds-c-icon-sizing: 32px;
     --sds-c-icon-sizing-width: 32px;
@@ -212,7 +194,7 @@ page-command-center {
 .cc-header__title {
     margin: 0;
     font-size: var(--slds-g-font-scale-5, 28px);
-    line-height: 35px;
+    line-height: var(--slds-g-line-height-2, 1.25);
     font-weight: var(--slds-g-font-weight-4, 400);
     color: var(--slds-g-color-on-surface-3, #03234d);
     white-space: nowrap;
@@ -223,7 +205,7 @@ page-command-center {
 .cc-header__subtitle {
     margin: 0;
     font-size: var(--slds-g-font-scale-base, 13px);
-    line-height: 18px;
+    line-height: var(--slds-g-line-height-3, 1.4);
     font-weight: var(--slds-g-font-weight-4, 400);
     color: var(--slds-g-color-on-surface-1, #5c5c5c);
     white-space: nowrap;
@@ -231,8 +213,6 @@ page-command-center {
     text-overflow: ellipsis;
 }
 
-/* ── Search input — pill, 32px tall, leading magnifying glass.
-   Same pattern used by ui-knowledge-page-header. */
 .cc-header__search {
     width: 280px;
     flex-shrink: 0;
@@ -262,46 +242,48 @@ page-command-center {
     fill: var(--slds-g-color-on-surface-1, #5c5c5c);
 }
 
-/* ── AI Readiness Card — Figma 42:4090 ─────────────────────────
-   One unified surface card (no internal divider). Left column is
-   276px and left-aligned: title → donut → description → button.
-   Right column is a 2-col flex of 5 KPI tiles with thin progress
-   bars. Card padding 24px, internal column gap 48px. */
-.cc-readiness-card {
-    display: flex;
+/* ── Overview row: AI Readiness + Total Articles (Figma 214-33111).
+   Two equal cards (409px ea + 16px gap = 834px), capped via max-width
+   so the row never spans the full main width. Violations card below
+   stays full width because it lives in its own section.            */
+.cc-overview-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--slds-g-spacing-4, 16px);
     align-items: stretch;
-    gap: var(--slds-g-spacing-9, 48px);
-    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
-    border-radius: var(--slds-g-radius-border-4, 20px);
-    background-color: var(--slds-g-color-surface-1, #fff);
-    padding: var(--slds-g-spacing-5, 24px);
+    max-width: 836px;
 }
 
-.cc-readiness-card__left {
+/* Knowledge AI Readiness card — title, centered donut, copy, CTA.
+ * Figma frame 214:33978 uses a 20px (radius-border-4) corner radius
+ * and an SLDS Body/font-scale-3 (20px) Semibold title. */
+.cc-readiness-card {
     display: flex;
     flex-direction: column;
-    align-items: stretch;
-    width: 276px;
-    flex-shrink: 0;
     gap: var(--slds-g-spacing-4, 16px);
+    padding: var(--slds-g-spacing-4, 16px);
+    min-height: 326px;
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-4, 20px);
 }
 
 .cc-readiness-card__title {
     margin: 0;
     font-size: var(--slds-g-font-scale-3, 20px);
-    line-height: 28px;
-    font-weight: var(--slds-g-font-weight-6, 600);
+    line-height: var(--slds-g-line-height-4, 1.5);
+    font-weight: var(--slds-g-font-weight-6, 590);
     color: var(--slds-g-color-on-surface-2, #2e2e2e);
-    white-space: nowrap;
 }
 
-/* Donut centered horizontally inside the 276px column. */
 .cc-donut-wrapper {
     position: relative;
     width: 138px;
     height: 138px;
     align-self: center;
-    margin-block: var(--slds-g-spacing-2, 8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .cc-donut-svg {
@@ -310,613 +292,527 @@ page-command-center {
     transform: rotate(-90deg);
 }
 
-/* Track behind the arc — matches the ka-score__ring reference and
-   Figma 42:4103 light-tinted unfilled segment using brand-base-90. */
 .cc-donut-bg {
-    stroke: var(--slds-g-color-brand-base-90, #d6e6ff);
+    stroke: var(--slds-g-color-success-container-1, #cdedd3);
 }
 
 .cc-donut-fg {
-    stroke: #2e844a;
-    transition: stroke-dashoffset 600ms ease-out;
+    stroke: var(--slds-g-color-success-base-50, #2e844a);
+    transition: stroke-dashoffset 0.6s ease-out;
 }
 
 .cc-donut-label {
     position: absolute;
     inset: 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
 }
 
 .cc-donut-label__value {
     font-size: var(--slds-g-font-scale-6, 32px);
-    line-height: 40px;
+    line-height: var(--slds-g-line-height-2, 1.25);
     font-weight: var(--slds-g-font-weight-4, 400);
     color: var(--slds-g-color-on-surface-2, #2e2e2e);
-    letter-spacing: 0;
 }
 
 .cc-readiness-card__copy {
     margin: 0;
-    font-size: var(--slds-g-font-scale-neg-1, 12px);
-    line-height: 17px;
-    font-weight: var(--slds-g-font-weight-4, 400);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: var(--slds-g-line-height-3, 1.4);
     color: var(--slds-g-color-on-surface-2, #2e2e2e);
-    /* Figma 51:4642 — clamp to 3 lines (h-[51px] / 17px line-height)
-       with ellipsis so the left column keeps its 4-row rhythm. */
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-/* Pill-shaped brand-outline lightning-button with sparkles icon.
-   Targets host-level CSS hooks since the actual <button> is in shadow DOM. */
-.cc-agentforce-btn {
+.cc-readiness-card__cta {
     align-self: flex-start;
-    --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
-    --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
-    --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
-    --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
-    --sds-c-button-sizing-height: 32px;
+    /* Pin the CTA to the bottom of the card so the column flex absorbs
+     * any extra height (the sibling Total Articles card is taller due
+     * to its chart) and the AI Readiness card never shows trailing
+     * white space below the action. Matches Figma 214:33978 where the
+     * action sits at the card's bottom edge. */
+    margin-top: auto;
+    --sds-c-button-radius-border: var(--slds-g-radius-border-circle, 9999px);
 }
 
-/* ── Right column: 2-col grid of 5 KPI tiles ─────────────────────
-   Per Figma 42:5245 — 2-col grid with 24px gap. Tiles 1-4 fill rows
-   1 and 2; tile 5 (Conflict) sits alone on row 3 in the left column
-   (~397px wide, matching the Figma fixed width). */
-.cc-readiness-card__right {
-    flex: 1 1 0;
-    min-width: 0;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--slds-g-spacing-5, 24px);
-    align-content: space-between;
+.cc-readiness-card__cta button,
+.cc-readiness-card__cta lightning-button button {
+    border-radius: 999px;
 }
 
-/* Each tile = "Modern KPI" tile from Figma. 4px outer padding,
-   8px gap between label / score-row / progress bar. */
-.cc-dimension {
+/* Total Articles card — big number + Acceptable badge + line chart.
+ * Figma frame 214:33138 uses radius-border-4 (20px) corners and an
+ * SLDS Body/font-scale-2 (16px) Semibold title. */
+.cc-articles-card {
     display: flex;
     flex-direction: column;
-    gap: var(--slds-g-spacing-2, 8px);
-    padding: var(--slds-g-spacing-1, 4px);
-    min-width: 0;
+    gap: var(--slds-g-spacing-4, 16px);
+    padding: var(--slds-g-spacing-4, 16px);
+    min-height: 326px;
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
     border-radius: var(--slds-g-radius-border-4, 20px);
 }
 
-/* Tile label — info-base-20 dark navy semibold per Figma 42:5255 */
-.cc-dimension__label {
-    font-size: var(--slds-g-font-size-base, 13px);
-    line-height: 18px;
-    font-weight: var(--slds-g-font-weight-6, 600);
-    color: var(--slds-g-color-info-base-20, #032d60);
+.cc-articles-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-/* Score (Titles/font-scale-3/Regular = 20px) inline with description
-   (Body/font-scale-neg-1/Regular = 12px) — Figma 42:5257 / 42:5258 */
-.cc-dimension__score-row {
+.cc-articles-card__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-3, 20px);
+    line-height: 28px;
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.cc-articles-card__metric-row {
     display: flex;
     align-items: center;
     gap: var(--slds-g-spacing-2, 8px);
-    min-width: 0;
 }
 
-.cc-dimension__score {
-    font-size: var(--slds-g-font-scale-3, 20px);
-    line-height: 28px;
+.cc-articles-card__value {
+    font-size: var(--slds-g-font-scale-6, 32px);
+    line-height: 40px;
     font-weight: var(--slds-g-font-weight-4, 400);
-    color: var(--slds-g-color-on-surface-3, #001e5b);
-    flex-shrink: 0;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
 }
 
-.cc-dimension__desc {
-    flex: 1 1 0;
-    min-width: 0;
+/* "Acceptable" pill in the Total Articles card (Figma 214:33138).
+ * `lightning-badge` extends `LightningShadowBaseClass`, so the
+ * visible chip is the inner `<span part="badge">` inside its shadow
+ * root — host-level rules never reach it. We expose the chip via
+ * the `badge` shadow part and tune size/colour/radius there, while
+ * SLDS-2 styling hooks (`--slds-c-badge-*`) cross the shadow boundary
+ * and feed the same span. Using both keeps the chip themable and
+ * still pixel-correct against the Figma mint pill. */
+.cc-articles-card__badge {
+    --slds-c-badge-color-background: var(--slds-g-color-success-base-90, #cdefc4);
+    --slds-c-badge-text-color: var(--slds-g-color-success-base-30, #194e31);
+    --slds-c-badge-color-border: transparent;
+    --slds-c-badge-radius-border: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-badge-font-size: var(--slds-g-font-scale-neg-1, 12px);
+    --slds-c-badge-line-height: 17px;
+    --slds-c-badge-spacing-block-start: 4px;
+    --slds-c-badge-spacing-block-end: 4px;
+    --slds-c-badge-spacing-inline-start: 12px;
+    --slds-c-badge-spacing-inline-end: 12px;
+    align-self: center;
+}
+
+.cc-articles-card__badge::part(badge) {
+    padding: 4px 12px;
+    border: 0;
+    border-radius: var(--slds-g-radius-border-circle, 9999px);
+    background: var(--slds-g-color-success-base-90, #cdefc4);
+    color: var(--slds-g-color-success-base-30, #194e31);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    line-height: 17px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.cc-articles-card__delta {
+    display: flex;
+    align-items: baseline;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.cc-articles-card__delta-value {
     font-size: var(--slds-g-font-scale-neg-1, 12px);
     line-height: 17px;
     font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-error-1, #b60554);
+}
+
+.cc-articles-card__delta-label {
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 17px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Chart uses a 2-column / 2-row grid so the Y-axis labels stack on
+   the left of the SVG and the X-axis labels sit underneath it,
+   matching the L-shape shown in Figma 214:33138. The Y-axis column
+   includes a thin vertical guideline between the two value labels,
+   and the X-axis row places a thin horizontal baseline above its
+   value labels.                                                  */
+.cc-articles-card__chart {
+    margin-top: auto;
+    flex: 1 1 auto;
+    min-height: 180px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    column-gap: var(--slds-g-spacing-2, 8px);
+    row-gap: 0;
+}
+
+.cc-spark-y-axis {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: var(--slds-g-line-height-3, 1.4);
     color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.cc-spark-y-axis__label {
+    flex-shrink: 0;
+}
+
+/* Thin vertical guideline that fills the space between the top and
+   bottom Y-axis labels, anchored to the right edge of the column so
+   it sits flush with the chart plot area.                         */
+.cc-spark-y-axis__rule {
+    flex: 1 1 auto;
+    width: 1px;
+    background-color: var(--slds-g-color-border-1, #c9c9c9);
+    margin-block: var(--slds-g-spacing-1, 4px);
+}
+
+/* Wrapper around the sparkline SVG so the "Goal" label can be rendered
+ * as positioned HTML rather than SVG <text>. The SVG uses
+ * preserveAspectRatio="none" to stretch chart geometry into the cell,
+ * which would distort SVG text — keeping the label outside the SVG
+ * preserves its native typography. */
+.cc-spark-plot {
+    grid-column: 2;
+    grid-row: 1;
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+}
+
+.cc-spark-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.cc-spark-x-axis {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* Thin horizontal baseline that sits above the X-axis value labels
+   and pairs with the Y-axis vertical rule to form the L-shaped
+   axes shown in Figma 214:33138.                                 */
+.cc-spark-x-axis__rule {
+    height: 1px;
+    width: 100%;
+    background-color: var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.cc-spark-x-axis__labels {
+    display: flex;
+    justify-content: space-between;
+    padding-top: var(--slds-g-spacing-3, 12px);
+}
+
+.cc-spark-line {
+    fill: none;
+    stroke: var(--slds-g-color-border-accent-1, #066afe);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cc-spark-line--projected {
+    stroke-dasharray: 6 4;
+    opacity: 1;
+}
+
+/* Forecast confidence band — a light-blue wedge that surrounds the
+   dashed projection line and widens toward the right edge to
+   communicate growing uncertainty over time. Figma frame 214:33138
+   uses a translucent #066afe wash at ~14% opacity.                */
+.cc-spark-forecast {
+    fill: var(--slds-g-color-border-accent-1, #066afe);
+    fill-opacity: 0.14;
+    stroke: none;
+}
+
+.cc-spark-goal {
+    stroke: var(--slds-g-color-palette-green-50, #2e844a);
+    stroke-width: 1;
+    opacity: 1;
+}
+
+/* "Goal" label sits just above the green goal reference line. The
+ * goal line is rendered at y = 40 inside a 0-110 SVG viewBox, so its
+ * vertical position is 40 / 110 ≈ 36.4% of the plot height. We pin
+ * the label to that percentage and lift it by its own height so the
+ * baseline rests immediately above the line. Rendering as HTML
+ * (instead of SVG <text>) keeps the typography native — SVG text
+ * inside a preserveAspectRatio="none" plot would be horizontally
+ * squished by the same non-uniform scale as the chart paths. */
+.cc-spark-goal-label {
+    position: absolute;
+    top: 36.4%;
+    left: var(--slds-g-spacing-2, 8px);
+    transform: translateY(-100%);
+    padding-bottom: var(--slds-g-spacing-1, 4px);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    color: var(--slds-g-color-palette-green-50, #2e844a);
+    font-weight: var(--slds-g-font-weight-4, 400);
+    pointer-events: none;
+}
+
+/* ── Structural Violations ───────────────────────────────────────
+ * Figma frame 214:33442: title + subtitle on the left, split-button
+ * "Review in Queue / Approve All" pill group on the right, and a
+ * data table beneath. The container itself has no surface chrome —
+ * only padding to align it inside the page scroller.
+ */
+.cc-violations {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+    padding: var(--slds-g-spacing-6, 24px) 0;
+}
+
+.cc-violations__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.cc-violations__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.cc-violations__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.cc-violations__subtitle {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Connected pill-shaped action group (Review in Queue + Approve All).
+ * Built on the standard `lightning-button-group` LBC so the buttons
+ * share the canonical SLDS group behaviour (joined inner border,
+ * shared focus ring, etc.). The outer pill ends are produced by
+ * targeting the inner native button on each leaf — `--slds-c-button
+ * -radius-border` would round all four corners, which would visually
+ * disconnect the group, so we round only the outer corners instead.
+ */
+.cc-violations__actions {
+    flex-shrink: 0;
+}
+
+/* Pill end-cap buttons sit inside a connected lightning-button-group.
+ * Each end button has a rounded outer corner and a flat inner corner
+ * where it abuts the other button. The default 12px horizontal
+ * padding leaves a noticeable visual gap on the rounded side because
+ * the curve eats into the corner without holding any text — tightening
+ * the outer-side padding to 8px pulls the label closer to the curve
+ * so the rounded end stops feeling oversized. */
+.cc-violations__action--left button {
+    border-top-left-radius: var(--slds-g-radius-border-circle, 9999px);
+    border-bottom-left-radius: var(--slds-g-radius-border-circle, 9999px);
+    padding-inline-start: var(--slds-g-spacing-2, 8px);
+}
+
+.cc-violations__action--right button {
+    border-top-right-radius: var(--slds-g-radius-border-circle, 9999px);
+    border-bottom-right-radius: var(--slds-g-radius-border-circle, 9999px);
+    padding-inline-end: var(--slds-g-spacing-2, 8px);
+}
+
+/* Violations data table — CSS grid for predictable column widths. */
+.cc-vt {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-3, 12px);
+    overflow: hidden;
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+}
+
+.cc-vt__row {
+    display: grid;
+    grid-template-columns: 40px minmax(180px, 1.4fr) minmax(220px, 2fr) 152px 152px 175px 50px;
+    align-items: stretch;
+    border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.cc-vt__row:last-child {
+    border-bottom: 0;
+}
+
+.cc-vt__row--head {
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+}
+
+.cc-vt__cell {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    min-height: 36px;
+    padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-2, 8px);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    overflow: hidden;
+}
+
+.cc-vt__row--head .cc-vt__cell {
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Header column dividers — Figma renders a 1px left border on every
+ * sortable header cell except Article (the first text column) and
+ * the leading checkbox cell. */
+.cc-vt__row--head .cc-vt__cell--desc,
+.cc-vt__row--head .cc-vt__cell--num,
+.cc-vt__row--head .cc-vt__cell--ai,
+.cc-vt__row--head .cc-vt__cell--date {
+    border-left: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.cc-vt__cell--check {
+    justify-content: center;
+}
+
+.cc-vt__cell--actions {
+    justify-content: flex-end;
+    position: relative;
+    overflow: visible;
+}
+
+.cc-vt__head-label {
+    font-weight: var(--slds-g-font-weight-6, 600);
+}
+
+.cc-vt__article-link {
+    color: var(--slds-g-color-link-base-1, #0b5cab);
+    text-decoration: none;
+    font-weight: var(--slds-g-font-weight-4, 400);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-/* Progress bar — slim rectangular track (no rounded ends).
-   8px tall, surface-container-3 track, accent-1 fill. Uses flex
-   on the track so the fill stretches to the track height regardless
-   of inherited light-DOM box-sizing or default block-level styles. */
-.cc-dimension__bar-bg {
-    display: flex;
-    align-items: stretch;
-    width: 100%;
-    height: 8px;
-    background-color: var(--slds-g-color-surface-container-3, #e5e5e5);
+.cc-vt__article-link:hover {
+    text-decoration: underline;
+}
+
+.cc-vt__desc {
     overflow: hidden;
-    box-sizing: border-box;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.cc-dimension__bar-fill {
-    height: 8px;
-    min-height: 8px;
-    background-color: var(--slds-g-color-accent-1, #066afe);
-    transition: width 500ms ease-out;
-    box-sizing: border-box;
+.cc-vt__ai {
+    font-weight: var(--slds-g-font-weight-7, 700);
 }
 
-/* ── Capability Summary Cards (SLDS 2 surface card pattern) ─────
-   Same 4-column grid, but each card is now a clean SLDS 2 elevation
-   card: white container, subtle neutral-base-95 border, soft shadow
-   that lifts on hover. The chunky 4px accent stripe was dropped — the
-   trend value carries the tone instead, in keeping with SLDS 2 cards. */
-.cc-capability-row {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--slds-g-spacing-4, 16px);
-    margin-bottom: var(--slds-g-spacing-5, 24px);
+.cc-vt__ai--positive {
+    color: var(--slds-g-color-success-base-50, #2e844a);
 }
 
-.cc-capability-card {
-    background-color: var(--slds-g-color-surface-container-1, #fff);
-    border: 1px solid var(--slds-g-color-neutral-base-95, #e5e5e5);
-    border-color: rgba(201, 201, 201, 1);
-    border-radius: var(--slds-g-radius-border-4, 20px);
-    padding: var(--slds-g-spacing-5, 24px);
-    display: flex;
-    flex-direction: column;
-    gap: var(--slds-g-spacing-4, 16px);
-    /* Explicitly suppress any inherited shadow (SLDS 2 base styles
-       can apply a card shadow to <article> containers). */
-    box-shadow: none;
-    transition: border-color 160ms ease-out;
+.cc-vt__ai--warning {
+    color: var(--slds-g-color-warning-base-50, #a96504);
+}
+
+.cc-vt__checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--slds-g-color-border-accent-1, #066afe);
     cursor: pointer;
-    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
-    color: var(--slds-g-color-on-surface-2, #2e2e2e);
 }
 
-.cc-capability-card:hover {
-    border-color: var(--slds-g-color-neutral-base-80, #c9c9c9);
-    box-shadow: none;
-}
-
-.cc-capability-card--clickable:focus-visible {
-    outline: 2px solid var(--slds-g-color-accent-2, #0250d9);
-    outline-offset: 2px;
-}
-
-.cc-capability-card__top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--slds-g-spacing-2, 8px);
-}
-
-.cc-capability-card__info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--slds-g-spacing-1, 4px);
-    min-width: 0;
-    flex: 1;
-}
-
-/* Match the watchlist .cc-metric-card__title styling so the
-   capability cards and watchlist cards share the same heading
-   treatment (16/22, weight 600, on-surface-2). */
-.cc-capability-card__metric {
-    margin: 0;
-    font-size: var(--slds-g-font-scale-2, 16px);
-    line-height: 22px;
-    font-weight: var(--slds-g-font-weight-6, 600);
-    color: var(--slds-g-color-on-surface-2, #2e2e2e);
-}
-
-/* Big number — pinned to the bottom of the card so all four cards
-   line up regardless of how long the eyebrow / metric label runs. */
-.cc-capability-card__value {
-    margin-top: auto;
-    font-size: var(--slds-g-font-scale-6, 32px);
-    line-height: 40px;
-    font-weight: var(--slds-g-font-weight-4, 400);
-    letter-spacing: -0.01em;
-    color: var(--slds-g-color-on-surface-3, #001e5b);
-}
-
-.cc-capability-card__trend {
-    display: flex;
-    align-items: center;
-    gap: var(--slds-g-spacing-1, 4px);
-    font-size: var(--slds-g-font-scale-neg-1, 12px);
-    line-height: 16px;
-    font-weight: var(--slds-g-font-weight-4, 400);
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
-}
-
-.cc-capability-card__trend-number {
-    font-weight: var(--slds-g-font-weight-7, 600);
-}
-
-/* Up trend: SLDS success green for both the icon glyph and the number. */
-.cc-capability-card__trend--up .cc-capability-card__trend-icon {
-    --slds-c-icon-color-foreground-default: var(--slds-g-color-success-base-30, #2e844a);
-}
-
-.cc-capability-card__trend--up .cc-capability-card__trend-number {
-    color: var(--slds-g-color-success-base-30, #2e844a);
-}
-
-/* Down trend: SLDS error red — future-proofs the same component if the
-   data ever flips a card to trend === 'down'. */
-.cc-capability-card__trend--down .cc-capability-card__trend-icon {
-    --slds-c-icon-color-foreground-default: var(--slds-g-color-error-base-50, #ba0517);
-}
-
-.cc-capability-card__trend--down .cc-capability-card__trend-number {
-    color: var(--slds-g-color-error-base-50, #ba0517);
-}
-
-/* ── Watchlist ─────────────────────────────────────────────────── */
-.cc-watch-row {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--slds-g-spacing-4, 16px);
-}
-
-.cc-metric-card {
-    background-color: var(--slds-g-color-surface-1, #fff);
-    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
-    border-radius: var(--slds-g-radius-border-4, 20px);
-    padding: var(--slds-g-spacing-4, 16px);
-    display: flex;
-    flex-direction: column;
-    gap: var(--slds-g-spacing-4, 16px);
-}
-
-.cc-metric-card__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--slds-g-spacing-2, 8px);
-}
-
-.cc-metric-card__heading {
-    flex: 1;
-    min-width: 0;
-}
-
-.cc-metric-card__title {
-    margin: 0;
-    font-size: var(--slds-g-font-scale-2, 16px);
-    line-height: 22px;
-    font-weight: var(--slds-g-font-weight-6, 600);
-    color: var(--slds-g-color-on-surface-2, #2e2e2e);
-}
-
-.cc-metric-card__details {
-    display: flex;
-    flex-direction: column;
-    gap: var(--slds-g-spacing-2, 8px);
-}
-
-.cc-metric-card__value {
-    font-size: var(--slds-g-font-scale-6, 32px);
-    line-height: 40px;
-    font-weight: var(--slds-g-font-weight-4, 400);
-    color: var(--slds-g-color-on-surface-2, #2e2e2e);
-}
-
-.cc-metric-card__delta {
-    display: flex;
-    align-items: baseline;
-    gap: var(--slds-g-spacing-2, 8px);
-    font-size: var(--slds-g-font-scale-neg-1, 12px);
-}
-
-.cc-metric-card__delta-value {
-    color: var(--slds-g-color-error-1, #b60554);
-}
-
-.cc-metric-card__delta-label {
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
-}
-
-.cc-metric-card__actions {
-    display: flex;
-    gap: var(--slds-g-spacing-2, 8px);
-}
-
-.cc-metric-card__cta {
-    --slds-c-button-brand-outline-text-color: var(--slds-g-color-accent-2, #0250d9);
-    --slds-c-button-brand-outline-color-border: var(--slds-g-color-accent-2, #0250d9);
-}
-
-/* ── Knowledge Updates Grid ────────────────────────────────────── */
-.cc-updates-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--slds-g-spacing-4, 16px);
-    align-items: start;
-}
-
-/* ── Actions Panel — Figma 45:10479 ─────────────────────────────
-   Single rounded card with a divided header (24px/32px padding) and
-   a compact body where each row is a 12px-radius pill stack with a
-   chevron + 32px standard icon + title/subline + brand-outline pill
-   CTA. Highlighted row uses brand-base-95 background and shows a
-   visible dismiss button. */
-.cc-actions-panel {
-    background-color: var(--slds-g-color-surface-container-1, #fff);
-    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
-    border-radius: var(--slds-g-radius-border-4, 20px);
-    padding: 0;
-    overflow: clip;
-    display: flex;
-    flex-direction: column;
-    margin-top: var(--slds-g-spacing-4, 16px);
-}
-
-.cc-actions-panel__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--slds-g-spacing-4, 16px);
-    padding: var(--slds-g-spacing-5, 24px) var(--slds-g-spacing-6, 32px);
-    border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
-}
-
-.cc-actions-panel__title {
-    margin: 0;
-    font-size: var(--slds-g-font-scale-3, 20px);
-    line-height: 28px;
-    font-weight: var(--slds-g-font-weight-6, 600);
-    color: var(--slds-g-color-on-surface-3, #001e5b);
-}
-
-.cc-actions-panel__tools {
-    display: flex;
-    gap: var(--slds-g-spacing-2, 8px);
-    flex-shrink: 0;
-}
-
-/* Round, bordered icon buttons in the header */
-.cc-actions-panel__icon-btn {
-    --slds-c-button-neutral-color-background: var(--slds-g-color-surface-container-1, #fff);
-    --slds-c-button-neutral-color-background-hover: var(--slds-g-color-surface-2, #f3f3f3);
-    --slds-c-button-neutral-color-border: var(--slds-g-color-border-2, #5c5c5c);
-    --slds-c-buttonicon-color-foreground: var(--slds-g-color-accent-2, #0250d9);
-    --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
-    --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
-    --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
-    --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
-    --sds-c-button-sizing-width: 32px;
-    --sds-c-button-sizing-height: 32px;
-}
-
-/* ── Body ───────────────────────────────────────────────────────── */
-.cc-actions-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--slds-g-spacing-1, 4px);
-    padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
-}
-
-.cc-action-row {
-    background-color: var(--slds-g-color-surface-container-1, #fff);
-    border-radius: var(--slds-g-radius-border-3, 12px);
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.cc-action-row--highlighted {
-    background-color: var(--slds-g-color-brand-base-95, #edf4ff);
-}
-
-/* Main row: chevron + icon + body + cta + (optional) dismiss */
-.cc-action-row__main {
-    display: flex;
-    align-items: center;
-    gap: var(--slds-g-spacing-2, 8px);
-    padding: var(--slds-g-spacing-3, 12px);
-}
-
-.cc-action__toggle {
-    display: flex;
+.cc-vt__actions-btn {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 24px;
     height: 24px;
-    border: 0;
-    background: transparent;
+    padding: 0;
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-circle, 9999px);
+    color: var(--slds-g-color-on-surface-3, #03234d);
     cursor: pointer;
-    border-radius: var(--slds-g-radius-border-2, 6px);
-    flex-shrink: 0;
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
 }
 
-.cc-action__toggle:hover {
+.cc-vt__actions-btn:hover {
     background-color: var(--slds-g-color-surface-2, #f3f3f3);
 }
 
-/* Standard 32px icon — SLDS renders its colored object background */
-.cc-action__icon {
-    --slds-c-icon-sizing: 32px;
-    --sds-c-icon-sizing-width: 32px;
-    --sds-c-icon-sizing-height: 32px;
-    flex-shrink: 0;
+.cc-vt__actions-btn:focus-visible {
+    outline: 2px solid var(--slds-g-color-border-accent-1, #066afe);
+    outline-offset: 2px;
 }
 
-.cc-action__body {
-    flex: 1 1 0;
-    min-width: 0;
+/* Row-actions popover (Approve changes / Edit to Resolve). */
+.cc-vt__menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: var(--slds-g-spacing-3, 12px);
+    z-index: 50;
     display: flex;
     flex-direction: column;
-}
-
-.cc-action__title-row {
-    display: flex;
-    align-items: center;
-    gap: var(--slds-g-spacing-2, 8px);
-    min-width: 0;
-}
-
-.cc-action__title {
-    font-size: var(--slds-g-font-scale-2, 16px);
-    line-height: 22px;
-    font-weight: var(--slds-g-font-weight-6, 600);
-    color: var(--slds-g-color-on-surface-2, #2e2e2e);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.cc-action__subline {
-    display: flex;
-    align-items: center;
-    gap: var(--slds-g-spacing-1, 4px);
-    font-size: var(--slds-g-font-scale-1, 14px);
-    line-height: 19px;
-    font-weight: var(--slds-g-font-weight-4, 400);
-    white-space: nowrap;
-    min-width: 0;
-}
-
-.cc-action__meta,
-.cc-action__sep {
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
-}
-
-.cc-action__link {
-    color: var(--slds-g-color-accent-2, #0250d9);
-    text-decoration: none;
-}
-
-.cc-action__link:hover {
-    text-decoration: underline;
-}
-
-.cc-priority-badge {
-    flex-shrink: 0;
-    font-size: var(--slds-g-font-scale-neg-2, 10px);
-    line-height: 14px;
-    font-weight: var(--slds-g-font-weight-6, 600);
-    padding: 2px var(--slds-g-spacing-2, 8px);
-    border-radius: var(--slds-g-radius-border-circle, 9999px);
-    background-color: var(--slds-g-color-surface-2, #f3f3f3);
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
-}
-
-.cc-priority-badge--high {
-    background-color: #fde7ee;
-    color: #ba0517;
-}
-
-/* Pill-shaped brand-outline lightning-button — Figma "Agentic Button - Neutral" */
-.cc-action__cta {
-    flex-shrink: 0;
-    --slds-c-button-radius-border-startstart: var(--slds-g-radius-border-circle, 9999px);
-    --slds-c-button-radius-border-startend: var(--slds-g-radius-border-circle, 9999px);
-    --slds-c-button-radius-border-endstart: var(--slds-g-radius-border-circle, 9999px);
-    --slds-c-button-radius-border-endend: var(--slds-g-radius-border-circle, 9999px);
-    --sds-c-button-sizing-height: 32px;
-    --slds-c-button-brand-outline-color-border: var(--slds-g-color-border-2, #5c5c5c);
-    --slds-c-button-brand-outline-color-background: var(--slds-g-color-surface-container-1, #fff);
-    --slds-c-button-brand-outline-text-color: var(--slds-g-color-accent-2, #0250d9);
-}
-
-.cc-action__dismiss {
-    flex-shrink: 0;
-    --slds-c-buttonicon-color-foreground: var(--slds-g-color-on-surface-1, #5c5c5c);
-}
-
-/* ── Expanded row table — Figma 45:10533 ─────────────────────────
-   Bordered SLDS data-table with surface-container-2 header strip,
-   first row highlighted (brand-base-90) to call out the focused
-   article, the rest on white. Sits inset from the row icon. */
-.cc-action__detail {
-    margin: 0 var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-3, 12px) 56px;
-    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
-    border-radius: var(--slds-g-radius-border-3, 12px);
-    overflow: hidden;
+    min-width: 180px;
+    padding: var(--slds-g-spacing-1, 4px) 0;
     background-color: var(--slds-g-color-surface-container-1, #fff);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-.cc-action-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: var(--slds-g-font-scale-base, 13px);
-    line-height: 18px;
-}
-
-.cc-action-table thead th {
-    background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
-    text-align: left;
-    padding: var(--slds-g-spacing-2, 8px);
-    font-weight: var(--slds-g-font-weight-6, 600);
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
-    border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
-    white-space: nowrap;
-}
-
-.cc-action-table tbody td {
-    padding: var(--slds-g-spacing-2, 8px);
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
-    border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
-    white-space: nowrap;
-}
-
-.cc-action-table tbody tr:last-child td {
-    border-bottom: 0;
-}
-
-/* Highlight the first row (matches Figma "Cell 1" brand-base-90) */
-.cc-action-table tbody tr:first-child td {
-    background-color: var(--slds-g-color-brand-base-90, #d6e6ff);
-}
-
-.cc-action-table tbody tr:first-child .cc-action-table__title {
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
-}
-
-.cc-action-table__link {
-    color: var(--slds-g-color-accent-2, #0250d9);
-    font-weight: var(--slds-g-font-weight-4, 400);
-}
-
-.cc-action-table__title {
-    max-width: 220px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.cc-action-table__actions-th {
-    width: 1%;
-}
-
-.cc-action-table__action-cell {
-    text-align: right;
-}
-
-.cc-action-table__btn {
-    display: inline-flex;
+.cc-vt__menu-item {
+    display: flex;
     align-items: center;
-    gap: var(--slds-g-spacing-1, 4px);
-    padding: var(--slds-g-spacing-1, 4px) var(--slds-g-spacing-2, 8px);
-    border: 0;
-    border-radius: var(--slds-g-radius-border-2, 6px);
+    height: 32px;
+    padding: 0 var(--slds-g-spacing-4, 16px);
     background: transparent;
-    color: var(--slds-g-color-accent-2, #0250d9);
+    border: 0;
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    font-family: inherit;
     font-size: var(--slds-g-font-scale-base, 13px);
-    line-height: 18px;
-    font-weight: var(--slds-g-font-weight-6, 600);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    text-align: left;
     cursor: pointer;
     white-space: nowrap;
 }
 
-.cc-action-table__btn:hover {
-    background-color: var(--slds-g-color-brand-base-95, #edf4ff);
+.cc-vt__menu-item:hover {
+    background-color: var(--slds-g-color-surface-2, #f3f3f3);
 }
 
+.cc-vt__menu-item:focus-visible {
+    outline: 2px solid var(--slds-g-color-border-accent-1, #066afe);
+    outline-offset: -2px;
+}
+
+/* ── Responsive: stack overview cards under ~960px ─────────────── */
+@media (max-width: 959px) {
+    .cc-overview-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

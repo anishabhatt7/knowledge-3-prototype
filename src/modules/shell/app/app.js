@@ -6,9 +6,12 @@ import ReviewArticle from 'page/reviewArticle';
 import KnowledgeHome from 'page/knowledgeHome';
 import HealingGraph from 'page/healingGraph';
 import KnowledgeBase from 'page/knowledgeBase';
+import KnowledgeRecord from 'page/knowledgeRecord';
 import CommandCenter from 'page/commandCenter';
 import KnowledgeAgents from 'page/knowledgeAgents';
 import KnowledgeBlocks from 'page/knowledgeBlocks';
+import { setDraftSession } from 'data/draftSession';
+import { initialArticle } from 'data/knowledge';
 
 /** Option A: explicit registration – add one import + one entry here when adding a route */
 const ROUTE_COMPONENTS = {
@@ -16,6 +19,7 @@ const ROUTE_COMPONENTS = {
     'page-knowledge-home': KnowledgeHome,
     'page-healing-graph': HealingGraph,
     'page-knowledge-base': KnowledgeBase,
+    'page-knowledge-record': KnowledgeRecord,
     'page-command-center': CommandCenter,
     'page-knowledge-agents': KnowledgeAgents,
     'page-knowledge-blocks': KnowledgeBlocks,
@@ -48,6 +52,13 @@ export default class App extends LightningElement {
     @track _darkMode = false;
     @track selectedFlow = 'v2';
     @track prototypeDropdownOpen = false;
+    // The workspace tab strip carries at most one dynamic article tab at
+    // a time. It starts empty — when the user opens an article (from the
+    // Knowledge Base list view, Command Center, Healing Graph, etc.) a
+    // single tab appears and is highlighted as the current page; opening
+    // a different article replaces that tab; closing it makes the tab
+    // disappear entirely. `originPath` records where the article was
+    // opened from so the close action returns the user there.
     @track _workspaceTabs = [];
     _docClickHandler = null;
     _workspaceTabHandler = null;
@@ -55,7 +66,7 @@ export default class App extends LightningElement {
     get prototypeOptions() {
         return [
             { label: 'V1 - Knowledge 3.0', value: 'v1' },
-            { label: 'V2 - Knowledge 3.0', value: 'v2' },
+            { label: 'V2 - AI ready Knowledge', value: 'v2' },
             { label: "PM's version - AI Ready Knowledge", value: 'pm' },
         ].map((opt) => ({
             ...opt,
@@ -66,7 +77,7 @@ export default class App extends LightningElement {
 
     get selectedFlowLabel() {
         const match = this.prototypeOptions.find((o) => o.value === this.selectedFlow);
-        return match ? match.label : 'V2 - Knowledge 3.0';
+        return match ? match.label : 'V2 - AI ready Knowledge';
     }
 
     handleTogglePrototypeDropdown(event) {
@@ -84,7 +95,7 @@ export default class App extends LightningElement {
             ? {
                   v1: 'http://localhost:5001/',
                   v2: 'http://localhost:8001/',
-                  pm: 'http://localhost:8002/',
+                  pm: 'http://localhost:3000/',
               }
             : {
                   v1: 'https://git.soma.salesforce.com/pages/anisha-bhatt/knowledge-3-prototype/v1/',
@@ -101,9 +112,25 @@ export default class App extends LightningElement {
         return name ? ROUTE_COMPONENTS[name] ?? null : null;
     }
 
+    // Resolves the route's pattern (`/knowledge-record/:id`) against
+    // the live params so we can compare it to the concrete `path` stored
+    // on a workspace tab. Without this the parametric article route
+    // never matches its tab and the tab fails to highlight.
+    get _currentLogicalPath() {
+        const route = this.route;
+        if (!route) return '/';
+        let path = route.path || '/';
+        const params = route.params || {};
+        for (const key of Object.keys(params)) {
+            path = path.replace(`:${key}`, encodeURIComponent(params[key]));
+        }
+        return path;
+    }
+
     get currentNavPage() {
         if (!this.route) return 'knowledge';
-        const matching = this._workspaceTabs.filter((t) => t.path === this.route.path);
+        const livePath = this._currentLogicalPath;
+        const matching = this._workspaceTabs.filter((t) => t.path === livePath);
         if (matching.length) return matching[matching.length - 1].page;
         return this.route.navPage ?? this.route.navHighlight ?? ROUTE_TO_NAV_PAGE[this.route.component] ?? 'knowledge';
     }
@@ -119,6 +146,16 @@ export default class App extends LightningElement {
         this._sldsVersion = activeSLDSVersion();
         this.unsubscribe = subscribe((route) => {
             this.route = route;
+            // When the user leaves an article view by any means other
+            // than the close button (clicking another nav item, hitting
+            // the back button, following an in-page link, etc.) drop the
+            // article tab so the context bar returns to its empty state.
+            const pattern = route?.path;
+            if (pattern && !pattern.startsWith('/knowledge-record/') && this._workspaceTabs.length) {
+                const livePath = this._currentLogicalPath;
+                const stillMatches = this._workspaceTabs.some((t) => t.path === livePath);
+                if (!stillMatches) this._workspaceTabs = [];
+            }
         });
         this._docClickHandler = (e) => {
             const switcher = this.querySelector('.prototype-switcher');
@@ -129,15 +166,45 @@ export default class App extends LightningElement {
         document.addEventListener('click', this._docClickHandler);
 
         this._workspaceTabHandler = (e) => {
-            const { label, path } = e.detail || {};
+            const { label, path, kind = 'record', originPath: explicitOrigin } = e.detail || {};
             if (!label || !path) return;
-            const existing = this._workspaceTabs.find((t) => t.label === label);
-            if (!existing) {
-                const page = `article-${Date.now()}`;
-                this._workspaceTabs = [
-                    ...this._workspaceTabs,
-                    { page, label, path, href: linkHref(path), closable: true },
-                ];
+            // Reopening the exact same path is always a no-op. Otherwise
+            // the behaviour depends on `kind`:
+            //   kind === 'record' (default) — record tabs are mutually
+            //       exclusive with each other (mirrors the prior single-
+            //       tab pattern). Opening a different record replaces
+            //       the prior record tab but keeps any editor tab open.
+            //   kind === 'editor' — appended alongside existing tabs so
+            //       the user can flip between the source record and the
+            //       active authoring experience opened from it.
+            // `originPath` controls where the close action returns the
+            // user. Callers (e.g. the v2 landing seed) can pass an
+            // explicit value to break out of the default "go back to
+            // where I came from" rule — the landing seed for example
+            // sends close → /command-center even though it was fired
+            // from /.
+            const existingByPath = this._workspaceTabs.find((t) => t.path === path);
+            if (existingByPath) return;
+            const page = `tab-${kind}-${Date.now()}`;
+            const currentPath = this._currentLogicalPath;
+            const derivedOrigin = currentPath.startsWith('/knowledge-record/')
+                ? '/knowledge-base'
+                : currentPath;
+            const originPath = explicitOrigin || derivedOrigin;
+            const newTab = {
+                page,
+                label,
+                path,
+                href: linkHref(path),
+                closable: true,
+                originPath,
+                kind,
+            };
+            if (kind === 'editor') {
+                this._workspaceTabs = [...this._workspaceTabs, newTab];
+            } else {
+                const nonRecord = this._workspaceTabs.filter((t) => t.kind !== 'record');
+                this._workspaceTabs = [...nonRecord, newTab];
             }
         };
         window.addEventListener('workspace:addtab', this._workspaceTabHandler);
@@ -146,10 +213,42 @@ export default class App extends LightningElement {
             const page = e.detail?.page;
             if (!page) return;
             const wasActive = this.currentNavPage === page;
+            // Capture the tab BEFORE removing it so we can route back to
+            // the path the user came from. `originPath` was stamped when
+            // the tab was added (or seeded for the default landing tab);
+            // missing values fall back to `/`.
+            const closingTab = this._workspaceTabs.find((t) => t.page === page);
             this._workspaceTabs = this._workspaceTabs.filter((t) => t.page !== page);
-            if (wasActive) navigate('/');
+            if (wasActive) navigate(closingTab?.originPath || '/');
         };
         window.addEventListener('workspace:closetab', this._workspaceCloseHandler);
+
+        // Default landing for the v2 ("Prototype experience") prototype:
+        // mirror the Command Center → Review Draft hand-off so the user
+        // arrives directly in the active article authoring experience
+        // with a workspace tab in the context bar. Closing that tab
+        // returns the user to /command-center (overriding the usual
+        // "close goes back to where I came from" rule by passing an
+        // explicit originPath into the addtab event).
+        if (!this._didLandingSetup) {
+            this._didLandingSetup = true;
+            const livePath = this._currentLogicalPath;
+            if (livePath === '/' || livePath === '') {
+                const title = initialArticle?.title || 'New Knowledge Article';
+                setDraftSession({ title });
+                window.dispatchEvent(
+                    new CustomEvent('workspace:addtab', {
+                        detail: {
+                            label: title,
+                            path: '/new-knowledge',
+                            kind: 'editor',
+                            originPath: '/command-center',
+                        },
+                    })
+                );
+                navigate('/new-knowledge');
+            }
+        }
     }
 
     _restorePreferences() {

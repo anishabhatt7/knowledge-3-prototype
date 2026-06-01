@@ -1,15 +1,29 @@
 import { LightningElement, track } from 'lwc';
 import { gsap } from 'gsap';
-import { animate, inView, stagger } from 'motion';
+import { animate } from 'motion';
 import { navigate } from '../../../router';
-import { setDraftSession } from 'data/draftSession';
+import { setRecord } from 'data/recordSession';
+import { setEditSession } from 'data/editSession';
+import { getArticleEdit } from 'data/articleEdits';
 import {
     seedAIReadiness,
-    seedCapabilitySummaries,
-    seedWatchlist,
-    seedActionItems,
+    seedStructuralViolations,
 } from 'data/commandCenter';
 
+/**
+ * Knowledge Health page (formerly "Command Center" — renamed per
+ * Figma frame 214-32880).
+ *
+ * Three sections sit inside the cc-main scroller:
+ *   1. Page header (Astro icon + title + subtitle + search).
+ *   2. Two-card overview row — Knowledge AI Readiness donut on the
+ *      left, Total Articles big-number + sparkline on the right.
+ *   3. Structural Violations data table with a per-row action menu
+ *      (Approve changes / Edit to Resolve). "Edit to Resolve" stashes
+ *      the article in `data/editSession` and hands off to the Review
+ *      Article (active authoring) page in a new workspace tab, the
+ *      same path used by the Knowledge Record violations CTA.
+ */
 export default class CommandCenter extends LightningElement {
     static renderMode = 'light';
 
@@ -21,11 +35,11 @@ export default class CommandCenter extends LightningElement {
         { id: 'home', label: 'Home', icon: 'utility:home', active: false },
     ];
 
+    // The "Maintain" group exposes a single rail entry. The id stays
+    // `command-center` (matches the route navHighlight) but the label
+    // is "Knowledge Health" per the new design.
     railMaintain = [
-        { id: 'command-center', label: 'Command Center', icon: 'utility:trending', active: true },
-        { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro' },
-        { id: 'healing-graph', label: 'Healing Graph', icon: 'utility:graph' },
-        { id: 'decision-hub', label: 'Decision Hub', icon: 'utility:dataspaces' },
+        { id: 'command-center', label: 'Knowledge Health', icon: 'utility:graph', active: true },
     ];
 
     railCreate = [
@@ -113,22 +127,20 @@ export default class CommandCenter extends LightningElement {
 
     handleRailNav(event) {
         const id = event.currentTarget?.dataset?.id;
-        if (id === 'home') navigate('/');
+        // `/home` maps to page-knowledge-home; `/` is the editor-landing
+        // route used by the v2 prototype's first-visit seed and would
+        // drop the user back into the active authoring experience
+        // instead of the Knowledge home page.
+        if (id === 'home') navigate('/home');
         else if (id === 'knowledge-agents') navigate('/knowledge-agents');
         else if (id === 'healing-graph') navigate('/healing-graph');
         else if (id === 'kb-base') navigate('/knowledge-base');
         else if (id === 'kb-blocks') navigate('/knowledge-blocks');
     }
 
-    // ── Data ────────────────────────────────────────────────────────
-    _aiReadiness = seedAIReadiness;
-    watchlist = seedWatchlist;
-    @track _actionItems = seedActionItems.map((item, idx) => ({
-        ...item,
-        expanded: idx === 0,
-    }));
-
     // ── AI Readiness donut ──────────────────────────────────────────
+    _aiReadiness = seedAIReadiness;
+
     get donutRadius() { return 70; }
     get donutCircumference() { return 2 * Math.PI * this.donutRadius; }
     get donutOffset() { return this.donutCircumference * (1 - this._aiReadiness.overall / 100); }
@@ -136,281 +148,344 @@ export default class CommandCenter extends LightningElement {
     get donutDashoffset() { return String(this.donutOffset); }
     get readinessOverall() { return `${this._aiReadiness.overall}%`; }
 
-    get dimensionsComputed() {
-        return this._aiReadiness.dimensions.map((dim) => ({
-            ...dim,
-            barStyle: `width: ${dim.score}%`,
-        }));
+    // ── Total Articles card ─────────────────────────────────────────
+    // Static prototype values — match the Figma frame's hero card.
+    totalArticlesValue = '123,456';
+    totalArticlesBadge = 'Acceptable';
+    totalArticlesDelta = '-10%';
+    totalArticlesPeriod = 'period vs period';
+
+    // Inline SVG sparkline points for the trend chart — pre-computed
+    // so the template stays declarative. The trailing dashed segment
+    // mirrors the "projected" tail in the Figma frame, and the
+    // forecast band widens around the projection to convey
+    // increasing uncertainty over time (Figma 214:33138).
+    sparkPath = 'M 0 82 L 50 80 L 100 78 L 150 72 L 200 60 L 260 50';
+    sparkProjectedPath = 'M 260 50 L 340 42 L 420 32 L 470 25';
+    sparkForecastPath = 'M 260 50 L 470 0 L 470 50 L 260 60 Z';
+    sparkGoalY = '40';
+
+    // ── Structural Violations table ─────────────────────────────────
+    @track _violations = seedStructuralViolations.map((v) => ({
+        ...v,
+        selected: false,
+        menuOpen: false,
+    }));
+    @track _allSelected = false;
+
+    get violationsComputed() {
+        // The AI Score column is locked to a descending sort, matching
+        // the column header arrow indicator. Scores are stored as
+        // formatted strings like "+ 6%" / "− 4%" (using U+2212 unicode
+        // minus, not ASCII "-"), so normalise the sign before parseFloat.
+        const parseScore = (raw) => {
+            const normalised = String(raw).replace('−', '-').replace(/[\s%]/g, '');
+            const n = parseFloat(normalised);
+            return Number.isNaN(n) ? 0 : n;
+        };
+        return [...this._violations]
+            .sort((a, b) => parseScore(b.aiScore) - parseScore(a.aiScore))
+            .map((v) => ({
+                ...v,
+                aiCellClass: v.aiTone === 'positive'
+                    ? 'cc-vt__ai cc-vt__ai--positive'
+                    : 'cc-vt__ai cc-vt__ai--warning',
+                menuClass: v.menuOpen ? 'cc-vt__menu cc-vt__menu--open' : 'cc-vt__menu',
+                actionsCellClass: v.menuOpen
+                    ? 'cc-vt__cell cc-vt__cell--actions cc-vt__cell--actions-open'
+                    : 'cc-vt__cell cc-vt__cell--actions',
+            }));
     }
 
-    // ── Capability summary cards ────────────────────────────────────
-    // Map a capability card's `key` to a route. Keys without a mapping
-    // render as non-interactive cards (no role/tabindex/cursor change).
-    _capabilityRoutes = {
-        healing: '/healing-graph',
-    };
-
-    get capabilitySummariesComputed() {
-        return seedCapabilitySummaries.map((s) => {
-            const route = this._capabilityRoutes[s.key];
-            const isInteractive = Boolean(route);
-            // Split "+12% this week" → number "+12%" + label " this week"
-            // so the numeric portion can be coloured independently.
-            const match = /^([+-]?\d+(?:[.,]\d+)?%?)(.*)$/.exec(s.trendValue || '');
-            const trendNumber = match ? match[1] : (s.trendValue || '');
-            const trendLabel = match ? match[2] : '';
-            return {
-                ...s,
-                trendIcon: s.trend === 'up' ? 'utility:arrowup' : s.trend === 'down' ? 'utility:arrowdown' : 'utility:dash',
-                trendNumber,
-                trendLabel,
-                trendClass:
-                    s.trend === 'up'
-                        ? 'cc-capability-card__trend cc-capability-card__trend--up'
-                        : s.trend === 'down'
-                            ? 'cc-capability-card__trend cc-capability-card__trend--down'
-                            : 'cc-capability-card__trend',
-                cardClass: isInteractive
-                    ? 'cc-capability-card cc-capability-card--clickable'
-                    : 'cc-capability-card',
-                cardRole: isInteractive ? 'button' : null,
-                cardTabIndex: isInteractive ? '0' : null,
-                cardAriaLabel: isInteractive ? `Open ${s.metric}` : null,
-            };
-        });
+    handleSelectAll(event) {
+        const checked = !!event.target?.checked;
+        this._allSelected = checked;
+        this._violations = this._violations.map((v) => ({ ...v, selected: checked }));
     }
 
-    handleCapabilityClick(event) {
-        const key = event.currentTarget?.dataset?.key;
-        const route = this._capabilityRoutes[key];
-        if (route) navigate(route);
+    handleSelectRow(event) {
+        const id = event.target?.dataset?.id;
+        const checked = !!event.target?.checked;
+        this._violations = this._violations.map((v) =>
+            v.id === id ? { ...v, selected: checked } : v
+        );
+        this._allSelected = this._violations.every((v) => v.selected);
     }
 
-    handleCapabilityKeyDown(event) {
-        if (event.key !== 'Enter' && event.key !== ' ') return;
-        const key = event.currentTarget?.dataset?.key;
-        const route = this._capabilityRoutes[key];
-        if (!route) return;
+    /**
+     * Open the Knowledge Article record for the clicked violation row
+     * in a new workspace tab. Mirrors the list-view pattern in
+     * `knowledgeBase.js`: stash record metadata via `setRecord`,
+     * dispatch `workspace:addtab` so the global tab strip shows the
+     * new tab, then navigate to the parametric record route. Closing
+     * the tab returns the user to `/command-center` via the shell's
+     * `originPath` mechanism.
+     */
+    handleArticleOpen(event) {
         event.preventDefault();
-        navigate(route);
-    }
-
-    // ── Actions for you ─────────────────────────────────────────────
-    get actionItemsComputed() {
-        return this._actionItems.map((item) => ({
-            ...item,
-            rowClass: item.highlighted
-                ? 'cc-action-row cc-action-row--highlighted'
-                : 'cc-action-row',
-            chevronIcon: item.expanded ? 'utility:chevrondown' : 'utility:chevronright',
-            showTable: item.expanded && item.tableData && item.tableData.length > 0,
-            priorityLabel: item.priority === 'high' ? 'High Priority' : item.priority,
-            priorityBadgeClass: item.priority === 'high' ? 'cc-priority-badge cc-priority-badge--high' : 'cc-priority-badge',
-            hasPriority: !!item.priority,
-        }));
-    }
-
-    handleToggleAction(event) {
-        const id = event.currentTarget.dataset.id;
-        this._actionItems = this._actionItems.map((item) => ({
-            ...item,
-            expanded: item.id === id ? !item.expanded : item.expanded,
-        }));
-    }
-
-    handleReviewDraft(event) {
-        const title = event.currentTarget.dataset.title || 'Untitled Article';
-        setDraftSession({ title });
+        const id = event.currentTarget?.dataset?.id;
+        const row = this._violations.find((v) => v.id === id);
+        if (!row) return;
+        setRecord({
+            id: row.id,
+            title: row.article,
+            articleRecordType: 'FAQ',
+            language: 'English',
+            currentVersion: '1',
+            isKnowledgeBlock: false,
+        });
+        const path = `/knowledge-record/${encodeURIComponent(row.id)}`;
         window.dispatchEvent(new CustomEvent('workspace:addtab', {
-            detail: { label: title, path: '/new-knowledge' },
+            detail: {
+                label: row.article,
+                path,
+                originPath: '/command-center',
+            },
         }));
-        navigate('/new-knowledge');
+        navigate(path);
+    }
+
+    handleViolationMenuToggle(event) {
+        event.stopPropagation();
+        const id = event.currentTarget?.dataset?.id;
+        // Close any other open menu so only one popover is visible at
+        // a time — mirrors the row-actions UX in lightning-datatable.
+        this._violations = this._violations.map((v) => ({
+            ...v,
+            menuOpen: v.id === id ? !v.menuOpen : false,
+        }));
+        this._ensureDocumentClickListener();
+    }
+
+    handleApproveChanges(event) {
+        event.stopPropagation();
+        const id = event.currentTarget?.dataset?.id;
+        // Close the menu and mark the row as resolved (purely visual
+        // for the prototype — drops the row from the displayed list).
+        this._violations = this._violations
+            .map((v) => ({ ...v, menuOpen: false }))
+            .filter((v) => v.id !== id);
+    }
+
+    handleEditToResolve(event) {
+        event.stopPropagation();
+        const id = event.currentTarget?.dataset?.id;
+        const row = this._violations.find((v) => v.id === id);
+        if (!row) return;
+        // Close any open menus before navigating.
+        this._violations = this._violations.map((v) => ({ ...v, menuOpen: false }));
+        this._launchActiveAuthoring(row);
+    }
+
+    /**
+     * Opens the Review Article (active authoring) experience in a new
+     * workspace tab seeded with the violation's article context. The
+     * tab's `originPath` is `/command-center` so closing the editor
+     * returns the user here. Mirrors `KnowledgeRecord._launchActive
+     * Authoring` so saved edits flow through `data/articleEdits` and
+     * the same `article:saved` event bus.
+     */
+    _launchActiveAuthoring(row) {
+        if (!row?.id) return;
+        const id = row.id;
+        const title = row.article;
+        const existing = getArticleEdit(id);
+        // Seed the editor with any in-flight edit, otherwise leave the
+        // body blank — the Review Article page will fall back to its
+        // own `_blocksToHtml(initialArticle.blockData)` path when no
+        // seed HTML is supplied.
+        const seedHtml = existing?.html || null;
+
+        setEditSession({
+            id,
+            title,
+            html: seedHtml,
+            recordType: 'FAQ',
+            originPath: '/command-center',
+            violation: { description: row.description, score: row.aiScore },
+        });
+
+        // Mirror the article into recordSession so a deep-link refresh
+        // of the editor route still finds metadata (title, version).
+        setRecord({
+            id,
+            title,
+            articleRecordType: 'FAQ',
+            language: 'English',
+            currentVersion: '1',
+            isKnowledgeBlock: false,
+        });
+
+        const path = `/edit-article/${encodeURIComponent(id)}`;
+        const tabLabel = `Edit: ${title}`;
+        window.dispatchEvent(
+            new CustomEvent('workspace:addtab', {
+                detail: {
+                    label: tabLabel,
+                    path,
+                    kind: 'editor',
+                    originPath: '/command-center',
+                },
+            })
+        );
+        navigate(path);
+    }
+
+    // Close the open row-actions menu when the user clicks outside it.
+    _docClickHandler = null;
+
+    _ensureDocumentClickListener() {
+        if (this._docClickHandler) return;
+        this._docClickHandler = (e) => {
+            if (!this._violations.some((v) => v.menuOpen)) return;
+            const inside = e.target?.closest?.('.cc-vt__cell--actions');
+            if (inside) return;
+            this._violations = this._violations.map((v) => ({ ...v, menuOpen: false }));
+        };
+        document.addEventListener('click', this._docClickHandler);
+    }
+
+    disconnectedCallback() {
+        if (this._docClickHandler) {
+            document.removeEventListener('click', this._docClickHandler);
+            this._docClickHandler = null;
+        }
     }
 
     // ── Motion entrance ─────────────────────────────────────────────
     _motionInited = false;
-    _stopInView = null;
     _scoreAnimated = false;
-    _scoreTween = null;
-    _ringTween = null;
-    _dimensionsAnimated = false;
-    _dimensionTweens = null;
+    _sparkAnimated = false;
 
     renderedCallback() {
+        // Always force the donut label / ring into a known-good state on
+        // every render. This guards against stale DOM left by older
+        // animation logic across HMR boundaries.
+        this._animateReadinessScore();
+        this._animateSparkline();
+
         if (this._motionInited) return;
         const scroller = this.querySelector('.cc-main');
         if (!scroller) return;
         this._motionInited = true;
+        scroller.style.scrollBehavior = 'smooth';
+    }
+
+    /**
+     * Draw-on entrance for the Total Articles sparkline. Uses GSAP to
+     * animate `stroke-dashoffset` from the full path length down to 0
+     * so the trend line appears to grow from left to right. The dashed
+     * projection segment draws in second (after the solid trend has
+     * rendered), and the forecast confidence band fades in alongside
+     * it. Runs once per mount and respects `prefers-reduced-motion`.
+     */
+    _animateSparkline() {
+        if (this._sparkAnimated) return;
+        const trendEl = this.querySelector('.cc-spark-line:not(.cc-spark-line--projected)');
+        const projectedEl = this.querySelector('.cc-spark-line--projected');
+        const forecastEl = this.querySelector('.cc-spark-forecast');
+        if (!trendEl || !projectedEl) return;
+        this._sparkAnimated = true;
 
         const reduce =
             typeof window !== 'undefined' &&
             window.matchMedia &&
             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduce) return;
+        if (reduce || !gsap) return;
 
-        scroller.style.scrollBehavior = 'smooth';
+        // `getTotalLength()` returns the total path length in user units
+        // (the SVG viewBox 0-480 wide × 0-110 tall). Setting both
+        // dasharray and dashoffset to that length hides the stroke
+        // entirely; tweening offset back to 0 then "draws" the line.
+        try {
+            const trendLength = trendEl.getTotalLength();
+            const projectedLength = projectedEl.getTotalLength();
 
-        const sections = Array.from(this.querySelectorAll('.cc-main .cc-section'));
-        if (!sections.length) return;
-
-        const childSelector = '.cc-readiness-card, .cc-capability-card, .cc-metric-card, .cc-actions-panel';
-        sections.forEach((section) => {
-            section.style.opacity = '0';
-            section.style.transform = 'translateY(24px)';
-            section.querySelectorAll(childSelector).forEach((card) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(16px)';
+            gsap.set(trendEl, {
+                strokeDasharray: trendLength,
+                strokeDashoffset: trendLength,
             });
-        });
+            // Preserve the dashed visual on the projected segment by
+            // pairing the existing 6-4 dash pattern with a long offset
+            // — animating to 0 reveals it left-to-right while keeping
+            // the dotted appearance once drawn.
+            gsap.set(projectedEl, {
+                strokeDasharray: `${projectedLength} ${projectedLength}`,
+                strokeDashoffset: projectedLength,
+            });
+            if (forecastEl) {
+                gsap.set(forecastEl, { opacity: 0 });
+            }
 
-        this._stopInView = inView(
-            sections,
-            (section) => {
-                animate(
-                    section,
-                    { opacity: [0, 1], y: [24, 0] },
-                    { duration: 0.55, ease: [0.2, 0.8, 0.2, 1] }
+            const tl = gsap.timeline({ delay: 0.35 });
+            tl.to(trendEl, {
+                strokeDashoffset: 0,
+                duration: 1.4,
+                ease: 'power2.out',
+            });
+            tl.to(
+                projectedEl,
+                {
+                    strokeDashoffset: 0,
+                    duration: 0.9,
+                    ease: 'power1.out',
+                    // After the projection has finished drawing, restore
+                    // the original dashed visual so the segment matches
+                    // its static design.
+                    onComplete: () => {
+                        projectedEl.style.strokeDasharray = '6 4';
+                        projectedEl.style.strokeDashoffset = '0';
+                    },
+                },
+                '-=0.15'
+            );
+            if (forecastEl) {
+                tl.to(
+                    forecastEl,
+                    { opacity: 1, duration: 0.6, ease: 'power1.out' },
+                    '-=0.7'
                 );
-                const cards = section.querySelectorAll(childSelector);
-                if (cards.length) {
-                    animate(
-                        cards,
-                        { opacity: [0, 1], y: [16, 0] },
-                        { duration: 0.45, ease: 'easeOut', delay: stagger(0.07, { startDelay: 0.1 }) }
-                    );
-                }
-            },
-            { root: scroller, amount: 0.15 }
-        );
-
-        this._animateReadinessScore();
-        this._animateReadinessDimensions();
+            }
+        } catch (_) {
+            // gsap unavailable / SVG API failure — leave the chart at
+            // its static (already-drawn) state.
+        }
     }
 
     /**
-     * Count-up entrance for the AI Readiness donut: animates the percentage
-     * label from 0 up to the target value and fills the SVG ring in sync.
-     * Runs once per mount and respects prefers-reduced-motion.
+     * Count-up entrance for the AI Readiness donut: animates the
+     * percentage label from 0 up to the target value and fills the
+     * SVG ring in sync. Runs once per mount and respects
+     * prefers-reduced-motion.
      */
     _animateReadinessScore() {
-        if (this._scoreAnimated) return;
+        // Always force the percentage label to the canonical value on
+        // every render — guards against stale textContent left by
+        // earlier (now-removed) animation logic across HMR updates.
         const labelEl = this.querySelector('.cc-donut-label__value');
+        if (labelEl) {
+            labelEl.textContent = `${this._aiReadiness.overall}%`;
+        }
+
+        // Animate the SVG ring from full circumference (empty) up to its
+        // computed final offset using motion.animate(). Runs once per
+        // mount; if the animation is unavailable, the template binding
+        // already places the ring at the final value.
+        if (this._scoreAnimated) return;
         const ringEl = this.querySelector('.cc-donut-fg');
-        if (!labelEl || !gsap) return;
+        if (!ringEl) return;
         this._scoreAnimated = true;
 
-        const target = this._aiReadiness.overall;
-
-        if (ringEl) {
-            // Disable CSS transition so GSAP's per-frame updates render cleanly.
-            ringEl.style.transition = 'none';
-        }
-
-        labelEl.textContent = '0%';
-        const counter = { val: 0 };
-        this._scoreTween = gsap.to(counter, {
-            val: target,
-            duration: 1.6,
-            ease: 'power2.out',
-            delay: 0.25,
-            onUpdate: () => {
-                labelEl.textContent = `${Math.round(counter.val)}%`;
-            },
-            onComplete: () => {
-                labelEl.textContent = `${target}%`;
-            },
-        });
-
-        if (ringEl) {
-            const circumference = this.donutCircumference;
-            const finalOffset = this.donutOffset;
-            this._ringTween = gsap.fromTo(
+        const circumference = this.donutCircumference;
+        const finalOffset = this.donutOffset;
+        try {
+            animate(
                 ringEl,
-                { strokeDashoffset: circumference },
-                {
-                    strokeDashoffset: finalOffset,
-                    duration: 1.6,
-                    ease: 'power2.out',
-                    delay: 0.25,
-                    onComplete: () => {
-                        // Restore the CSS transition for any future stroke updates.
-                        ringEl.style.transition = '';
-                    },
-                }
+                { strokeDashoffset: [circumference, finalOffset] },
+                { duration: 1.4, delay: 0.2, ease: [0.2, 0.8, 0.2, 1] }
             );
+        } catch (_) {
+            ringEl.setAttribute('stroke-dashoffset', String(finalOffset));
         }
-    }
-
-    /**
-     * Count-up entrance for each readiness dimension: animates the score
-     * number from 0 up to the target and fills the progress bar in sync.
-     * Uses scaleX (not width) on the bar fill so we don't fight the
-     * existing CSS `transition: width` rule and stay on the compositor.
-     * Runs once per mount; gated by the prefers-reduced-motion check
-     * in renderedCallback().
-     */
-    _animateReadinessDimensions() {
-        if (this._dimensionsAnimated) return;
-        if (!gsap) return;
-        const dimEls = Array.from(this.querySelectorAll('.cc-dimension'));
-        if (!dimEls.length) return;
-        this._dimensionsAnimated = true;
-
-        const targets = this._aiReadiness.dimensions;
-        this._dimensionTweens = [];
-
-        dimEls.forEach((dimEl, i) => {
-            const target = targets[i];
-            if (!target) return;
-            const scoreEl = dimEl.querySelector('.cc-dimension__score');
-            const fillEl = dimEl.querySelector('.cc-dimension__bar-fill');
-            if (!scoreEl || !fillEl) return;
-
-            scoreEl.textContent = '0%';
-            gsap.set(fillEl, { scaleX: 0, transformOrigin: 'left center' });
-
-            const duration = 1.2;
-            const delay = 0.3 + i * 0.08;
-            const ease = 'power2.out';
-
-            const counter = { val: 0 };
-            const counterTween = gsap.to(counter, {
-                val: target.score,
-                duration,
-                delay,
-                ease,
-                onUpdate: () => {
-                    scoreEl.textContent = `${Math.round(counter.val)}%`;
-                },
-                onComplete: () => {
-                    scoreEl.textContent = `${target.score}%`;
-                },
-            });
-
-            const fillTween = gsap.to(fillEl, {
-                scaleX: 1,
-                duration,
-                delay,
-                ease,
-            });
-
-            this._dimensionTweens.push(counterTween, fillTween);
-        });
-    }
-
-    disconnectedCallback() {
-        this._stopInView?.();
-        this._stopInView = null;
-        this._motionInited = false;
-        this._scoreTween?.kill();
-        this._ringTween?.kill();
-        this._scoreTween = null;
-        this._ringTween = null;
-        this._scoreAnimated = false;
-        if (this._dimensionTweens) {
-            this._dimensionTweens.forEach((t) => t?.kill());
-            this._dimensionTweens = null;
-        }
-        this._dimensionsAnimated = false;
     }
 }
