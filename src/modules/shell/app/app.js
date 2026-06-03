@@ -10,6 +10,7 @@ import KnowledgeRecord from 'page/knowledgeRecord';
 import CommandCenter from 'page/commandCenter';
 import KnowledgeAgents from 'page/knowledgeAgents';
 import KnowledgeBlocks from 'page/knowledgeBlocks';
+import ReviewQueue from 'page/reviewQueue';
 import { setDraftSession } from 'data/draftSession';
 import { initialArticle } from 'data/knowledge';
 
@@ -23,6 +24,7 @@ const ROUTE_COMPONENTS = {
     'page-command-center': CommandCenter,
     'page-knowledge-agents': KnowledgeAgents,
     'page-knowledge-blocks': KnowledgeBlocks,
+    'page-review-queue': ReviewQueue,
 };
 
 /** Derived from routes.config: component name → nav page id (includes navHighlight for child routes) */

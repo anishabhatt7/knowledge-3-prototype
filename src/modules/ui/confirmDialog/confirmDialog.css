@@ -1,0 +1,9 @@
+/*
+ * Intentionally empty.
+ *
+ * The lightning-modal-* primitives (header, body, footer) plus the
+ * SLDS utility classes used in confirmDialog.html (slds-m-left_x-small)
+ * cover all needed styling for this prompt-style dialog. Custom CSS
+ * would risk overriding SLDS classes, which is disallowed by repo
+ * conventions (AGENTS.md, slds-rules.mdc).
+ */

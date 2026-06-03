@@ -1,0 +1,805 @@
+/* =========================================================
+ * page-review-queue — Knowledge Article review experience
+ * Matches Figma 270:18173 (KNOWLEDGE AGENT DASHBOARD - REVIEW
+ * ARTICLE). Two-column shell: left rail with the article queue,
+ * main pane with title, score card, tabs, and a side-by-side
+ * Current/Suggested compare. Renders in light DOM (renderMode
+ * 'light') so SLDS classes and hooks apply directly.
+ * ========================================================= */
+
+.rq-page {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    /* Fill the workspace inner (which the app shell sizes to viewport
+     * minus header/context-bar). Children scroll independently. */
+    height: 100%;
+    background: var(--slds-g-color-surface-1, #ffffff);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    align-items: stretch;
+    overflow: hidden;
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+}
+
+/* ── Article Queue rail ─────────────────────────────────── */
+
+.rq-rail {
+    background: var(--slds-g-color-surface-1, #ffffff);
+    border-right: 1px solid var(--slds-g-color-border-1, #dddbda);
+    /* Independent scroll so the queue stays visible as the main pane
+     * scrolls; long queues still scroll inside the rail. */
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* Header reads as a card title — Semibold, dark navy, generous padding,
+ * with a thin divider above the queue rows. Matches Figma 270:18421. */
+.rq-rail__head {
+    padding: 16px;
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 590;
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    border-bottom: 1px solid var(--slds-g-color-border-1, #d7d7d7);
+}
+
+.rq-rail__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.rq-rail__item {
+    margin: 0;
+}
+
+/* Compact row: 6/8 padding, 13px text. Inactive rows keep a transparent
+ * 4px left border so swapping to active doesn't shift content. Both the
+ * title and the violation count truncate with ellipsis since article
+ * names can outrun the 240px rail. Matches Figma 270:18424–270:18430. */
+.rq-rail__row {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 6px 16px;
+    text-align: left;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    border: 0;
+    border-left: 4px solid transparent;
+    cursor: pointer;
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+    font: inherit;
+    transition: background-color 120ms ease;
+}
+
+.rq-rail__row:hover {
+    background: var(--slds-g-color-surface-container-2, #f3f6f9);
+}
+
+.rq-rail__item--active .rq-rail__row {
+    background: var(--slds-g-color-brand-base-90, #d6e6ff);
+    border-left-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.rq-rail__item--active .rq-rail__title {
+    font-weight: 590;
+}
+
+.rq-rail__title {
+    width: 100%;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rq-rail__meta {
+    width: 100%;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 400;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Main pane shell ────────────────────────────────────── */
+
+.rq-main {
+    display: flex;
+    flex-direction: column;
+    padding: 24px 32px 48px;
+    background: var(--slds-g-color-surface-1, #ffffff);
+    min-width: 0;
+    /* Outer column owns layout but not scroll — the side-by-side
+     * panes scroll independently inside .rq-split so corresponding
+     * sections stay aligned across both columns. */
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Header bar: flush against the edges of .rq-main, breaks out of the
+ * parent padding using negative margins so the bottom border spans the
+ * full width — matches the Figma frame (270:18436). Title + status
+ * badge sit inline on the first row with the fixed/pending progress
+ * underneath; Save & Next is pinned to the right. */
+.rq-main__head {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+    margin: calc(var(--slds-g-spacing-5, 24px) * -1) calc(var(--slds-g-spacing-6, 32px) * -1) var(--slds-g-spacing-4, 16px);
+    padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.rq-main__head-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.rq-main__title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-3, 12px);
+    min-width: 0;
+}
+
+.rq-main__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    line-height: 22px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Status chip (e.g. "Draft") in the page header — matches the
+ * "⚡ Badge - Informational" variant from the Knowledge 3.0 Figma:
+ * pale info-tinted surface with dark on-info text + leading list
+ * icon, in a tight rounded-rectangle shape. SLDS defaults to a
+ * full-pill radius and uppercase legacy styling, so we recolor via
+ * the documented `--slds-c-badge-*` hooks and pierce the `badge`
+ * part for radius/typography/gap. */
+.rq-main__status {
+    --slds-c-badge-color-background: var(--slds-g-color-info-container-1, #daf2fb);
+    --slds-c-badge-text-color: var(--slds-g-color-on-info-1, #014486);
+    --slds-c-badge-color-border: transparent;
+    --slds-c-badge-radius-border: var(--slds-g-radius-border-2, 4px);
+    --slds-c-badge-spacing-block-start: 2px;
+    --slds-c-badge-spacing-block-end: 2px;
+    --slds-c-badge-spacing-inline-start: var(--slds-g-spacing-2, 8px);
+    --slds-c-badge-spacing-inline-end: var(--slds-g-spacing-2, 8px);
+    --slds-c-badge-font-size: var(--slds-g-font-scale-neg-1, 12px);
+    --slds-c-badge-line-height: 16px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.rq-main__status::part(badge) {
+    background: var(--slds-g-color-info-container-1, #daf2fb);
+    color: var(--slds-g-color-on-info-1, #014486);
+    border: 0;
+    border-radius: var(--slds-g-radius-border-2, 4px);
+    padding: 2px var(--slds-g-spacing-2, 8px);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    font-weight: var(--slds-g-font-weight-4, 400);
+    line-height: 16px;
+    text-transform: none;
+    letter-spacing: 0;
+    gap: var(--slds-g-spacing-1, 4px);
+}
+
+/* Leading list icon: inherit the dark on-info text color and sit
+ * flush against the label (no SLDS legacy margin push). */
+.rq-main__status .slds-badge__icon {
+    margin: 0;
+    fill: var(--slds-g-color-on-info-1, #014486);
+}
+
+.rq-main__progress {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.rq-main__progress-fixed {
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    font-weight: var(--slds-g-font-weight-4, 400);
+}
+
+.rq-main__progress-pending {
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    font-weight: var(--slds-g-font-weight-4, 400);
+}
+
+.rq-main__actions {
+    flex-shrink: 0;
+}
+
+/* Save & Next split button — primary "Save & Next" on the left and
+ * a chevron dropdown menu on the right, grouped into a single pill
+ * via `lightning-button-group`. `lightning-button-group` already
+ * trims the redundant inner border between adjacent children, so
+ * the seam reads as a single 1px line; we just round the outer
+ * corners back to the original pill aesthetic and recolour the
+ * menu half's border so the whole pill carries the brand-outline
+ * tone end to end. */
+.rq-save-next {
+    --slds-c-button-radius-border: var(--slds-g-radius-border-circle, 999px);
+}
+
+/* Pull the menu half's border + chevron into the brand-outline
+ * accent colour so the seam between halves reads as one continuous
+ * brand-outline divider rather than the default neutral grey. */
+.rq-save-next__menu {
+    --slds-c-button-color-border: var(--slds-g-color-accent-1, #066afe);
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+.rq-save-next .rq-save-next__menu button {
+    border-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+/* Primary (left) half: pill-rounded on the outer (left) edge, flat
+ * against the menu trigger on the inner (right) edge. */
+.rq-save-next .rq-save-next__main button {
+    border-radius: var(--slds-g-radius-border-circle, 999px) 0 0
+        var(--slds-g-radius-border-circle, 999px);
+}
+
+/* Menu (right) half: flat against the primary on the inner (left)
+ * edge, pill-rounded on the outer (right) edge. */
+.rq-save-next .rq-save-next__menu button {
+    border-radius: 0 var(--slds-g-radius-border-circle, 999px)
+        var(--slds-g-radius-border-circle, 999px) 0;
+}
+
+/* ── AI Score card ──────────────────────────────────────── */
+
+.rq-score-card {
+    background: var(--slds-g-color-surface-1, #ffffff);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-5, 24px);
+    margin-bottom: var(--slds-g-spacing-4, 16px);
+}
+
+.rq-score-card__title {
+    margin: 0 0 var(--slds-g-spacing-3, 12px);
+    font-size: var(--slds-g-font-scale-2, 16px);
+    font-weight: var(--slds-g-font-weight-7, 700);
+    line-height: 22px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.rq-score-card__body {
+    display: grid;
+    grid-template-columns: 184px 1fr;
+    align-items: center;
+    gap: var(--slds-g-spacing-5, 20px);
+}
+
+.rq-donut {
+    position: relative;
+    width: 124px;
+    height: 124px;
+    justify-self: center;
+}
+
+.rq-donut__svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+.rq-donut__bg {
+    fill: none;
+    stroke: var(--slds-g-color-surface-container-2, #ecebea);
+    stroke-width: 12;
+}
+
+.rq-donut__fg {
+    fill: none;
+    /* Match the Knowledge 3.0 Figma frame's donut arc (#2e844a — the
+     * canonical SLDS green-50). We use the palette token instead of
+     * the semantic `--slds-g-color-success-1`: this app's theme
+     * overrides success-1 to a dark teal, which makes the arc read
+     * as a different color than Figma. The palette token is stable
+     * across themes. */
+    stroke: var(--slds-g-color-palette-green-50, #2e844a);
+    stroke-width: 12;
+    stroke-linecap: round;
+    /* stroke-dashoffset is driven by GSAP via `_displayedScore` so the
+     * ring and the % label tween together — no CSS transition here or
+     * we'd compound two interpolators. */
+}
+
+.rq-donut__label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rq-donut__value {
+    font-size: var(--slds-g-font-scale-5, 24px);
+    line-height: 40px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.rq-score-card__metrics {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+    margin: 0;
+}
+
+.rq-score-card__metric {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--slds-g-spacing-2, 8px);
+    margin: 0;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.rq-score-card__metric dt {
+    margin: 0;
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-info-base-20, #032d60);
+}
+
+.rq-score-card__metric-value {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+}
+
+/* "Trending above Average" chip — soft success tint
+ * (success-base-95 #def9f3) with mid-success text. We pierce the
+ * lightning-badge shadow root via the documented `badge` part so
+ * the chip picks up the mixed-case style instead of SLDS legacy
+ * uppercase, and a tight rounded-rectangle radius so it reads as
+ * a status tag rather than an elongated pill. */
+.rq-score-card__trend {
+    --slds-c-badge-color-background: var(--slds-g-color-success-base-95, #def9f3);
+    --slds-c-badge-text-color: var(--slds-g-color-success-base-30, #194e31);
+    --slds-c-badge-radius-border: var(--slds-g-radius-border-2, 4px);
+    --slds-c-badge-color-border: transparent;
+    --slds-c-badge-font-size: var(--slds-g-font-scale-neg-1, 12px);
+    --slds-c-badge-line-height: 16px;
+    --slds-c-badge-spacing-block-start: 2px;
+    --slds-c-badge-spacing-block-end: 2px;
+    --slds-c-badge-spacing-inline-start: var(--slds-g-spacing-2, 8px);
+    --slds-c-badge-spacing-inline-end: var(--slds-g-spacing-2, 8px);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.rq-score-card__trend::part(badge) {
+    background: var(--slds-g-color-success-base-95, #def9f3);
+    color: var(--slds-g-color-success-base-30, #194e31);
+    border: 0;
+    border-radius: var(--slds-g-radius-border-2, 4px);
+    padding: 2px var(--slds-g-spacing-2, 8px);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    font-weight: var(--slds-g-font-weight-4, 400);
+    line-height: 16px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* ── Tabs ───────────────────────────────────────────────── */
+
+.rq-tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    border-bottom: 1px solid var(--slds-g-color-border-1, #dddbda);
+    margin: 0 0 16px;
+    background: transparent;
+}
+
+.rq-tab {
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
+    font: inherit;
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 19px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    cursor: pointer;
+    transition: color 120ms ease, border-color 120ms ease;
+    margin-bottom: -1px;
+}
+
+.rq-tab:hover {
+    color: var(--slds-g-color-accent-2, #0250d9);
+}
+
+.rq-tab--active {
+    color: var(--slds-g-color-accent-2, #0250d9);
+    border-bottom-color: var(--slds-g-color-accent-2, #0250d9);
+    font-weight: var(--slds-g-font-weight-6, 590);
+}
+
+/* ── Side-by-side compare ───────────────────────────────── */
+
+.rq-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+    gap: 16px;
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* Figma frame 270:18450 — each pane has an "Input field" wrapper with
+ * a 1px #5c5c5c border, 8px radius, and a separate label sitting
+ * outside the box at 14px Semibold. We mirror that here: the label
+ * (`.rq-pane__head`) is rendered above the bordered card, then the
+ * card itself (`.rq-pane`) holds the body content. */
+.rq-pane {
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+    min-height: 0;
+    gap: var(--slds-g-spacing-1, 4px);
+}
+
+.rq-pane__head {
+    padding: 0;
+    border: 0;
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 19px;
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    background: transparent;
+    flex: 0 0 auto;
+}
+
+/* Each pane body is its own independent scroll container — free
+ * scrolling on one column never moves the other. The only cross-pane
+ * scroll is the click-to-jump tween in reviewQueue.js, which fires
+ * when the user selects an error / suggestion to bring its paired
+ * counterpart into view.
+ *
+ * Anchor the SLDS 2 base font family here so every descendant
+ * (paragraphs, headings, suggestion cards, errors) renders the
+ * article body in the Cosmos theme's typography stack rather than
+ * relying on a cascade from `.rq-page` that nested LWC components
+ * could shadow. */
+.rq-pane__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: var(--slds-g-spacing-3, 12px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-3, 12px);
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    font-family: var(
+        --slds-g-font-family-base,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        Roboto,
+        'Helvetica Neue',
+        Arial,
+        sans-serif
+    );
+}
+
+/* Current Article paragraphs (left pane). Plain paragraphs in the
+ * Suggested pane reuse the same baseline so prose reads identically
+ * across panes — only error tinting is exclusive to the left side. */
+.rq-paragraph,
+.rq-suggested-item--paragraph {
+    position: relative;
+    padding: 4px 0;
+    line-height: 22px;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    color: #181818;
+    border-radius: 6px;
+}
+
+/* Inert plain paragraphs on the right — no pointer affordance. */
+.rq-suggested-item--paragraph {
+    cursor: default;
+}
+
+.rq-paragraph__heading {
+    margin: 12px 0 4px;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.rq-paragraph--heading {
+    padding: 0;
+}
+
+.rq-paragraph__text {
+    margin: 0;
+}
+
+.rq-paragraph__list {
+    margin: 4px 0 0;
+    padding-left: 22px;
+}
+
+.rq-paragraph__list li {
+    margin-bottom: 4px;
+}
+
+.rq-paragraph__figure {
+    margin: 8px 0;
+}
+
+/* Real article photo. Kept at a wide 16:5 banner crop so it reads
+ * as an inline figure rather than dominating the column; `cover`
+ * crops the image to the box instead of letterboxing. The neutral
+ * surface-container fallback hides the broken-image glyph if the
+ * asset 404s before the network swap finishes. */
+.rq-paragraph__image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 5;
+    object-fit: cover;
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    background: var(--slds-g-color-surface-container-2, #ecebea);
+}
+
+.rq-paragraph__figure figcaption {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--slds-g-color-on-surface-2, #5c5c5c);
+}
+
+/* Error paragraphs read as full-width red blocks — every flagged
+ * paragraph in the Current Article wears the same red tint, matching
+ * Figma frame 290:20963–290:20965. A 1px transparent border in the
+ * resting state reserves the same layout box as the selected state,
+ * so toggling selection doesn't shift surrounding paragraphs.
+ *
+ * Tone variants (factual / tonal / vague) all collapse to the same
+ * red palette — the Figma comp shows a single severity color for
+ * Current Article violations regardless of category. */
+.rq-paragraph--error {
+    cursor: pointer;
+    padding: 8px 12px;
+    background-color: rgba(234, 0, 30, 0.2);
+    border: 1px solid transparent;
+    border-radius: var(--slds-g-radius-border-2, 4px);
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.rq-paragraph--error:hover {
+    background-color: rgba(234, 0, 30, 0.28);
+}
+
+/* Selected: lighter red fill (#fbccd2) with a red border and the
+ * "Elevation / 16dp - Navigation Drawers" drop-shadow from Figma —
+ * the row lifts visibly off the page so the user always knows which
+ * violation is in focus. */
+.rq-paragraph--error.is-highlight {
+    background-color: #fbccd2;
+    border-color: #ea001e;
+    box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.04), 0 7px 24px 0 rgba(0, 0, 0, 0.19);
+}
+
+/* Inline <p> inside the error block — collapse default browser margin
+ * so the tinted block hugs the text. */
+.rq-paragraph--error .rq-paragraph__text {
+    margin: 0;
+}
+
+/* Suggestion cards — Figma frame 276:19984 uses a soft success
+ * tint (success-base-95 #def9f3) with NO border and an 8px radius.
+ * Click-to-jump on the body keeps the prototype interaction. */
+
+.rq-suggestion {
+    cursor: pointer;
+    padding: var(--slds-g-spacing-2, 8px);
+    border: 1px solid transparent;
+    background: var(--slds-g-color-success-base-95, #def9f3);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.rq-suggestion:hover {
+    background: #cdf0e6;
+}
+
+/* Selected suggestion (right pane) — Figma node 290:21009. The card
+ * keeps its tone-coloured fill, picks up a 1px tone-coloured border,
+ * and rises on the "Elevation / 16dp" drop-shadow so the suggestion
+ * + its paired error read as one focused unit across the split. */
+.rq-suggestion.is-highlight {
+    background: var(--slds-g-color-success-base-95, #def9f3);
+    border-color: var(--slds-g-color-palette-green-50, #2e844a);
+    box-shadow: 0 3px 3px 0 rgba(0, 0, 0, 0.04), 0 7px 12px 0 rgba(0, 0, 0, 0.19);
+}
+
+.rq-suggestion--addition {
+    background: var(--slds-g-color-brand-base-95, #edf4ff);
+}
+
+.rq-suggestion--addition:hover {
+    background: #dde8fb;
+}
+
+.rq-suggestion--addition.is-highlight {
+    background: var(--slds-g-color-brand-base-95, #edf4ff);
+    border-color: var(--slds-g-color-accent-1, #0176d3);
+    box-shadow: 0 3px 3px 0 rgba(0, 0, 0, 0.04), 0 7px 12px 0 rgba(0, 0, 0, 0.19);
+}
+
+.rq-suggestion--rejected {
+    opacity: 0.55;
+    background: var(--slds-g-color-surface-container-1, #f3f6f9);
+    border-color: var(--slds-g-color-border-1, #dddbda);
+}
+
+.rq-suggestion__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+/* Category label — Figma uses accent-3 navy (#022ac0) for every
+ * variant, regardless of which tint the card uses. */
+.rq-suggestion__category {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-accent-3, #022ac0);
+}
+
+.rq-suggestion__category--addition,
+.rq-suggestion__category--tonal-change {
+    color: var(--slds-g-color-accent-3, #022ac0);
+}
+
+/* AI-suggestion chip: a tone-coloured circle (structural=green,
+ * addition=blue, tonal=purple) with the project sparkle icon inside.
+ * The category text immediately to the right names the suggestion
+ * type — the sparkle reinforces that this is an AI-generated edit. */
+.rq-suggestion__chip-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--slds-g-radius-border-circle, 999px);
+    background: rgba(3, 104, 77, 0.12);
+    flex-shrink: 0;
+}
+
+.rq-suggestion__chip-spark {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    display: block;
+}
+
+.rq-suggestion--addition .rq-suggestion__chip-glyph {
+    background: rgba(1, 118, 211, 0.12);
+}
+
+.rq-suggestion--tonal-change .rq-suggestion__chip-glyph {
+    background: rgba(106, 58, 140, 0.12);
+}
+
+.rq-suggestion__action {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 19px;
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-accent-2, #0250d9);
+    cursor: pointer;
+}
+
+.rq-suggestion__action:hover {
+    text-decoration: underline;
+}
+
+.rq-suggestion__title {
+    margin: 0 0 var(--slds-g-spacing-1, 4px);
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: #181818;
+}
+
+.rq-suggestion__body {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    color: #181818;
+}
+
+.rq-suggestion__foot {
+    margin-top: var(--slds-g-spacing-2, 8px);
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    color: var(--slds-g-color-accent-3, #022ac0);
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 19px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+}
+
+.rq-suggestion__impact {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rq-suggestion__impact-icon {
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-accent-3, #022ac0);
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-3, #022ac0);
+}
+
+.rq-suggestion--addition .rq-suggestion__foot,
+.rq-suggestion--tonal-change .rq-suggestion__foot {
+    color: var(--slds-g-color-accent-3, #022ac0);
+}
+
+.rq-suggestion--addition .rq-suggestion__impact-icon,
+.rq-suggestion--tonal-change .rq-suggestion__impact-icon {
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-accent-3, #022ac0);
+}
+
+.rq-suggestion--rejected .rq-suggestion__foot {
+    color: var(--slds-g-color-on-surface-2, #5c5c5c);
+}
+
+/* Responsive: stack the two panes on narrower viewports so the
+ * compare still works at smaller window widths (the prototype doesn't
+ * leave the desktop frame, but we keep this readable). */
+@media (max-width: 1024px) {
+    .rq-page {
+        grid-template-columns: 200px 1fr;
+    }
+    .rq-split {
+        grid-template-columns: 1fr;
+    }
+}

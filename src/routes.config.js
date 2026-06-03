@@ -97,4 +97,14 @@ export const routes = [
         title: 'Knowledge Blocks | Knowledge',
         navHighlight: 'knowledge',
     },
+    {
+        // Article review queue. Opened in a new workspace tab from the
+        // Knowledge Health page's "Review in Queue" CTA. Closes back
+        // to /command-center via the shell's `originPath` mechanism
+        // stamped on the addtab event.
+        path: '/review-queue',
+        component: 'page-review-queue',
+        title: 'Review Queue | Knowledge',
+        navHighlight: 'knowledge',
+    },
 ];

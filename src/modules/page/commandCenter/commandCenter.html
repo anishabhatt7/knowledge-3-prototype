@@ -207,18 +207,17 @@
                             <h2 class="cc-violations__title">Structural Violations</h2>
                             <p class="cc-violations__subtitle">Unified view of decisions, expertise, and organizational knowledge</p>
                         </div>
-                        <lightning-button-group class="cc-violations__actions">
-                            <lightning-button
-                                variant="brand-outline"
-                                label="Review in Queue"
-                                class="cc-violations__action cc-violations__action--left"
-                            ></lightning-button>
-                            <lightning-button
-                                variant="brand-outline"
-                                label="Approve All"
-                                class="cc-violations__action cc-violations__action--right"
-                            ></lightning-button>
-                        </lightning-button-group>
+                        <div class="cc-violations__actions slds-button-group" role="group">
+                            <button
+                                type="button"
+                                class="slds-button slds-button_outline-brand cc-violations__action cc-violations__action--left"
+                                onclick={handleReviewInQueue}
+                            >Review in Queue</button>
+                            <button
+                                type="button"
+                                class="slds-button slds-button_outline-brand cc-violations__action cc-violations__action--right"
+                            >Approve All</button>
+                        </div>
                     </header>
 
                     <div class="cc-vt" role="table" aria-label="Structural violations">

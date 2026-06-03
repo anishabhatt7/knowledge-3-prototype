@@ -331,6 +331,25 @@ export default class CommandCenter extends LightningElement {
         navigate(path);
     }
 
+    /**
+     * Open the article review queue in a new workspace tab and drive
+     * the GSAP-powered hand-off animation.
+     *
+     * The trigger is a native `<button>` (see commandCenter.html);
+     * `lightning-button` was swapped out because its shadow-DOM click
+     * doesn't surface to LWC template `onclick` bindings consistently
+     * in this synthetic-shadow prototype, leaving the queue CTA
+     * silently inert. Native `onclick` is reliable and lets the
+     * transition flow run end-to-end. The queue page (page-review-
+     * queue) hosts the side-by-side current vs. suggested compare
+     * experience driven by `data/reviewQueue` seed; closing the tab
+     * returns the user to /command-center via the shell's
+     * `originPath` mechanism.
+     */
+    handleReviewInQueue(event) {
+        this._reviewInQueueTransition(event);
+    }
+
     // Close the open row-actions menu when the user clicks outside it.
     _docClickHandler = null;
 
@@ -369,6 +388,53 @@ export default class CommandCenter extends LightningElement {
         if (!scroller) return;
         this._motionInited = true;
         scroller.style.scrollBehavior = 'smooth';
+    }
+
+    /**
+     * GSAP-driven exit animation for the Knowledge Health → Review
+     * Queue hand-off, followed by the route swap. The matching
+     * entrance animation lives in `reviewQueue.renderedCallback`.
+     * Guarded by `_navigating` so a mash on the button doesn't queue
+     * overlapping tweens. `prefers-reduced-motion` skips the tween.
+     */
+    _navigating = false;
+
+    _reviewInQueueTransition(event) {
+        event?.stopPropagation?.();
+        if (this._navigating) return;
+        const path = '/review-queue';
+        const doNav = () => {
+            window.dispatchEvent(
+                new CustomEvent('workspace:addtab', {
+                    detail: {
+                        label: 'Review Queue',
+                        path,
+                        kind: 'editor',
+                        originPath: '/command-center',
+                    },
+                })
+            );
+            navigate(path);
+        };
+
+        const main = this.querySelector('.cc-main');
+        const reduce =
+            typeof window !== 'undefined' &&
+            window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!main || !gsap || reduce) {
+            doNav();
+            return;
+        }
+
+        this._navigating = true;
+        gsap.to(main, {
+            opacity: 0,
+            y: -12,
+            duration: 0.28,
+            ease: 'power2.in',
+            onComplete: doNav,
+        });
     }
 
     /**

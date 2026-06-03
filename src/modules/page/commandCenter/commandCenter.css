@@ -386,31 +386,37 @@ page-command-center {
  * root — host-level rules never reach it. We expose the chip via
  * the `badge` shadow part and tune size/colour/radius there, while
  * SLDS-2 styling hooks (`--slds-c-badge-*`) cross the shadow boundary
- * and feed the same span. Using both keeps the chip themable and
- * still pixel-correct against the Figma mint pill. */
+ * and feed the same span. Geometry (4px radius, 2px/8px padding,
+ * 16px line-height, weight 400, sentence-case) mirrors the
+ * Knowledge 3.0 status pills used on Review Queue
+ * (`.rq-score-card__trend`, `.rq-main__status`); a full-pill 9999px
+ * radius read as a stretched oval on the longer "Acceptable" label
+ * and was inconsistent with the rest of the badge family. */
 .cc-articles-card__badge {
     --slds-c-badge-color-background: var(--slds-g-color-success-base-90, #cdefc4);
     --slds-c-badge-text-color: var(--slds-g-color-success-base-30, #194e31);
     --slds-c-badge-color-border: transparent;
-    --slds-c-badge-radius-border: var(--slds-g-radius-border-circle, 9999px);
+    --slds-c-badge-radius-border: var(--slds-g-radius-border-2, 4px);
     --slds-c-badge-font-size: var(--slds-g-font-scale-neg-1, 12px);
-    --slds-c-badge-line-height: 17px;
-    --slds-c-badge-spacing-block-start: 4px;
-    --slds-c-badge-spacing-block-end: 4px;
-    --slds-c-badge-spacing-inline-start: 12px;
-    --slds-c-badge-spacing-inline-end: 12px;
+    --slds-c-badge-line-height: 16px;
+    --slds-c-badge-spacing-block-start: 2px;
+    --slds-c-badge-spacing-block-end: 2px;
+    --slds-c-badge-spacing-inline-start: var(--slds-g-spacing-2, 8px);
+    --slds-c-badge-spacing-inline-end: var(--slds-g-spacing-2, 8px);
     align-self: center;
+    text-transform: none;
+    letter-spacing: 0;
 }
 
 .cc-articles-card__badge::part(badge) {
-    padding: 4px 12px;
+    padding: 2px var(--slds-g-spacing-2, 8px);
     border: 0;
-    border-radius: var(--slds-g-radius-border-circle, 9999px);
+    border-radius: var(--slds-g-radius-border-2, 4px);
     background: var(--slds-g-color-success-base-90, #cdefc4);
     color: var(--slds-g-color-success-base-30, #194e31);
     font-size: var(--slds-g-font-scale-neg-1, 12px);
-    font-weight: var(--slds-g-font-weight-6, 590);
-    line-height: 17px;
+    font-weight: var(--slds-g-font-weight-4, 400);
+    line-height: 16px;
     text-transform: none;
     letter-spacing: 0;
 }
@@ -624,6 +630,16 @@ page-command-center {
     flex-shrink: 0;
 }
 
+/* The shell-level `shell-app .slds-button-group` rule adds an 8px gap
+ * between flex children, which would split this connected pill pair
+ * with a visible seam. Re-collapse the gap here so the two buttons
+ * sit edge-to-edge as designed. Chaining two namespaced classes
+ * beats the shell-level selector on specificity (2 classes vs 1
+ * class + 1 type) without overriding the SLDS class directly. */
+.cc-violations__header .cc-violations__actions {
+    gap: 0;
+}
+
 /* Pill end-cap buttons sit inside a connected lightning-button-group.
  * Each end button has a rounded outer corner and a flat inner corner
  * where it abuts the other button. The default 12px horizontal
@@ -631,16 +647,29 @@ page-command-center {
  * the curve eats into the corner without holding any text — tightening
  * the outer-side padding to 8px pulls the label closer to the curve
  * so the rounded end stops feeling oversized. */
-.cc-violations__action--left button {
+.cc-violations__action--left {
     border-top-left-radius: var(--slds-g-radius-border-circle, 9999px);
     border-bottom-left-radius: var(--slds-g-radius-border-circle, 9999px);
     padding-inline-start: var(--slds-g-spacing-2, 8px);
 }
 
-.cc-violations__action--right button {
+.cc-violations__action--right {
     border-top-right-radius: var(--slds-g-radius-border-circle, 9999px);
     border-bottom-right-radius: var(--slds-g-radius-border-circle, 9999px);
     padding-inline-end: var(--slds-g-spacing-2, 8px);
+    /* Each button carries its own 1px border, so the inner seam would
+     * otherwise render at 2px. Pull the right cap back by one border
+     * width so the two borders overlap into a single shared line. */
+    margin-inline-start: calc(var(--slds-g-sizing-border-1, 1px) * -1);
+}
+
+/* The end-cap pill pair on Structural Violations sits on the Knowledge
+ * Health card surface and must read as a clean transparent-on-surface
+ * outline. Forcing background to white prevents the surrounding shell's
+ * faint-grey container fill (#f3f3f3) from bleeding through and keeps
+ * the brand-outline treatment crisp across both buttons. */
+.cc-violations__action {
+    background-color: var(--slds-g-color-surface-1, #ffffff);
 }
 
 /* Violations data table — CSS grid for predictable column widths. */

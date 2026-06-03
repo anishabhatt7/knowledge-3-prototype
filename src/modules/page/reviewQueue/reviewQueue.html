@@ -1,0 +1,248 @@
+<template lwc:render-mode="light">
+    <div class="rq-page">
+        <!-- Left rail: queue of articles waiting for review -->
+        <aside class="rq-rail" aria-label="Article queue">
+            <header class="rq-rail__head">Article Queue</header>
+            <ul class="rq-rail__list" role="list">
+                <template for:each={queueItems} for:item="q">
+                    <li key={q.id} class={q.rowClass}>
+                        <button
+                            type="button"
+                            class="rq-rail__row"
+                            data-id={q.id}
+                            onclick={handleSelectArticle}
+                            aria-current={q.ariaCurrent}
+                        >
+                            <span class="rq-rail__title">{q.title}</span>
+                            <span class="rq-rail__meta">{q.violationsLabel}</span>
+                        </button>
+                    </li>
+                </template>
+            </ul>
+        </aside>
+
+        <!-- Main pane: title, score card, content tabs, side-by-side body -->
+        <main class="rq-main">
+            <header class="rq-main__head">
+                <div class="rq-main__head-content">
+                    <div class="rq-main__title-row">
+                        <h1 class="rq-main__title">{activeArticle.title}</h1>
+                        <lightning-badge
+                            class="rq-main__status"
+                            label={activeArticle.status}
+                            icon-name="utility:list"
+                        ></lightning-badge>
+                    </div>
+                    <p class="rq-main__progress">
+                        <span class="rq-main__progress-fixed">{activeArticle.fixedCount} Fixed</span>,
+                        <span class="rq-main__progress-pending">{pendingCountLive} Pending</span>
+                    </p>
+                </div>
+                <div class="rq-main__actions">
+                    <lightning-button-group class="rq-save-next">
+                        <lightning-button
+                            label="Save & Next"
+                            variant="brand-outline"
+                            class="rq-save-next__main"
+                            onclick={handleSaveNext}
+                        ></lightning-button>
+                        <lightning-button-menu
+                            icon-name="utility:down"
+                            variant="border-filled"
+                            menu-alignment="right"
+                            alternative-text="More save options"
+                            class="rq-save-next__menu"
+                            onselect={handleSaveMenuSelect}
+                        >
+                            <lightning-menu-item
+                                value="save-stay"
+                                label="Save & Stay on this article"
+                            ></lightning-menu-item>
+                            <lightning-menu-item
+                                value="skip-next"
+                                label="Skip to next article without saving"
+                            ></lightning-menu-item>
+                            <lightning-menu-item
+                                value="submit-approval"
+                                label="Submit for Approval"
+                            ></lightning-menu-item>
+                        </lightning-button-menu>
+                    </lightning-button-group>
+                </div>
+            </header>
+
+            <!-- AI score card -->
+            <section class="rq-score-card" aria-label="AI score after changes">
+                <h2 class="rq-score-card__title">AI Score after changes</h2>
+                <div class="rq-score-card__body">
+                    <div class="rq-donut" role="img" aria-label={donutAriaLabel}>
+                        <svg viewBox="0 0 120 120" class="rq-donut__svg" aria-hidden="true">
+                            <circle
+                                class="rq-donut__bg"
+                                cx="60" cy="60" r="50"
+                            ></circle>
+                            <circle
+                                class="rq-donut__fg"
+                                cx="60" cy="60" r="50"
+                                stroke-dasharray={donutCircumference}
+                                stroke-dashoffset={donutOffset}
+                            ></circle>
+                        </svg>
+                        <div class="rq-donut__label">
+                            <span class="rq-donut__value">{aiScoreDisplay}%</span>
+                        </div>
+                    </div>
+                    <dl class="rq-score-card__metrics">
+                        <div class="rq-score-card__metric">
+                            <dt>Metadata Completeness:</dt>
+                            <dd class="rq-score-card__metric-value">{metadataLive}%</dd>
+                            <lightning-badge
+                                class="rq-score-card__trend"
+                                label="Trending above Average"
+                            ></lightning-badge>
+                        </div>
+                        <div class="rq-score-card__metric">
+                            <dt>Structural Violations:</dt>
+                            <dd class="rq-score-card__metric-value">{structuralLive}</dd>
+                            <lightning-badge
+                                class="rq-score-card__trend"
+                                label="Trending above Average"
+                            ></lightning-badge>
+                        </div>
+                    </dl>
+                </div>
+            </section>
+
+            <!-- Tabs (Content active; others inert in prototype) -->
+            <nav class="rq-tabs" role="tablist" aria-label="Article review tabs">
+                <template for:each={tabs} for:item="t">
+                    <button
+                        key={t.id}
+                        type="button"
+                        role="tab"
+                        class={t.className}
+                        data-id={t.id}
+                        aria-selected={t.ariaSelected}
+                        onclick={handleSelectTab}
+                    >{t.label}</button>
+                </template>
+            </nav>
+
+            <!-- Side-by-side content -->
+            <section class="rq-split" aria-label="Side-by-side article comparison">
+                <article class="rq-pane rq-pane--current" aria-label="Current article">
+                    <header class="rq-pane__head">Current Article</header>
+                    <div class="rq-pane__body">
+                        <template for:each={paragraphsRendered} for:item="p">
+                            <div
+                                key={p.id}
+                                class={p.rowClass}
+                                data-paragraph-id={p.id}
+                                data-suggestion-id={p.suggestionId}
+                                onclick={handleParagraphClick}
+                            >
+                                <template if:true={p.isHeading}>
+                                    <h3 class="rq-paragraph__heading">{p.text}</h3>
+                                </template>
+                                <template if:true={p.isPara}>
+                                    <p class="rq-paragraph__text">{p.text}</p>
+                                </template>
+                                <template if:true={p.isList}>
+                                    <ul class="rq-paragraph__list">
+                                        <template for:each={p.items} for:item="li">
+                                            <li key={li}>{li}</li>
+                                        </template>
+                                    </ul>
+                                </template>
+                                <template if:true={p.isImage}>
+                                    <figure class="rq-paragraph__figure">
+                                        <img
+                                            class="rq-paragraph__image"
+                                            src={p.src}
+                                            alt={p.alt}
+                                        />
+                                        <figcaption>{p.caption}</figcaption>
+                                    </figure>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </article>
+
+                <article class="rq-pane rq-pane--suggested" aria-label="Suggested changes">
+                    <header class="rq-pane__head">Suggested Changes</header>
+                    <div class="rq-pane__body">
+                        <!-- Unified flow: stable paragraphs render as plain
+                             article text; error paragraphs are replaced by the
+                             matching suggestion card; "Addition" suggestions
+                             append at the end. -->
+                        <template for:each={suggestedItemsRendered} for:item="item">
+                            <div
+                                key={item.id}
+                                class={item.rowClass}
+                                data-paragraph-id={item.dataParagraphId}
+                                data-suggestion-id={item.dataSuggestionId}
+                                data-paragraph-id-ref={item.dataParagraphIdRef}
+                                onclick={handleSuggestedItemClick}
+                            >
+                                <!-- Plain-paragraph branches -->
+                                <template if:true={item.isHeading}>
+                                    <h3 class="rq-paragraph__heading">{item.text}</h3>
+                                </template>
+                                <template if:true={item.isPara}>
+                                    <p class="rq-paragraph__text">{item.text}</p>
+                                </template>
+                                <template if:true={item.isList}>
+                                    <ul class="rq-paragraph__list">
+                                        <template for:each={item.items} for:item="li">
+                                            <li key={li}>{li}</li>
+                                        </template>
+                                    </ul>
+                                </template>
+                                <template if:true={item.isImage}>
+                                    <figure class="rq-paragraph__figure">
+                                        <img
+                                            class="rq-paragraph__image"
+                                            src={item.src}
+                                            alt={item.alt}
+                                        />
+                                        <figcaption>{item.caption}</figcaption>
+                                    </figure>
+                                </template>
+                                <!-- Suggestion-card branch -->
+                                <template if:true={item.isSuggestion}>
+                                    <header class="rq-suggestion__head">
+                                        <span class={item.categoryClass}>
+                                            <span class="rq-suggestion__chip-glyph" aria-hidden="true">
+                                                <img src="./images/sparkles.svg" alt="" class="rq-suggestion__chip-spark" />
+                                            </span>
+                                            {item.category}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            class="rq-suggestion__action"
+                                            data-id={item.id}
+                                            onclick={handleSuggestionAction}
+                                        >{item.actionLabel}</button>
+                                    </header>
+                                    <h4 class="rq-suggestion__title">{item.numberedTitle}</h4>
+                                    <p class="rq-suggestion__body">{item.body}</p>
+                                    <footer class="rq-suggestion__foot">
+                                        <span class="rq-suggestion__impact">
+                                            <lightning-icon
+                                                icon-name="utility:arrowup"
+                                                size="x-small"
+                                                class="rq-suggestion__impact-icon"
+                                            ></lightning-icon>
+                                            AI score by {item.aiImpact}%
+                                        </span>
+                                    </footer>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </article>
+            </section>
+        </main>
+    </div>
+</template>
