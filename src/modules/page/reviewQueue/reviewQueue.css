@@ -113,7 +113,7 @@
 .rq-main {
     display: flex;
     flex-direction: column;
-    padding: 24px 32px 48px;
+    padding: 24px 16px 24px;
     background: var(--slds-g-color-surface-1, #ffffff);
     min-width: 0;
     /* Outer column owns layout but not scroll — the side-by-side
@@ -133,7 +133,7 @@
     display: flex;
     align-items: center;
     gap: var(--slds-g-spacing-3, 12px);
-    margin: calc(var(--slds-g-spacing-5, 24px) * -1) calc(var(--slds-g-spacing-6, 32px) * -1) var(--slds-g-spacing-4, 16px);
+    margin: calc(var(--slds-g-spacing-5, 24px) * -1) calc(var(--slds-g-spacing-4, 16px) * -1) var(--slds-g-spacing-4, 16px);
     padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
     background: var(--slds-g-color-surface-container-1, #ffffff);
     border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
