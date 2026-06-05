@@ -1,0 +1,10 @@
+/*
+ * The SLDS context-bar item paints absolutely-positioned ::before/::after
+ * indicators that sit above the statically-positioned close button, so
+ * pointer events never reach it. Promote the close button into the
+ * positioned layer so it stays clickable.
+ */
+.gn-tab-close {
+    position: relative;
+    z-index: 2;
+}

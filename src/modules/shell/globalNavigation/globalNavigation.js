@@ -1,6 +1,8 @@
 import { LightningElement, api, track } from 'lwc';
 
 export default class GlobalNavigation extends LightningElement {
+    // Light DOM so the SLDS context-bar styles apply; co-located CSS keeps
+    // the tab close button clickable above the item pseudo-elements.
     static renderMode = 'light';
 
     @api currentPage = 'home';
