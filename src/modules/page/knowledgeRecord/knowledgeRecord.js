@@ -480,7 +480,7 @@ export default class KnowledgeRecord extends LightningElement {
         const tabLabel = `Edit: ${title}`;
         window.dispatchEvent(
             new CustomEvent('workspace:addtab', {
-                detail: { label: tabLabel, path, kind: 'editor' },
+                detail: { label: tabLabel, path, originPath: `/knowledge-record/${encodeURIComponent(id)}`, kind: 'editor' },
             })
         );
         navigate(path);

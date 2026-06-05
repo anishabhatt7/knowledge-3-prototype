@@ -272,7 +272,10 @@
                                             <div class="cc-action__title-row">
                                                 <span class="cc-action__title">{action.title}</span>
                                                 <template lwc:if={action.hasPriority}>
-                                                    <span class={action.priorityBadgeClass}>{action.priorityLabel}</span>
+                                                    <lightning-badge
+                                                        label={action.priorityLabel}
+                                                        class={action.priorityBadgeClass}
+                                                    ></lightning-badge>
                                                 </template>
                                             </div>
                                             <div class="cc-action__subline">

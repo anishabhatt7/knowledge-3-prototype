@@ -1058,7 +1058,7 @@ page-healing-graph {
     display: flex;
     flex-direction: column;
     gap: var(--slds-g-spacing-7, 40px);
-    padding: var(--slds-g-spacing-6, 32px) var(--slds-g-spacing-7, 40px);
+    padding: 0;
     /* Cover the shell's dotted radial-gradient backdrop with a flat
        surface so the dashboard reads as a clean page. */
     background-color: var(--slds-g-color-surface-1, #fafafa);
@@ -1072,6 +1072,8 @@ page-healing-graph {
     grid-template-columns: repeat(3, 1fr);
     gap: var(--slds-g-spacing-5, 24px);
     width: 100%;
+    padding: var(--slds-g-spacing-5, 24px);
+    border-bottom: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
 }
 
 /* Collapse to a single column only on narrow viewports. */
@@ -1086,9 +1088,24 @@ page-healing-graph {
     flex-direction: column;
     gap: var(--slds-g-spacing-2, 8px);
     padding: var(--slds-g-spacing-4, 16px);
-    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    border: var(--slds-g-sizing-border-1, 1px) solid #e5e5e5;
     border-radius: var(--slds-g-radius-border-4, 20px);
     background-color: var(--slds-g-color-surface-1, #fff);
+    cursor: pointer;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hg-dash-card:focus-visible {
+    outline: var(--slds-g-sizing-border-2, 2px) solid var(--slds-g-color-border-accent-1, #0176d3);
+    outline-offset: var(--slds-g-spacing-1, 4px);
+}
+
+/* Selected domain card — Figma 375:48126 (2px accent border). The 1px
+   outer ring keeps the visual at 2px without shifting the 1px layout
+   border, so sibling cards don't reflow. */
+.hg-dash-card--selected {
+    border-color: var(--slds-g-color-border-accent-2, #0250d9);
+    box-shadow: 0 0 0 var(--slds-g-sizing-border-1, 1px) var(--slds-g-color-border-accent-2, #0250d9);
 }
 
 .hg-dash-card__title {
@@ -1194,6 +1211,7 @@ page-healing-graph {
     display: flex;
     flex-direction: column;
     gap: var(--slds-g-spacing-4, 16px);
+    margin: 0 var(--slds-g-spacing-5, 24px) var(--slds-g-spacing-5, 24px);
 }
 
 .hg-qi-header {
@@ -1211,22 +1229,6 @@ page-healing-graph {
     font-weight: var(--slds-g-font-weight-6, 590);
     line-height: var(--slds-g-font-line-height-3, 1.4);
     color: var(--slds-g-color-on-surface-2, #2e2e2e);
-}
-
-.hg-qi-header__explore {
-    flex-shrink: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    font-family: var(--slds-g-font-family-base, inherit);
-    font-size: var(--slds-g-font-scale-1, 14px);
-    font-weight: var(--slds-g-font-weight-4, 400);
-    color: var(--slds-g-color-accent-2, #0250d9);
-    cursor: pointer;
-}
-
-.hg-qi-header__explore:hover {
-    text-decoration: underline;
 }
 
 /* ── Filter bar (Figma 385:47622) ────────────────────────────────── */
@@ -1383,6 +1385,20 @@ page-healing-graph {
     margin-top: auto;
     padding-top: var(--slds-g-spacing-3, 12px);
     border-top: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+/* When the quality-issue tile is reused inside the narrow graph-view
+   side panel, drop its card chrome (the panel already frames it) and
+   stack the two conflicting options vertically. */
+.hg-qi-tile--panel {
+    gap: var(--slds-g-spacing-4, 16px);
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+}
+
+.hg-qi-tile--panel .hg-qi-tile__columns {
+    grid-template-columns: 1fr;
 }
 
 /* ── Empty state ─────────────────────────────────────────────────── */

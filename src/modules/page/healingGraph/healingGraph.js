@@ -1,7 +1,10 @@
 import { LightningElement, track } from 'lwc';
 import * as d3 from 'd3';
 import { gsap } from 'gsap';
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import { animate, stagger } from 'motion';
+
+gsap.registerPlugin(ScrollToPlugin);
 import { navigate } from '../../../router';
 import { setDraftSession } from 'data/draftSession';
 import { setRecord } from 'data/recordSession';
@@ -34,8 +37,8 @@ export default class HealingGraph extends LightningElement {
 
     railMaintain = [
         { id: 'command-center', label: 'Command Center', icon: 'utility:trending' },
-        { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro' },
         { id: 'healing-graph', label: 'Knowledge Health', icon: 'utility:graph', active: true },
+        { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro' },
         { id: 'decision-hub', label: 'Decision Hub', icon: 'utility:dataspaces' },
     ];
 
@@ -188,12 +191,105 @@ export default class HealingGraph extends LightningElement {
     }
 
     renderedCallback() {
-        if (this._d3Inited) return;
-        const svg = this.querySelector('.hg-svg');
-        if (!svg) return;
-        this._d3Inited = true;
-        this._playEntranceAnimation();
-        this._initGraph();
+        if (this._graphView) {
+            if (this._d3Inited) return;
+            const svg = this.querySelector('.hg-svg');
+            if (!svg) return;
+            this._d3Inited = true;
+            this._playEntranceAnimation();
+            this._initGraph();
+            return;
+        }
+
+        // Dashboard view — set up smooth scroll + entrance/progress motion
+        // the first time the dashboard renders.
+        if (this._dashInited) return;
+        const dashboard = this.querySelector('.hg-dashboard');
+        if (!dashboard) return;
+        this._dashInited = true;
+        this._setupDashboardMotion(dashboard);
+    }
+
+    _prefersReducedMotion() {
+        return (
+            typeof window !== 'undefined' &&
+            window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        );
+    }
+
+    // ── Dashboard motion ─────────────────────────────────────────────
+    // Native smooth scroll on the dashboard scroller (matches the other
+    // pages), plus a GSAP-driven entrance: cards and the quality-issues
+    // section reveal upward in a stagger, and each domain progress bar
+    // fills from zero to its value.
+    _setupDashboardMotion(dashboard) {
+        this._dashScroller = dashboard;
+        dashboard.style.scrollBehavior = 'smooth';
+
+        if (this._prefersReducedMotion()) return;
+
+        const cards = [...this.querySelectorAll('.hg-dash-grid .hg-dash-card')];
+        const qiSection = this.querySelector('.hg-qi-section');
+
+        if (cards.length) {
+            gsap.from(cards, {
+                opacity: 0,
+                y: 16,
+                duration: 0.5,
+                ease: 'power2.out',
+                stagger: 0.06,
+                clearProps: 'opacity,transform',
+            });
+        }
+
+        if (qiSection) {
+            gsap.from(qiSection, {
+                opacity: 0,
+                y: 16,
+                duration: 0.5,
+                ease: 'power2.out',
+                delay: 0.15,
+                clearProps: 'opacity,transform',
+            });
+        }
+
+        this._animateProgressBars();
+    }
+
+    // Tween each lightning-progress-bar's value from 0 → target so the
+    // fill animates in. We tween a proxy and write the rounded value back
+    // to the base component each frame.
+    _animateProgressBars() {
+        const bars = [...this.querySelectorAll('.hg-dash-progress')];
+        bars.forEach((bar, i) => {
+            const target = Number(bar.value) || 0;
+            const proxy = { v: 0 };
+            bar.value = 0;
+            gsap.to(proxy, {
+                v: target,
+                duration: 1,
+                ease: 'power2.out',
+                delay: 0.2 + i * 0.06,
+                onUpdate: () => {
+                    bar.value = Math.round(proxy.v);
+                },
+                onComplete: () => {
+                    bar.value = target;
+                },
+            });
+        });
+    }
+
+    // A quick "pop" when a card becomes selected, complementing the CSS
+    // border/box-shadow transition.
+    _animateCardSelection(card) {
+        if (!card || this._prefersReducedMotion()) return;
+        gsap.fromTo(
+            card,
+            { scale: 0.97 },
+            { scale: 1, duration: 0.45, ease: 'back.out(1.7)', clearProps: 'transform' }
+        );
     }
 
     _playEntranceAnimation() {
@@ -247,8 +343,12 @@ export default class HealingGraph extends LightningElement {
         this._graphView = on;
         // The graph builds lazily in renderedCallback when the <svg> is in
         // the DOM. lwc:if removes that node when we leave graph view, so we
-        // reset the init guard to force a clean rebuild on the next toggle.
-        if (!on) this._teardownGraph();
+        // reset the init guards to force a clean rebuild on the next toggle.
+        if (on) {
+            this._dashInited = false;
+        } else {
+            this._teardownGraph();
+        }
     }
 
     get headerSubtitle() {
@@ -262,6 +362,7 @@ export default class HealingGraph extends LightningElement {
             let status = 'error';
             if (c.overall >= 85) status = 'success';
             else if (c.overall >= 70) status = 'warning';
+            const selected = c.domain === this._dashFilters.domain;
             return {
                 id: c.id,
                 domain: c.domain,
@@ -269,6 +370,10 @@ export default class HealingGraph extends LightningElement {
                 overall: c.overall,
                 overallLabel: `${c.overall}%`,
                 trend: c.trend,
+                selected,
+                cardClass: selected
+                    ? 'hg-dash-card hg-dash-card--selected'
+                    : 'hg-dash-card',
                 progressClass: `hg-dash-progress hg-dash-progress_${status}`,
                 accuracyLabel: `${c.accuracy}%`,
                 metadataLabel: `${c.metadata}%`,
@@ -276,6 +381,52 @@ export default class HealingGraph extends LightningElement {
                 structureLabel: `${c.structure}%`,
                 hitl: `${c.hitl}`,
             };
+        });
+    }
+
+    /**
+     * Selecting a domain card filters the Active Quality Issues to that
+     * domain and scrolls the section into view. Clicking the already
+     * selected card clears the filter (toggle).
+     */
+    handleDomainCardClick(event) {
+        const card = event.currentTarget;
+        const domain = card?.dataset?.domain;
+        if (!domain) return;
+        const alreadySelected = this._dashFilters.domain === domain;
+        this._dashFilters = {
+            ...this._dashFilters,
+            domain: alreadySelected ? '' : domain,
+        };
+        if (!alreadySelected) {
+            this._animateCardSelection(card);
+            this._scrollToQualityIssues();
+        }
+    }
+
+    handleDomainCardKeydown(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            this.handleDomainCardClick(event);
+        }
+    }
+
+    _scrollToQualityIssues() {
+        // Light DOM render mode — query the rendered section directly.
+        requestAnimationFrame(() => {
+            const scroller = this._dashScroller || this.querySelector('.hg-dashboard');
+            const section = this.querySelector('.hg-qi-section');
+            if (!scroller || !section) return;
+            if (this._prefersReducedMotion()) {
+                section.scrollIntoView({ block: 'start' });
+                return;
+            }
+            // GSAP smooth scroll within the dashboard scroll container.
+            gsap.to(scroller, {
+                duration: 0.6,
+                ease: 'power3.inOut',
+                scrollTo: { y: section, offsetY: 16 },
+            });
         });
     }
 
@@ -402,12 +553,6 @@ export default class HealingGraph extends LightningElement {
         const id = event.currentTarget?.dataset?.id;
         if (!id) return;
         this._ignoredIssueIds = [...this._ignoredIssueIds, id];
-    }
-
-    /** "Explore All" — clear filters and restore any dismissed issues. */
-    handleExploreAll() {
-        this._dashFilters = { domain: '', type: '', priority: '' };
-        this._ignoredIssueIds = [];
     }
 
     // ── Computed getters ─────────────────────────────────────────────
@@ -549,6 +694,39 @@ export default class HealingGraph extends LightningElement {
         return [];
     }
 
+    /**
+     * Maps the selected graph contradiction into the same shape the
+     * dashboard "Active Quality Issues" tile uses, so the side panel
+     * presents identical content and actions: clickable articles that
+     * open as records in a workspace tab, a confidence badge, and a
+     * "Pick this" action per conflicting option.
+     */
+    get selectedContradiction() {
+        const data = this._selectedElement?.data;
+        if (!data) return null;
+        const confidenceBySeverity = { critical: 98, high: 95, medium: 90, low: 85 };
+        const confidence = confidenceBySeverity[data.severity] ?? 95;
+        return {
+            id: data.id,
+            domain: data.domain,
+            typeBadgeLabel: 'Contradiction',
+            confidenceLabel: `Confidence: ${confidence}%`,
+            title: `Conflicting information in ${data.domain}`,
+            description:
+                'The following information has been identified as a contradiction. Both articles make mutually-exclusive claims about the same topic — only one can be correct. Review each source and pick the one to keep.',
+            itemA: {
+                articleId: data.entityA?.id,
+                articleTitle: data.entityA?.title,
+                text: data.entityA?.claim,
+            },
+            itemB: {
+                articleId: data.entityB?.id,
+                articleTitle: data.entityB?.title,
+                text: data.entityB?.claim,
+            },
+        };
+    }
+
     get healingNodeDotStyle() {
         if (!this._selectedElement?.node) return '';
         return `background-color: ${CAPABILITY_COLORS[this._selectedElement.node.capability] || '#3b82f6'}`;
@@ -655,6 +833,17 @@ export default class HealingGraph extends LightningElement {
         this._selectedElement = null;
     }
 
+    /** Dismiss the selected contradiction and close the detail panel. */
+    handleIgnoreContradiction() {
+        const id = this._selectedElement?.data?.id;
+        if (id) {
+            this._contradictions = this._contradictions.map((c) =>
+                c.id === id ? { ...c, status: 'ignored' } : c
+            );
+        }
+        this._selectedElement = null;
+    }
+
     handleToggleAction(event) {
         const id = event.currentTarget.dataset.actionId;
         const expanded = [...this._expandedActions];
@@ -701,7 +890,7 @@ export default class HealingGraph extends LightningElement {
 
     _addArticleTab(title) {
         window.dispatchEvent(new CustomEvent('workspace:addtab', {
-            detail: { label: title, path: '/new-knowledge' },
+            detail: { label: title, path: '/new-knowledge', originPath: '/healing-graph' },
         }));
     }
 

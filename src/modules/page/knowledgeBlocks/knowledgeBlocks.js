@@ -27,8 +27,8 @@ export default class KnowledgeBlocks extends LightningElement {
 
     railMaintain = [
         { id: 'command-center', label: 'Command Center', icon: 'utility:trending' },
-        { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro' },
         { id: 'healing-graph', label: 'Knowledge Health', icon: 'utility:graph' },
+        { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro' },
         { id: 'decision-hub', label: 'Decision Hub', icon: 'utility:dataspaces' },
     ];
 
@@ -218,5 +218,42 @@ export default class KnowledgeBlocks extends LightningElement {
             this.showToast = false;
             this._toastMessage = '';
         }, 4000);
+    }
+
+    // ── Page entrance motion ─────────────────────────────────────────
+    // A GSAP reveal that glides the active view's content up and fades
+    // it in, matching the entrance used on the other pages. It replays
+    // whenever the view (list / create / saved) changes so each swap
+    // gets the same smooth transition.
+    renderedCallback() {
+        const shell = this.querySelector('.kblocks-shell');
+        if (!shell) return;
+        if (this._animatedView === this._currentView) return;
+        this._animatedView = this._currentView;
+        this._playEntrance(shell);
+    }
+
+    disconnectedCallback() {
+        this._animatedView = null;
+    }
+
+    _playEntrance(shell) {
+        const reduce =
+            typeof window !== 'undefined' &&
+            window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce) return;
+
+        const items = Array.from(shell.children);
+        if (!items.length) return;
+
+        gsap.from(items, {
+            opacity: 0,
+            y: 18,
+            duration: 0.5,
+            ease: 'power2.out',
+            stagger: 0.1,
+            clearProps: 'opacity,transform',
+        });
     }
 }

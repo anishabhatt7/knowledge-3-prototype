@@ -44,8 +44,8 @@ export default class KnowledgeAgents extends LightningElement {
 
     railMaintain = [
         { id: 'command-center', label: 'Command Center', icon: 'utility:trending' },
-        { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro', active: true },
         { id: 'healing-graph', label: 'Knowledge Health', icon: 'utility:graph' },
+        { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro', active: true },
         { id: 'decision-hub', label: 'Decision Hub', icon: 'utility:dataspaces' },
     ];
 

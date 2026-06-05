@@ -23,8 +23,8 @@ export default class CommandCenter extends LightningElement {
 
     railMaintain = [
         { id: 'command-center', label: 'Command Center', icon: 'utility:trending', active: true },
-        { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro' },
         { id: 'healing-graph', label: 'Knowledge Health', icon: 'utility:graph' },
+        { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro' },
         { id: 'decision-hub', label: 'Decision Hub', icon: 'utility:dataspaces' },
     ];
 
@@ -123,9 +123,9 @@ export default class CommandCenter extends LightningElement {
     // ── Data ────────────────────────────────────────────────────────
     _aiReadiness = seedAIReadiness;
     watchlist = seedWatchlist;
-    @track _actionItems = seedActionItems.map((item, idx) => ({
+    @track _actionItems = seedActionItems.map((item) => ({
         ...item,
-        expanded: idx === 0,
+        expanded: false,
     }));
 
     // ── AI Readiness donut ──────────────────────────────────────────
@@ -223,7 +223,7 @@ export default class CommandCenter extends LightningElement {
         const title = event.currentTarget.dataset.title || 'Untitled Article';
         setDraftSession({ title });
         window.dispatchEvent(new CustomEvent('workspace:addtab', {
-            detail: { label: title, path: '/new-knowledge' },
+            detail: { label: title, path: '/new-knowledge', originPath: '/command-center' },
         }));
         navigate('/new-knowledge');
     }

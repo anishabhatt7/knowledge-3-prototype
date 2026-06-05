@@ -237,43 +237,54 @@
                     </button>
                 </div>
                 <div class="hg-panel__body">
-                    <!-- Contradiction detail -->
+                    <!-- Contradiction detail — mirrors the dashboard
+                         "Active Quality Issues" tile (clickable articles
+                         open as records in a workspace tab, confidence
+                         badge, and a "Pick this" action per option). -->
                     <template lwc:if={isContradictionSelected}>
-                        <div class="hg-contra">
-                            <div class="hg-contra__head">
-                                <span class="hg-contra__domain">{_selectedElement.data.domain}</span>
-                                <span class={contraSeverityClass}>{_selectedElement.data.severity}</span>
-                            </div>
-                            <div class="hg-contra__claims">
-                                <div class="hg-contra__claim hg-contra__claim--a">
-                                    <p class="hg-contra__claim-title">{_selectedElement.data.entityA.title}</p>
-                                    <p class="hg-contra__claim-text">{_selectedElement.data.entityA.claim}</p>
+                        <article class="hg-qi-tile hg-qi-tile--panel">
+                            <div class="hg-qi-tile__head">
+                                <div class="hg-qi-tile__head-left">
+                                    <span class="hg-qi-tile__domain">{selectedContradiction.domain}</span>
+                                    <lightning-badge label={selectedContradiction.typeBadgeLabel} class="hg-qi-type-badge slds-badge_lightest"></lightning-badge>
+                                    <lightning-badge label={selectedContradiction.confidenceLabel} icon-name="utility:success" class="hg-qi-conf-badge slds-theme_success"></lightning-badge>
                                 </div>
-                                <div class="hg-contra__vs"><span>vs</span></div>
-                                <div class="hg-contra__claim hg-contra__claim--b">
-                                    <p class="hg-contra__claim-title">{_selectedElement.data.entityB.title}</p>
-                                    <p class="hg-contra__claim-text">{_selectedElement.data.entityB.claim}</p>
+                                <div class="hg-qi-tile__head-actions">
+                                    <lightning-button variant="brand-outline" label="Ignore Issue" onclick={handleIgnoreContradiction}></lightning-button>
                                 </div>
                             </div>
-                            <div class="hg-contra__resolutions">
-                                <p class="hg-contra__resolution-label">Suggested Resolutions</p>
-                                <template for:each={contraResolutionsComputed} for:item="res">
-                                    <div key={res.key} class="hg-contra__resolution-item">
-                                        <p class="hg-contra__resolution-article">{res.articleTitle}</p>
-                                        <p class="hg-contra__resolution-text">{res.text}</p>
-                                        <button type="button" class="hg-contra__review-btn" data-title={res.articleTitle} onclick={handleApproveDraftArticle}>
-                                            <lightning-icon icon-name="utility:sparkles" size="xx-small" alternative-text=""></lightning-icon>
-                                            <span>Approve Draft</span>
-                                        </button>
+
+                            <div class="hg-qi-tile__summary">
+                                <p class="hg-qi-tile__summary-title">{selectedContradiction.title}</p>
+                                <p class="hg-qi-tile__summary-text">{selectedContradiction.description}</p>
+                            </div>
+
+                            <div class="hg-qi-tile__columns">
+                                <div class="hg-qi-col">
+                                    <span class="hg-qi-col__label">Option A</span>
+                                    <button type="button" class="hg-qi-col__article" data-id={selectedContradiction.itemA.articleId} data-title={selectedContradiction.itemA.articleTitle} onclick={handleOpenArticle}>
+                                        <lightning-icon icon-name="utility:knowledge_base" size="xx-small" alternative-text="" class="hg-qi-col__article-icon"></lightning-icon>
+                                        <span class="hg-qi-col__article-text">{selectedContradiction.itemA.articleTitle}</span>
+                                    </button>
+                                    <p class="hg-qi-col__text">{selectedContradiction.itemA.text}</p>
+                                    <div class="hg-qi-col__footer">
+                                        <lightning-button variant="brand-outline" label="Pick this" data-title={selectedContradiction.itemA.articleTitle} onclick={handlePickOption}></lightning-button>
                                     </div>
-                                </template>
+                                </div>
+
+                                <div class="hg-qi-col">
+                                    <span class="hg-qi-col__label">Option B</span>
+                                    <button type="button" class="hg-qi-col__article" data-id={selectedContradiction.itemB.articleId} data-title={selectedContradiction.itemB.articleTitle} onclick={handleOpenArticle}>
+                                        <lightning-icon icon-name="utility:knowledge_base" size="xx-small" alternative-text="" class="hg-qi-col__article-icon"></lightning-icon>
+                                        <span class="hg-qi-col__article-text">{selectedContradiction.itemB.articleTitle}</span>
+                                    </button>
+                                    <p class="hg-qi-col__text">{selectedContradiction.itemB.text}</p>
+                                    <div class="hg-qi-col__footer">
+                                        <lightning-button variant="brand-outline" label="Pick this" data-title={selectedContradiction.itemB.articleTitle} onclick={handlePickOption}></lightning-button>
+                                    </div>
+                                </div>
                             </div>
-                            <p class="hg-contra__time">Detected {contraDetectedTime}</p>
-                            <div class="hg-contra__actions">
-                                <lightning-button variant="brand" label="Approve All Drafts" icon-name="utility:sparkles" class="hg-contra__btn" onclick={handleApproveDraftContra}></lightning-button>
-                                <lightning-button variant="neutral" label="Ignore" class="hg-contra__btn"></lightning-button>
-                            </div>
-                        </div>
+                        </article>
                     </template>
 
                     <!-- Node healing detail -->
@@ -343,7 +354,16 @@
             <div class="hg-dashboard">
                 <div class="hg-dash-grid">
                     <template for:each={domainCards} for:item="card">
-                        <article key={card.id} class="hg-dash-card">
+                        <article
+                            key={card.id}
+                            class={card.cardClass}
+                            role="button"
+                            tabindex="0"
+                            aria-pressed={card.selected}
+                            data-domain={card.domain}
+                            onclick={handleDomainCardClick}
+                            onkeydown={handleDomainCardKeydown}
+                        >
                             <p class="hg-dash-card__title">{card.domain}</p>
 
                             <div class="hg-dash-card__content">
@@ -395,7 +415,6 @@
                 <section class="hg-qi-section">
                     <div class="hg-qi-header">
                         <h2 class="hg-qi-header__title">Active Quality Issue</h2>
-                        <button type="button" class="hg-qi-header__explore" onclick={handleExploreAll}>Explore All</button>
                     </div>
 
                     <!-- Filter bar — Figma 385:47622 -->

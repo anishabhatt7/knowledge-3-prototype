@@ -10,15 +10,17 @@ import { LightningElement, api } from 'lwc';
 
 const COLUMNS = [
   {
-    label: 'Account Name',
-    fieldName: 'accountNameUrl',
-    type: 'url',
+    label: 'Article Name',
+    fieldName: 'accountName',
+    type: 'button',
     sortable: true,
     initialWidth: 400,
     wrapText: false,
     cellAttributes: { class: 'nk-kb-name-cell' },
     typeAttributes: {
       label: { fieldName: 'accountName' },
+      variant: 'base',
+      name: 'view_record',
     },
   },
   {

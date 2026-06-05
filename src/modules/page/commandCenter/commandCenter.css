@@ -800,18 +800,12 @@ page-command-center {
 
 .cc-priority-badge {
     flex-shrink: 0;
-    font-size: var(--slds-g-font-scale-neg-2, 10px);
-    line-height: 14px;
-    font-weight: var(--slds-g-font-weight-6, 600);
-    padding: 2px var(--slds-g-spacing-2, 8px);
-    border-radius: var(--slds-g-radius-border-circle, 9999px);
-    background-color: var(--slds-g-color-surface-2, #f3f3f3);
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
 }
 
+/* High priority uses the SLDS error theme via badge styling hooks. */
 .cc-priority-badge--high {
-    background-color: #fde7ee;
-    color: #ba0517;
+    --slds-c-badge-color-background: var(--slds-g-color-error-container-1, #feded8);
+    --slds-c-badge-text-color: var(--slds-g-color-error-1, #ba0517);
 }
 
 /* Pill-shaped brand-outline lightning-button — Figma "Agentic Button - Neutral" */
