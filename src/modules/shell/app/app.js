@@ -116,7 +116,14 @@ export default class App extends LightningElement {
 
     get currentNavPage() {
         if (!this.route) return 'knowledge';
-        const matching = this._workspaceTabs.filter((t) => t.path === this.route.path);
+        // `route.path` is the (possibly parametric) template; rebuild the
+        // concrete path with the route params so workspace tabs opened on
+        // routes like `/knowledge-record/:id` match and show as active.
+        const params = this.route.params || {};
+        const concretePath = this.route.path
+            ? this.route.path.replace(/:([^/]+)/g, (_m, k) => encodeURIComponent(params[k] ?? ''))
+            : this.route.path;
+        const matching = this._workspaceTabs.filter((t) => t.path === concretePath);
         if (matching.length) return matching[matching.length - 1].page;
         return this.route.navPage ?? this.route.navHighlight ?? ROUTE_TO_NAV_PAGE[this.route.component] ?? 'knowledge';
     }
