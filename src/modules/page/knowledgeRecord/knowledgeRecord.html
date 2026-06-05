@@ -1,0 +1,423 @@
+<template lwc:render-mode="light">
+    <div class="kr-page">
+        <!-- ═══ PAGE HEADER ═══ -->
+        <header class="kr-header">
+            <div class="kr-header__main">
+                <div class="kr-header__icon-wrapper" aria-hidden="true">
+                    <lightning-icon
+                        icon-name="standard:knowledge"
+                        size="medium"
+                        alternative-text="Knowledge Article"
+                    ></lightning-icon>
+                </div>
+                <div class="kr-header__title-block">
+                    <p class="kr-header__overline">{overline}</p>
+                    <h1 class="kr-header__title" title={title}>{title}</h1>
+                </div>
+            </div>
+            <div class="kr-header__actions">
+                <lightning-button
+                    variant="neutral"
+                    label="Follow"
+                    icon-name="utility:add"
+                    icon-position="left"
+                    class="kr-header__btn kr-header__btn--pill"
+                ></lightning-button>
+                <lightning-button
+                    variant="neutral"
+                    label="Archive"
+                    class="kr-header__btn"
+                ></lightning-button>
+                <lightning-button
+                    variant="neutral"
+                    label="Submit for Translation"
+                    class="kr-header__btn"
+                ></lightning-button>
+                <lightning-button
+                    variant="brand-outline"
+                    label="Analyse Article"
+                    class="kr-header__btn"
+                ></lightning-button>
+                <lightning-button-icon
+                    variant="border-filled"
+                    icon-name="utility:down"
+                    alternative-text="More actions"
+                    class="kr-header__more"
+                ></lightning-button-icon>
+            </div>
+        </header>
+
+        <!-- ═══ METADATA STRIP ═══
+             Full label text is rendered (e.g. "Article number"); the
+             column-grid + ellipsis CSS clips them visually to match
+             the truncated look in the Figma frame at narrow widths. -->
+        <section class="kr-meta" aria-label="Article metadata">
+            <div class="kr-meta__item">
+                <p class="kr-meta__label">Article number</p>
+                <p class="kr-meta__value">{articleNumber}</p>
+            </div>
+            <div class="kr-meta__item">
+                <p class="kr-meta__label">Article Record Type</p>
+                <p class="kr-meta__value">{articleRecordType}</p>
+            </div>
+            <div class="kr-meta__item">
+                <p class="kr-meta__label">Version Number</p>
+                <p class="kr-meta__value">{versionNumber}</p>
+            </div>
+            <div class="kr-meta__item">
+                <p class="kr-meta__label">Is Latest Version</p>
+                <p class="kr-meta__value">
+                    <!-- Checked-state visual built from a small flex
+                         square + white check glyph (avoids needing a
+                         full <lightning-input type="checkbox">). -->
+                    <span class="kr-meta__check" role="img" aria-label="Yes">
+                        <lightning-icon
+                            icon-name="utility:check"
+                            size="xx-small"
+                            alternative-text=""
+                        ></lightning-icon>
+                    </span>
+                </p>
+            </div>
+            <div class="kr-meta__item">
+                <p class="kr-meta__label">Publication Status</p>
+                <p class="kr-meta__value">{publishedStatus}</p>
+            </div>
+            <div class="kr-meta__item">
+                <p class="kr-meta__label">Language</p>
+                <p class="kr-meta__value">{language}</p>
+            </div>
+            <div class="kr-meta__item">
+                <p class="kr-meta__label">Parent Article</p>
+                <p class="kr-meta__value">
+                    <a class="kr-meta__link" href="javascript:void(0)">{parentArticleId}</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- ═══ BODY: Left main + Right sidebar ═══ -->
+        <div class="kr-body">
+            <!-- LEFT MAIN COLUMN
+                 Wrapped in lightning-card so the surface, border, and
+                 shadow come from the Lightning Base Component instead
+                 of hand-rolled CSS. The inner `.kr-main__body` keeps
+                 the vertical flex/gap layout for tabs + tab content. -->
+            <lightning-card class="kr-main">
+                <div class="kr-main__body">
+                <!-- Tab bar -->
+                <div class="kr-tabs" role="tablist" aria-label="Article views">
+                    <template for:each={tabs} for:item="tab">
+                        <button
+                            key={tab.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={tab.ariaSelected}
+                            data-id={tab.id}
+                            class={tab.tabClass}
+                            onclick={handleTabClick}
+                        >{tab.label}</button>
+                    </template>
+                </div>
+
+                <!-- ════════ DETAILS TAB CONTENT ═══════════════════════
+                     Figma frame 182:35015 shows Information + Details
+                     accordions when the Details tab is active. -->
+                <template lwc:if={isDetailsTab}>
+                <!-- Information section (collapsible) -->
+                <section class="kr-section">
+                    <button
+                        type="button"
+                        class="kr-section__header"
+                        aria-expanded={_infoOpen}
+                        onclick={handleToggleInfo}
+                    >
+                        <lightning-icon
+                            icon-name={infoChevron}
+                            size="x-small"
+                            alternative-text="Toggle Information"
+                            class="kr-section__chevron"
+                        ></lightning-icon>
+                        <span class="kr-section__title">Information</span>
+                    </button>
+                    <template lwc:if={_infoOpen}>
+                        <div class="kr-section__body">
+                            <div class="kr-field">
+                                <p class="kr-field__label">Title</p>
+                                <p class="kr-field__value kr-field__value--muted">{title}</p>
+                            </div>
+                            <div class="kr-field">
+                                <p class="kr-field__label">
+                                    <span>Summary</span>
+                                    <lightning-icon
+                                        icon-name="utility:info"
+                                        size="xx-small"
+                                        alternative-text="Info"
+                                        class="kr-field__info"
+                                    ></lightning-icon>
+                                </p>
+                                <p class="kr-field__value">{summary}</p>
+                            </div>
+                        </div>
+                    </template>
+                </section>
+
+                <!-- Details section (collapsible) -->
+                <section class="kr-section">
+                    <button
+                        type="button"
+                        class="kr-section__header"
+                        aria-expanded={_detailsOpen}
+                        onclick={handleToggleDetails}
+                    >
+                        <lightning-icon
+                            icon-name={detailsChevron}
+                            size="x-small"
+                            alternative-text="Toggle Details"
+                            class="kr-section__chevron"
+                        ></lightning-icon>
+                        <span class="kr-section__title">Details</span>
+                    </button>
+                    <template lwc:if={_detailsOpen}>
+                        <div class="kr-section__body">
+                            <div class="kr-field kr-field--rich">
+                                <p class="kr-field__label">
+                                    <span>Details</span>
+                                    <lightning-icon
+                                        icon-name="utility:info"
+                                        size="xx-small"
+                                        alternative-text="Info"
+                                        class="kr-field__info"
+                                    ></lightning-icon>
+                                </p>
+                                <div class="kr-rich">
+                                    <template lwc:if={hasEditedBody}>
+                                        <!-- When the user has saved an
+                                             edit in the Review Article
+                                             experience, render the
+                                             editor's HTML directly so
+                                             formatting and any block
+                                             types unique to the editor
+                                             (lists, blockquotes, etc.)
+                                             show up here untouched. -->
+                                        <lightning-formatted-rich-text
+                                            value={bodyHtml}
+                                        ></lightning-formatted-rich-text>
+                                    </template>
+                                    <template lwc:else>
+                                        <template for:each={bodyBlocks} for:item="b">
+                                            <p key={b.key} lwc:if={b.isLead}><strong>{b.text}</strong></p>
+                                            <p key={b.key} lwc:elseif={b.isSubheading} class="kr-rich__region"><strong>{b.text}</strong></p>
+                                            <p key={b.key} lwc:elseif={b.isMinor} class="kr-rich__country">{b.text}</p>
+                                            <p key={b.key} lwc:elseif={b.isParagraph}>{b.text}</p>
+                                            <ul key={b.key} lwc:elseif={b.isList}>
+                                                <template for:each={b.items} for:item="i">
+                                                    <li key={i.key}>{i.text}</li>
+                                                </template>
+                                            </ul>
+                                        </template>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </section>
+                </template>
+
+                <!-- ════════ ANALYSIS TAB CONTENT ══════════════════════
+                     Figma frame 182:34320 — AI Readiness dashboard
+                     (donut + KPIs + summary + suggestion button) plus
+                     a Structural Violations data table. Built without
+                     a chart library: the donut is two stacked SVG
+                     arcs driven by `readinessPercent`. -->
+                <template lwc:if={isAnalysisTab}>
+                    <section class="kr-ai" aria-labelledby="kr-ai-title">
+                        <header class="kr-ai__header">
+                            <h2 id="kr-ai-title" class="kr-ai__title">AI Readiness Score</h2>
+                        </header>
+                        <div class="kr-ai__body">
+                            <!-- Donut: green arc on grey ring -->
+                            <div class="kr-donut" role="img" aria-label={readinessLabel} style={readinessDonutStyle}>
+                                <svg class="kr-donut__svg" viewBox="0 0 120 120" aria-hidden="true">
+                                    <!-- Background ring (grey) -->
+                                    <circle class="kr-donut__track" cx="60" cy="60" r="52"></circle>
+                                    <!-- Foreground arc (green); stroke-dasharray
+                                         is sized off the percentage so a score
+                                         change reflows without JS. -->
+                                    <circle class="kr-donut__arc" cx="60" cy="60" r="52"
+                                            stroke-dasharray="254.469 326.726"
+                                            transform="rotate(-90 60 60)"></circle>
+                                </svg>
+                                <span class="kr-donut__label">{readinessLabel}</span>
+                            </div>
+
+                            <!-- KPI rows + summary + CTA -->
+                            <div class="kr-ai__right">
+                                <div class="kr-kpi">
+                                    <div class="kr-kpi__row">
+                                        <span class="kr-kpi__label">Metadata Completeness:</span>
+                                        <span class="kr-kpi__value">{metadataCompleteness}</span>
+                                        <lightning-badge
+                                            label="Trending Average"
+                                            icon-name="utility:warning"
+                                            class="slds-theme_warning kr-kpi__badge"
+                                        ></lightning-badge>
+                                    </div>
+                                    <div class="kr-kpi__row">
+                                        <span class="kr-kpi__label">Structural Violations:</span>
+                                        <span class="kr-kpi__value">{structuralViolationsCount}</span>
+                                        <lightning-badge
+                                            label="Trending below baseline"
+                                            icon-name="utility:error"
+                                            class="kr-kpi__badge kr-kpi__badge--error"
+                                        ></lightning-badge>
+                                    </div>
+                                </div>
+                                <div class="kr-ai__summary">{readinessSummary}</div>
+                                <div class="kr-ai__actions">
+                                    <lightning-button
+                                        variant="brand-outline"
+                                        label="Review Suggestions"
+                                        onclick={handleReviewSuggestions}
+                                        class="kr-ai__cta"
+                                    ></lightning-button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="kr-violations" aria-labelledby="kr-violations-title">
+                        <!-- Header row: title + subtitle on the left, brand-
+                             outline CTA on the right. Mirrors Figma frame
+                             207:33626. -->
+                        <header class="kr-violations__header">
+                            <div class="kr-violations__heading">
+                                <h2 id="kr-violations-title" class="kr-violations__title">Structural Violations</h2>
+                                <p class="kr-violations__subtitle">14 Structural Violations Detected. Edit Article to Resolve them on by one</p>
+                            </div>
+                            <lightning-button
+                                variant="brand-outline"
+                                label="Edit Article to Resolve"
+                                class="kr-violations__cta"
+                                onclick={handleViolationAction}
+                            ></lightning-button>
+                        </header>
+                        <!-- Reusing lightning-datatable for sort + cell
+                             behavior. The AI Score column applies a per-row
+                             class via `cellAttributes.class` so the delta
+                             renders green / amber based on the value. -->
+                        <lightning-datatable
+                            class="kr-violations__table"
+                            key-field="id"
+                            data={violationRows}
+                            columns={violationColumns}
+                            hide-checkbox-column
+                            onrowaction={handleViolationAction}
+                        ></lightning-datatable>
+                    </section>
+                </template>
+                </div>
+            </lightning-card>
+
+            <!-- RIGHT SIDEBAR
+                 Each sidebar card is a `<lightning-card>` so it picks up
+                 the LBC's standard surface, border, and shadow. The
+                 collapse chevron lives in the `actions` slot and the
+                 list/CTA content goes in the default body slot. -->
+            <aside class="kr-sidebar" aria-label="Article context">
+                <!-- Table of Content card -->
+                <lightning-card class="kr-card" title="Table of Content">
+                    <button
+                        type="button"
+                        slot="actions"
+                        class="kr-card__toggle"
+                        aria-expanded={_tocOpen}
+                        aria-label="Toggle Table of Content"
+                        onclick={handleToggleToc}
+                    >
+                        <lightning-icon
+                            icon-name={tocChevron}
+                            size="x-small"
+                            alternative-text="Toggle"
+                        ></lightning-icon>
+                    </button>
+                    <template lwc:if={_tocOpen}>
+                        <ul class="kr-toc">
+                            <template for:each={tocItems} for:item="t">
+                                <li key={t.id} class={t.itemClass}>
+                                    <lightning-icon
+                                        icon-name={t.chevron}
+                                        size="xx-small"
+                                        alternative-text=""
+                                        class={t.iconClass}
+                                    ></lightning-icon>
+                                    <a href="javascript:void(0)" class="kr-toc__link">{t.label}</a>
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+                </lightning-card>
+
+                <!-- Helpful? card -->
+                <lightning-card class="kr-card" title="Was this article helpful?">
+                    <div class="kr-helpful">
+                        <lightning-button
+                            variant={likeBtnVariant}
+                            label="Like"
+                            icon-name="utility:like"
+                            icon-position="left"
+                            onclick={handleLike}
+                            class="kr-helpful__btn"
+                        ></lightning-button>
+                        <lightning-button
+                            variant={dislikeBtnVariant}
+                            label="Dislike"
+                            icon-name="utility:dislike"
+                            icon-position="left"
+                            onclick={handleDislike}
+                            class="kr-helpful__btn"
+                        ></lightning-button>
+                    </div>
+                </lightning-card>
+
+                <!-- Categories card -->
+                <lightning-card class="kr-card" title="Categories(1)">
+                    <button
+                        type="button"
+                        slot="actions"
+                        class="kr-card__toggle"
+                        aria-expanded={_categoriesOpen}
+                        aria-label="Toggle Categories"
+                        onclick={handleToggleCategories}
+                    >
+                        <lightning-icon
+                            icon-name={categoriesChevron}
+                            size="x-small"
+                            alternative-text="Toggle"
+                        ></lightning-icon>
+                    </button>
+                    <template lwc:if={_categoriesOpen}>
+                        <ul class="kr-toc">
+                            <li class="kr-toc__item">
+                                <button
+                                    type="button"
+                                    class="kr-toc__expander"
+                                    aria-expanded={_inquiryOpen}
+                                    onclick={handleToggleInquiry}
+                                >
+                                    <lightning-icon
+                                        icon-name={inquiryChevron}
+                                        size="xx-small"
+                                        alternative-text="Toggle Inquiry"
+                                        class="kr-toc__chevron"
+                                    ></lightning-icon>
+                                    <span class="kr-toc__link">Inquiry Type(1)</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </template>
+                </lightning-card>
+            </aside>
+        </div>
+
+    </div>
+</template>

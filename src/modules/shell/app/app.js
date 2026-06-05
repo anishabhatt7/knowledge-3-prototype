@@ -6,6 +6,7 @@ import ReviewArticle from 'page/reviewArticle';
 import KnowledgeHome from 'page/knowledgeHome';
 import HealingGraph from 'page/healingGraph';
 import KnowledgeBase from 'page/knowledgeBase';
+import KnowledgeRecord from 'page/knowledgeRecord';
 import CommandCenter from 'page/commandCenter';
 import KnowledgeAgents from 'page/knowledgeAgents';
 import KnowledgeBlocks from 'page/knowledgeBlocks';
@@ -16,6 +17,7 @@ const ROUTE_COMPONENTS = {
     'page-knowledge-home': KnowledgeHome,
     'page-healing-graph': HealingGraph,
     'page-knowledge-base': KnowledgeBase,
+    'page-knowledge-record': KnowledgeRecord,
     'page-command-center': CommandCenter,
     'page-knowledge-agents': KnowledgeAgents,
     'page-knowledge-blocks': KnowledgeBlocks,
@@ -140,14 +142,14 @@ export default class App extends LightningElement {
         document.addEventListener('click', this._docClickHandler);
 
         this._workspaceTabHandler = (e) => {
-            const { label, path } = e.detail || {};
+            const { label, path, originPath } = e.detail || {};
             if (!label || !path) return;
             const existing = this._workspaceTabs.find((t) => t.label === label);
             if (!existing) {
                 const page = `article-${Date.now()}`;
                 this._workspaceTabs = [
                     ...this._workspaceTabs,
-                    { page, label, path, href: linkHref(path), closable: true },
+                    { page, label, path, originPath, href: linkHref(path), closable: true },
                 ];
             }
         };
@@ -156,9 +158,23 @@ export default class App extends LightningElement {
         this._workspaceCloseHandler = (e) => {
             const page = e.detail?.page;
             if (!page) return;
-            const wasActive = this.currentNavPage === page;
+            const closing = this._workspaceTabs.find((t) => t.page === page);
+            // `this.route.path` is the (possibly parametric) template, so
+            // rebuild the concrete path with the route params to reliably
+            // tell whether the tab being closed is the one on screen — a
+            // plain `currentNavPage` check misses `/knowledge-record/:id`
+            // style tabs.
+            const params = this.route?.params || {};
+            const concretePath = this.route?.path
+                ? this.route.path.replace(/:([^/]+)/g, (_m, k) =>
+                    encodeURIComponent(params[k] ?? ''))
+                : null;
+            const wasActive = closing && concretePath === closing.path;
             this._workspaceTabs = this._workspaceTabs.filter((t) => t.page !== page);
-            if (wasActive) navigate('/');
+            // Return to the tab's origin (e.g. Knowledge Health for record
+            // tabs opened from the Active Quality Issue links); fall back to
+            // the Knowledge home when no origin was stamped.
+            if (wasActive) navigate(closing?.originPath || '/');
         };
         window.addEventListener('workspace:closetab', this._workspaceCloseHandler);
     }

@@ -24,7 +24,7 @@ export default class CommandCenter extends LightningElement {
     railMaintain = [
         { id: 'command-center', label: 'Command Center', icon: 'utility:trending', active: true },
         { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro' },
-        { id: 'healing-graph', label: 'Healing Graph', icon: 'utility:graph' },
+        { id: 'healing-graph', label: 'Knowledge Health', icon: 'utility:graph' },
         { id: 'decision-hub', label: 'Decision Hub', icon: 'utility:dataspaces' },
     ];
 
@@ -148,6 +148,7 @@ export default class CommandCenter extends LightningElement {
     // render as non-interactive cards (no role/tabindex/cursor change).
     _capabilityRoutes = {
         healing: '/healing-graph',
+        agents: '/knowledge-agents',
     };
 
     get capabilitySummariesComputed() {

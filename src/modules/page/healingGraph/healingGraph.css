@@ -1025,3 +1025,384 @@ page-healing-graph {
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
 }
+
+/* ── Header: search + Graph View toggle ──────────────────────────── */
+.hg-search {
+    width: 16rem;
+    flex-shrink: 0;
+}
+
+.hg-viewtoggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.hg-viewtoggle__label {
+    font-size: var(--slds-g-font-scale-base, 13px);
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+    white-space: nowrap;
+}
+
+/* ── DASHBOARD VIEW ──────────────────────────────────────────────── */
+.hg-dashboard {
+    position: absolute;
+    top: var(--hg-header-height, 101px);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-7, 40px);
+    padding: var(--slds-g-spacing-6, 32px) var(--slds-g-spacing-7, 40px);
+    /* Cover the shell's dotted radial-gradient backdrop with a flat
+       surface so the dashboard reads as a clean page. */
+    background-color: var(--slds-g-color-surface-1, #fafafa);
+    /* SLDS 2 base typography (Cosmos) for all dashboard text. */
+    font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.hg-dash-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--slds-g-spacing-5, 24px);
+    width: 100%;
+}
+
+/* Collapse to a single column only on narrow viewports. */
+@media (max-width: 900px) {
+    .hg-dash-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.hg-dash-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+    padding: var(--slds-g-spacing-4, 16px);
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    background-color: var(--slds-g-color-surface-1, #fff);
+}
+
+.hg-dash-card__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    line-height: var(--slds-g-font-line-height-3, 1.375);
+    color: var(--slds-g-color-info-base-20, #032d60);
+}
+
+.hg-dash-card__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.hg-dash-card__overall-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.hg-dash-card__overall {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.hg-dash-card__pct {
+    flex-shrink: 0;
+    font-size: var(--slds-g-font-scale-4, 24px);
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+}
+
+.hg-dash-card__trend {
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* lightning-progress-bar — exact Figma green fill (#2e844a =
+   --slds-g-color-palette-green-50). The LBC's value fill reads
+   --slds-g-color-accent-container-1 (no dedicated fill hook is exposed),
+   so we locally remap that token to the green, scoped to this bar only. */
+.hg-dash-progress {
+    display: block;
+    width: 100%;
+    --slds-g-color-accent-container-1: var(--slds-g-color-palette-green-50, #2e844a);
+}
+
+.hg-dash-card__metrics {
+    display: flex;
+    gap: var(--slds-g-spacing-7, 40px);
+}
+
+.hg-dash-metric-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.hg-dash-metric {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.hg-dash-metric__label {
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.hg-dash-metric__value {
+    font-size: var(--slds-g-font-scale-base, 13px);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    line-height: var(--slds-g-font-line-height-3, 1.375);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.hg-dash-card__footer {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    padding-top: var(--slds-g-spacing-2, 8px);
+    border-top: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+.hg-dash-card__hitl-label {
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* Informational (light-blue) badge to match the Figma info badge. */
+.hg-dash-badge {
+    --slds-c-badge-color-background: var(--slds-g-color-info-container-1, #d8e6fe);
+    --slds-c-badge-text-color: var(--slds-g-color-info-base-20, #032d60);
+}
+
+/* ── Active Quality Issue section (Figma 387:48080) ──────────────── */
+.hg-qi-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.hg-qi-header {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.hg-qi-header__title {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+    font-family: var(--slds-g-font-family-base, inherit);
+    font-size: var(--slds-g-font-scale-3, 20px);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    line-height: var(--slds-g-font-line-height-3, 1.4);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.hg-qi-header__explore {
+    flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: var(--slds-g-font-family-base, inherit);
+    font-size: var(--slds-g-font-scale-1, 14px);
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-accent-2, #0250d9);
+    cursor: pointer;
+}
+
+.hg-qi-header__explore:hover {
+    text-decoration: underline;
+}
+
+/* ── Filter bar (Figma 385:47622) ────────────────────────────────── */
+.hg-qi-filterbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--slds-g-spacing-5, 24px);
+    padding: var(--slds-g-spacing-2, 8px) 0;
+}
+
+.hg-qi-filterbar__field {
+    width: 220px;
+    flex-shrink: 0;
+}
+
+/* ── Issue tile ──────────────────────────────────────────────────── */
+.hg-qi-tile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+    padding: var(--slds-g-spacing-4, 16px);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    background-color: var(--slds-g-color-surface-1, #fff);
+}
+
+.hg-qi-tile__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 16px);
+    flex-wrap: wrap;
+}
+
+.hg-qi-tile__head-left {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    flex-wrap: wrap;
+}
+
+.hg-qi-tile__domain {
+    font-family: var(--slds-g-font-family-base, inherit);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-info-base-20, #032d60);
+}
+
+.hg-qi-tile__head-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+/* Type badge (lightest) + confidence badge (success theme). */
+.hg-qi-type-badge {
+    --slds-c-badge-color-background: var(--slds-g-color-surface-container-1, #fff);
+    --slds-c-badge-text-color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.hg-qi-conf-badge {
+    --slds-c-badge-color-background: var(--slds-g-color-success-container-1, #cdefc4);
+    --slds-c-badge-text-color: var(--slds-g-color-success-base-30, #2e844a);
+}
+
+/* Blue summary container. */
+.hg-qi-tile__summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-1, 4px);
+    padding: var(--slds-g-spacing-3, 10px);
+    border-radius: var(--slds-g-radius-border-3, 16px);
+    background-color: var(--slds-g-color-brand-base-95, #edf4ff);
+}
+
+.hg-qi-tile__summary-title {
+    margin: 0;
+    font-family: var(--slds-g-font-family-base, inherit);
+    font-size: var(--slds-g-font-scale-1, 14px);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    line-height: var(--slds-g-font-line-height-3, 1.4);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.hg-qi-tile__summary-text {
+    margin: 0;
+    font-family: var(--slds-g-font-family-base, inherit);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: var(--slds-g-font-line-height-3, 1.4);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+/* Two-column options/articles. */
+.hg-qi-tile__columns {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--slds-g-spacing-5, 24px);
+}
+
+@media (max-width: 768px) {
+    .hg-qi-tile__columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+.hg-qi-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+    min-width: 0;
+}
+
+.hg-qi-col__label {
+    font-family: var(--slds-g-font-family-base, inherit);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.hg-qi-col__article {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: var(--slds-g-font-family-base, inherit);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    font-weight: var(--slds-g-font-weight-4, 400);
+    color: var(--slds-g-color-accent-2, #0250d9);
+    cursor: pointer;
+    text-align: left;
+}
+
+.hg-qi-col__article:hover .hg-qi-col__article-text {
+    text-decoration: underline;
+}
+
+.hg-qi-col__article-icon {
+    --sds-c-icon-color-foreground: var(--slds-g-color-accent-2, #0250d9);
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-2, #0250d9);
+}
+
+.hg-qi-col__text {
+    margin: 0;
+    font-family: var(--slds-g-font-family-base, inherit);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: var(--slds-g-font-line-height-3, 1.4);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.hg-qi-col__footer {
+    margin-top: auto;
+    padding-top: var(--slds-g-spacing-3, 12px);
+    border-top: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+}
+
+/* ── Empty state ─────────────────────────────────────────────────── */
+.hg-contra-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    padding: var(--slds-g-spacing-9, 48px);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    background-color: var(--slds-g-color-surface-1, #fff);
+}
+
+.hg-contra-empty__icon {
+    --sds-c-icon-color-foreground: var(--slds-g-color-success-1, #2e844a);
+}
+
+.hg-contra-empty__text {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-base, 13px);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}

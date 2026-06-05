@@ -89,27 +89,52 @@
                     <lightning-icon icon-name="standard:lightning_usage" size="medium" alternative-text=""></lightning-icon>
                 </span>
                 <div class="hg-header__title-block">
-                    <h1 class="hg-header__title">Healing Graph</h1>
-                    <span class="hg-header__stats">{statsLabel}</span>
+                    <h1 class="hg-header__title">Knowledge Health</h1>
+                    <span class="hg-header__stats">{headerSubtitle}</span>
                 </div>
             </div>
             <div class="hg-header__right">
-                <button type="button" class={healthBtnClass} onclick={handleToggleHealthBar}>
-                    <lightning-icon icon-name="utility:heart" size="xx-small" alternative-text=""></lightning-icon>
-                    <span>Health</span>
-                </button>
-                <lightning-combobox
-                    class="hg-combobox"
-                    variant="label-hidden"
-                    label="Filter by status"
-                    name="healing-filter"
-                    value={_healingFilter}
-                    options={healingComboboxOptions}
-                    onchange={handleHealingFilterChange}
-                ></lightning-combobox>
+                <template lwc:if={_graphView}>
+                    <button type="button" class={healthBtnClass} onclick={handleToggleHealthBar}>
+                        <lightning-icon icon-name="utility:heart" size="xx-small" alternative-text=""></lightning-icon>
+                        <span>Health</span>
+                    </button>
+                    <lightning-combobox
+                        class="hg-combobox"
+                        variant="label-hidden"
+                        label="Filter by status"
+                        name="healing-filter"
+                        value={_healingFilter}
+                        options={healingComboboxOptions}
+                        onchange={handleHealingFilterChange}
+                    ></lightning-combobox>
+                </template>
+                <template lwc:else>
+                    <lightning-input
+                        class="hg-search"
+                        type="search"
+                        variant="label-hidden"
+                        label="Search knowledge health"
+                        placeholder="Search..."
+                    ></lightning-input>
+                </template>
+                <label class="hg-viewtoggle">
+                    <span class="hg-viewtoggle__label">Graph View</span>
+                    <lightning-input
+                        type="toggle"
+                        variant="label-hidden"
+                        label="Graph View"
+                        message-toggle-active=""
+                        message-toggle-inactive=""
+                        checked={_graphView}
+                        onchange={handleToggleGraphView}
+                    ></lightning-input>
+                </label>
             </div>
         </header>
 
+        <!-- ═══ GRAPH VIEW (toggled on) ═══ -->
+        <template lwc:if={_graphView}>
         <!-- Health domain bar -->
         <template lwc:if={_showHealthBar}>
             <div class="hg-health-bar">
@@ -310,6 +335,168 @@
                     </template>
                 </div>
             </aside>
+        </template>
+        </template>
+
+        <!-- ═══ DASHBOARD VIEW (default) ═══ -->
+        <template lwc:else>
+            <div class="hg-dashboard">
+                <div class="hg-dash-grid">
+                    <template for:each={domainCards} for:item="card">
+                        <article key={card.id} class="hg-dash-card">
+                            <p class="hg-dash-card__title">{card.domain}</p>
+
+                            <div class="hg-dash-card__content">
+                                <div class="hg-dash-card__overall-group">
+                                    <div class="hg-dash-card__overall">
+                                        <span class="hg-dash-card__pct">{card.overallLabel}</span>
+                                        <span class="hg-dash-card__trend">Overall Health trending {card.trend}</span>
+                                    </div>
+                                    <lightning-progress-bar
+                                        class={card.progressClass}
+                                        value={card.overall}
+                                        size="large"
+                                    ></lightning-progress-bar>
+                                </div>
+
+                                <div class="hg-dash-card__metrics">
+                                    <div class="hg-dash-metric-col">
+                                        <div class="hg-dash-metric">
+                                            <span class="hg-dash-metric__label">Accuracy</span>
+                                            <span class="hg-dash-metric__value">{card.accuracyLabel}</span>
+                                        </div>
+                                        <div class="hg-dash-metric">
+                                            <span class="hg-dash-metric__label">Compliance</span>
+                                            <span class="hg-dash-metric__value">{card.complianceLabel}</span>
+                                        </div>
+                                    </div>
+                                    <div class="hg-dash-metric-col">
+                                        <div class="hg-dash-metric">
+                                            <span class="hg-dash-metric__label">Metadata</span>
+                                            <span class="hg-dash-metric__value">{card.metadataLabel}</span>
+                                        </div>
+                                        <div class="hg-dash-metric">
+                                            <span class="hg-dash-metric__label">Structure/Clarity</span>
+                                            <span class="hg-dash-metric__value">{card.structureLabel}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="hg-dash-card__footer">
+                                <span class="hg-dash-card__hitl-label">HITL Approvals required:</span>
+                                <lightning-badge label={card.hitl} class="hg-dash-badge"></lightning-badge>
+                            </div>
+                        </article>
+                    </template>
+                </div>
+
+                <!-- ═══ ACTIVE QUALITY ISSUES — Figma 387:48080 ═══ -->
+                <section class="hg-qi-section">
+                    <div class="hg-qi-header">
+                        <h2 class="hg-qi-header__title">Active Quality Issue</h2>
+                        <button type="button" class="hg-qi-header__explore" onclick={handleExploreAll}>Explore All</button>
+                    </div>
+
+                    <!-- Filter bar — Figma 385:47622 -->
+                    <div class="hg-qi-filterbar">
+                        <lightning-combobox
+                            class="hg-qi-filterbar__field"
+                            name="domain"
+                            label="Domain/Agent"
+                            placeholder="Select a Domain"
+                            value={_dashFilters.domain}
+                            options={domainFilterOptions}
+                            onchange={handleDashFilterChange}
+                        ></lightning-combobox>
+                        <lightning-combobox
+                            class="hg-qi-filterbar__field"
+                            name="type"
+                            label="Quality Issue"
+                            placeholder="Select Issue Type"
+                            value={_dashFilters.type}
+                            options={qualityIssueTypeOptions}
+                            onchange={handleDashFilterChange}
+                        ></lightning-combobox>
+                        <lightning-combobox
+                            class="hg-qi-filterbar__field"
+                            name="priority"
+                            label="Priority"
+                            placeholder="Select Priority"
+                            value={_dashFilters.priority}
+                            options={priorityFilterOptions}
+                            onchange={handleDashFilterChange}
+                        ></lightning-combobox>
+                    </div>
+
+                    <template lwc:if={hasQualityIssues}>
+                        <template for:each={qualityIssues} for:item="q">
+                            <article key={q.id} class="hg-qi-tile">
+                                <div class="hg-qi-tile__head">
+                                    <div class="hg-qi-tile__head-left">
+                                        <span class="hg-qi-tile__domain">{q.domain}</span>
+                                        <lightning-badge label={q.typeBadgeLabel} class="hg-qi-type-badge slds-badge_lightest"></lightning-badge>
+                                        <lightning-badge label={q.confidenceLabel} icon-name="utility:success" class="hg-qi-conf-badge slds-theme_success"></lightning-badge>
+                                    </div>
+                                    <div class="hg-qi-tile__head-actions">
+                                        <template lwc:if={q.isSimilarity}>
+                                            <lightning-button variant="brand" label="Merge Articles" data-title={q.title} onclick={handleMergeArticles}></lightning-button>
+                                        </template>
+                                        <lightning-button variant="brand-outline" label="Ignore Issue" data-id={q.id} onclick={handleIgnoreIssue}></lightning-button>
+                                    </div>
+                                </div>
+
+                                <div class="hg-qi-tile__summary">
+                                    <p class="hg-qi-tile__summary-title">{q.title}</p>
+                                    <p class="hg-qi-tile__summary-text">{q.description}</p>
+                                </div>
+
+                                <div class="hg-qi-tile__columns">
+                                    <div class="hg-qi-col">
+                                        <span class="hg-qi-col__label">{q.itemALabel}</span>
+                                        <button type="button" class="hg-qi-col__article" data-id={q.itemA.articleId} data-title={q.itemA.articleTitle} onclick={handleOpenArticle}>
+                                            <lightning-icon icon-name="utility:knowledge_base" size="xx-small" alternative-text="" class="hg-qi-col__article-icon"></lightning-icon>
+                                            <span class="hg-qi-col__article-text">{q.itemA.articleTitle}</span>
+                                        </button>
+                                        <p class="hg-qi-col__text">{q.itemA.text}</p>
+                                        <div class="hg-qi-col__footer">
+                                            <template lwc:if={q.isContradiction}>
+                                                <lightning-button variant="brand-outline" label="Pick this" data-title={q.itemA.articleTitle} onclick={handlePickOption}></lightning-button>
+                                            </template>
+                                            <template lwc:else>
+                                                <lightning-button variant="brand-outline" label="Archive Article" data-id={q.id} onclick={handleArchiveArticle}></lightning-button>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <div class="hg-qi-col">
+                                        <span class="hg-qi-col__label">{q.itemBLabel}</span>
+                                        <button type="button" class="hg-qi-col__article" data-id={q.itemB.articleId} data-title={q.itemB.articleTitle} onclick={handleOpenArticle}>
+                                            <lightning-icon icon-name="utility:knowledge_base" size="xx-small" alternative-text="" class="hg-qi-col__article-icon"></lightning-icon>
+                                            <span class="hg-qi-col__article-text">{q.itemB.articleTitle}</span>
+                                        </button>
+                                        <p class="hg-qi-col__text">{q.itemB.text}</p>
+                                        <div class="hg-qi-col__footer">
+                                            <template lwc:if={q.isContradiction}>
+                                                <lightning-button variant="brand-outline" label="Pick this" data-title={q.itemB.articleTitle} onclick={handlePickOption}></lightning-button>
+                                            </template>
+                                            <template lwc:else>
+                                                <lightning-button variant="brand-outline" label="Archive Article" data-id={q.id} onclick={handleArchiveArticle}></lightning-button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        </template>
+                    </template>
+                    <template lwc:else>
+                        <div class="hg-contra-empty">
+                            <lightning-icon icon-name="utility:success" size="small" alternative-text="" class="hg-contra-empty__icon"></lightning-icon>
+                            <p class="hg-contra-empty__text">No active quality issues match the selected filters.</p>
+                        </div>
+                    </template>
+                </section>
+            </div>
         </template>
         </div>
     </div>

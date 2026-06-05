@@ -20,8 +20,8 @@ const d = (days) => Date.now() - days * 86_400_000;
 export const seedAgents = [
     {
         id: 'agent-billing',
-        name: 'Billing Agent',
-        domain: 'Billing',
+        name: 'Onboarding Concierge',
+        domain: 'Employee Onboarding',
         status: 'active',
         governanceTier: 'auto-publish',
         signalSources: ['cases', 'slack', 'docs'],
@@ -34,13 +34,13 @@ export const seedAgents = [
         freshnessPercent: 91,
         avatar: '$',
         crossDomainLinks: [
-            { targetDomain: 'Compliance', linkCount: 4, relationship: 'policy-reference' },
-            { targetDomain: 'Engineering', linkCount: 2, relationship: 'api-dependency' },
-            { targetDomain: 'Product', linkCount: 1, relationship: 'pricing-model' },
+            { targetDomain: 'HR Compliance', linkCount: 4, relationship: 'policy-reference' },
+            { targetDomain: 'Benefits & Payroll', linkCount: 2, relationship: 'api-dependency' },
+            { targetDomain: 'Relocation & Mobility', linkCount: 1, relationship: 'pricing-model' },
         ],
         coordinationEvents: [
             { partnerAgent: 'Compliance Agent', sharedEntity: 'Revenue Recognition Standards', status: 'in-sync', timestamp: h(3) },
-            { partnerAgent: 'Engineering Agent', sharedEntity: 'API Rate Limiting Configuration', status: 'pending', timestamp: h(8) },
+            { partnerAgent: 'Benefits Agent', sharedEntity: 'API Rate Limiting Configuration', status: 'pending', timestamp: h(8) },
         ],
         predictedNeeds: [
             { topic: 'Tax calculation rules for EU expansion', confidence: 82, source: 'Slack: 8 threads on EU VAT', dueDate: '2026-05-15' },
@@ -57,8 +57,8 @@ export const seedAgents = [
     },
     {
         id: 'agent-product',
-        name: 'Product Agent',
-        domain: 'Product',
+        name: 'Relocation Agent',
+        domain: 'Relocation & Mobility',
         status: 'active',
         governanceTier: 'human-review',
         signalSources: ['slack', 'docs', 'code-repo'],
@@ -71,13 +71,13 @@ export const seedAgents = [
         freshnessPercent: 83,
         avatar: 'P',
         crossDomainLinks: [
-            { targetDomain: 'Engineering', linkCount: 5, relationship: 'api-spec' },
-            { targetDomain: 'Competitive Intelligence', linkCount: 3, relationship: 'feature-comparison' },
-            { targetDomain: 'Onboarding', linkCount: 2, relationship: 'user-flow' },
+            { targetDomain: 'Benefits & Payroll', linkCount: 5, relationship: 'api-spec' },
+            { targetDomain: 'Workplace & Facilities', linkCount: 3, relationship: 'feature-comparison' },
+            { targetDomain: 'Travel & Expense', linkCount: 2, relationship: 'user-flow' },
         ],
         coordinationEvents: [
-            { partnerAgent: 'Engineering Agent', sharedEntity: 'Analytics Dashboard v2 Spec', status: 'in-sync', timestamp: h(6) },
-            { partnerAgent: 'Competitive Intel Agent', sharedEntity: 'Feature Parity Tracker', status: 'conflict', timestamp: d(1) },
+            { partnerAgent: 'Benefits Agent', sharedEntity: 'Analytics Dashboard v2 Spec', status: 'in-sync', timestamp: h(6) },
+            { partnerAgent: 'Workplace Agent', sharedEntity: 'Feature Parity Tracker', status: 'conflict', timestamp: d(1) },
         ],
         predictedNeeds: [
             { topic: 'Mobile app feature parity documentation', confidence: 88, source: 'Roadmap: Q3 mobile launch', dueDate: '2026-06-01' },
@@ -95,7 +95,7 @@ export const seedAgents = [
     {
         id: 'agent-compliance',
         name: 'Compliance Agent',
-        domain: 'Compliance',
+        domain: 'HR Compliance',
         status: 'active',
         governanceTier: 'human-required',
         signalSources: ['docs', 'policy', 'cases'],
@@ -108,14 +108,14 @@ export const seedAgents = [
         freshnessPercent: 69,
         avatar: 'C',
         crossDomainLinks: [
-            { targetDomain: 'Billing', linkCount: 6, relationship: 'regulatory-requirement' },
-            { targetDomain: 'Engineering', linkCount: 3, relationship: 'security-policy' },
-            { targetDomain: 'Product', linkCount: 1, relationship: 'data-handling' },
+            { targetDomain: 'Employee Onboarding', linkCount: 6, relationship: 'regulatory-requirement' },
+            { targetDomain: 'Benefits & Payroll', linkCount: 3, relationship: 'security-policy' },
+            { targetDomain: 'Relocation & Mobility', linkCount: 1, relationship: 'data-handling' },
         ],
         coordinationEvents: [
-            { partnerAgent: 'Billing Agent', sharedEntity: 'Revenue Recognition Standards', status: 'in-sync', timestamp: h(5) },
-            { partnerAgent: 'Engineering Agent', sharedEntity: 'Information Security Policy', status: 'pending', timestamp: h(24) },
-            { partnerAgent: 'Billing Agent', sharedEntity: 'PCI-DSS Compliance Requirements', status: 'in-sync', timestamp: d(2) },
+            { partnerAgent: 'Onboarding Concierge', sharedEntity: 'Revenue Recognition Standards', status: 'in-sync', timestamp: h(5) },
+            { partnerAgent: 'Benefits Agent', sharedEntity: 'Information Security Policy', status: 'pending', timestamp: h(24) },
+            { partnerAgent: 'Onboarding Concierge', sharedEntity: 'PCI-DSS Compliance Requirements', status: 'in-sync', timestamp: d(2) },
         ],
         predictedNeeds: [
             { topic: 'CCPA enforcement guidance update', confidence: 89, source: 'Policy: new enforcement actions detected', dueDate: '2026-04-25' },
@@ -132,8 +132,8 @@ export const seedAgents = [
     },
     {
         id: 'agent-engineering',
-        name: 'Engineering Agent',
-        domain: 'Engineering',
+        name: 'Benefits Agent',
+        domain: 'Benefits & Payroll',
         status: 'active',
         governanceTier: 'human-review',
         signalSources: ['code-repo', 'slack', 'docs'],
@@ -146,15 +146,15 @@ export const seedAgents = [
         freshnessPercent: 85,
         avatar: 'E',
         crossDomainLinks: [
-            { targetDomain: 'Product', linkCount: 4, relationship: 'api-spec' },
-            { targetDomain: 'Compliance', linkCount: 3, relationship: 'security-requirement' },
-            { targetDomain: 'Billing', linkCount: 2, relationship: 'integration-dependency' },
-            { targetDomain: 'Onboarding', linkCount: 1, relationship: 'infrastructure-guide' },
+            { targetDomain: 'Relocation & Mobility', linkCount: 4, relationship: 'api-spec' },
+            { targetDomain: 'HR Compliance', linkCount: 3, relationship: 'security-requirement' },
+            { targetDomain: 'Employee Onboarding', linkCount: 2, relationship: 'integration-dependency' },
+            { targetDomain: 'Travel & Expense', linkCount: 1, relationship: 'infrastructure-guide' },
         ],
         coordinationEvents: [
-            { partnerAgent: 'Product Agent', sharedEntity: 'Analytics Dashboard v2 Spec', status: 'in-sync', timestamp: h(4) },
+            { partnerAgent: 'Relocation Agent', sharedEntity: 'Analytics Dashboard v2 Spec', status: 'in-sync', timestamp: h(4) },
             { partnerAgent: 'Compliance Agent', sharedEntity: 'Information Security Policy', status: 'pending', timestamp: h(24) },
-            { partnerAgent: 'Billing Agent', sharedEntity: 'API Rate Limiting Configuration', status: 'conflict', timestamp: h(7) },
+            { partnerAgent: 'Onboarding Concierge', sharedEntity: 'API Rate Limiting Configuration', status: 'conflict', timestamp: h(7) },
         ],
         predictedNeeds: [
             { topic: 'Kubernetes v1.30 migration guide', confidence: 85, source: 'Code: k8s deprecation warnings in CI', dueDate: '2026-05-10' },
@@ -171,8 +171,8 @@ export const seedAgents = [
     },
     {
         id: 'agent-onboarding',
-        name: 'Onboarding Agent',
-        domain: 'Onboarding',
+        name: 'Travel & Expense Agent',
+        domain: 'Travel & Expense',
         status: 'learning',
         governanceTier: 'human-review',
         signalSources: ['cases', 'slack', 'docs'],
@@ -185,13 +185,13 @@ export const seedAgents = [
         freshnessPercent: 62,
         avatar: 'O',
         crossDomainLinks: [
-            { targetDomain: 'Product', linkCount: 3, relationship: 'user-flow' },
-            { targetDomain: 'Engineering', linkCount: 2, relationship: 'setup-dependency' },
-            { targetDomain: 'Compliance', linkCount: 1, relationship: 'training-requirement' },
+            { targetDomain: 'Relocation & Mobility', linkCount: 3, relationship: 'user-flow' },
+            { targetDomain: 'Benefits & Payroll', linkCount: 2, relationship: 'setup-dependency' },
+            { targetDomain: 'HR Compliance', linkCount: 1, relationship: 'training-requirement' },
         ],
         coordinationEvents: [
-            { partnerAgent: 'Product Agent', sharedEntity: 'Customer Onboarding Flow', status: 'pending', timestamp: h(12) },
-            { partnerAgent: 'Engineering Agent', sharedEntity: 'New Hire Technical Setup Guide', status: 'in-sync', timestamp: d(1) },
+            { partnerAgent: 'Relocation Agent', sharedEntity: 'Customer Onboarding Flow', status: 'pending', timestamp: h(12) },
+            { partnerAgent: 'Benefits Agent', sharedEntity: 'New Hire Technical Setup Guide', status: 'in-sync', timestamp: d(1) },
         ],
         predictedNeeds: [
             { topic: 'Progressive disclosure flow troubleshooting guide', confidence: 83, source: 'Cases: 9 tickets on new flow issues', dueDate: '2026-04-20' },
@@ -208,8 +208,8 @@ export const seedAgents = [
     },
     {
         id: 'agent-competitive',
-        name: 'Competitive Intel Agent',
-        domain: 'Competitive Intelligence',
+        name: 'Workplace Agent',
+        domain: 'Workplace & Facilities',
         status: 'active',
         governanceTier: 'auto-publish',
         signalSources: ['docs', 'slack', 'cases'],
@@ -222,13 +222,13 @@ export const seedAgents = [
         freshnessPercent: 57,
         avatar: 'CI',
         crossDomainLinks: [
-            { targetDomain: 'Product', linkCount: 4, relationship: 'feature-comparison' },
-            { targetDomain: 'Billing', linkCount: 3, relationship: 'pricing-comparison' },
-            { targetDomain: 'Engineering', linkCount: 1, relationship: 'capability-analysis' },
+            { targetDomain: 'Relocation & Mobility', linkCount: 4, relationship: 'feature-comparison' },
+            { targetDomain: 'Employee Onboarding', linkCount: 3, relationship: 'pricing-comparison' },
+            { targetDomain: 'Benefits & Payroll', linkCount: 1, relationship: 'capability-analysis' },
         ],
         coordinationEvents: [
-            { partnerAgent: 'Product Agent', sharedEntity: 'Feature Parity Tracker', status: 'conflict', timestamp: d(1) },
-            { partnerAgent: 'Billing Agent', sharedEntity: 'Competitor Pricing Matrix Q1 2026', status: 'in-sync', timestamp: d(2) },
+            { partnerAgent: 'Relocation Agent', sharedEntity: 'Feature Parity Tracker', status: 'conflict', timestamp: d(1) },
+            { partnerAgent: 'Onboarding Concierge', sharedEntity: 'Competitor Pricing Matrix Q1 2026', status: 'in-sync', timestamp: d(2) },
         ],
         predictedNeeds: [
             { topic: 'InsightHub competitor battlecard', confidence: 91, source: 'News: InsightHub raised Series C', dueDate: '2026-04-22' },

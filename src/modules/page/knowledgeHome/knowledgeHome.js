@@ -45,7 +45,7 @@ export default class KnowledgeHome extends LightningElement {
     railMaintain = [
         { id: 'command-center', label: 'Command Center', icon: 'utility:trending' },
         { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro' },
-        { id: 'healing-graph', label: 'Healing Graph', icon: 'utility:graph' },
+        { id: 'healing-graph', label: 'Knowledge Health', icon: 'utility:graph' },
         { id: 'decision-hub', label: 'Decision Hub', icon: 'utility:dataspaces' },
     ];
 

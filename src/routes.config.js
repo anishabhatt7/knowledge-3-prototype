@@ -32,13 +32,33 @@ export const routes = [
     {
         path: '/healing-graph',
         component: 'page-healing-graph',
-        title: 'Healing Graph | Knowledge',
+        title: 'Knowledge Health | Knowledge',
         navHighlight: 'knowledge',
     },
     {
         path: '/knowledge-base',
         component: 'page-knowledge-base',
         title: 'Knowledge Base | Knowledge',
+        navHighlight: 'knowledge',
+    },
+    {
+        // Parametric record route opened as a workspace tab from the
+        // Knowledge Health "Active Quality Issue" article links (and the
+        // Knowledge Base list view). Each article id maps to a distinct
+        // tab; the `:id` lookup resolves against `data/recordSession`
+        // which the opener populates before navigating.
+        path: '/knowledge-record/:id',
+        component: 'page-knowledge-record',
+        title: 'Knowledge Article',
+        navHighlight: 'knowledge',
+    },
+    {
+        // Edit-mode entry into the Review Article (active authoring)
+        // page. Knowledge Record's "Edit Article" actions stash a
+        // payload via `setEditSession()` and navigate here.
+        path: '/edit-article/:id',
+        component: 'page-review-article',
+        title: 'Edit Knowledge Article',
         navHighlight: 'knowledge',
     },
     {

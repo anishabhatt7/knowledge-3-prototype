@@ -4,12 +4,15 @@ import { gsap } from 'gsap';
 import { animate, stagger } from 'motion';
 import { navigate } from '../../../router';
 import { setDraftSession } from 'data/draftSession';
+import { setRecord } from 'data/recordSession';
 import {
     seedGraphNodes,
     seedGraphEdges,
     seedHealthDomains,
     seedContradictions,
     seedHealingActions,
+    seedQualityIssues,
+    buildDomainHealthSnapshot,
     CAPABILITY_COLORS,
     CAPABILITY_LABELS,
     SEVERITY_COLORS,
@@ -32,7 +35,7 @@ export default class HealingGraph extends LightningElement {
     railMaintain = [
         { id: 'command-center', label: 'Command Center', icon: 'utility:trending' },
         { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro' },
-        { id: 'healing-graph', label: 'Healing Graph', icon: 'utility:graph', active: true },
+        { id: 'healing-graph', label: 'Knowledge Health', icon: 'utility:graph', active: true },
         { id: 'decision-hub', label: 'Decision Hub', icon: 'utility:dataspaces' },
     ];
 
@@ -134,6 +137,15 @@ export default class HealingGraph extends LightningElement {
         }
     }
 
+    // ── View toggle (dashboard default, graph optional) ─────────────
+    @track _graphView = false;
+    @track _domainHealth = [];
+
+    // ── Dashboard "Active Quality Issue" filters + dismissals ───────
+    @track _dashFilters = { domain: '', type: '', priority: '' };
+    @track _ignoredIssueIds = [];
+    _qualityIssues = seedQualityIssues;
+
     // ── Graph state ─────────────────────────────────────────────────
     @track _activeFilters = [];
     @track _healingFilter = 'all';
@@ -160,6 +172,7 @@ export default class HealingGraph extends LightningElement {
     _nodeIdsInContradictions = new Set();
 
     connectedCallback() {
+        this._domainHealth = buildDomainHealthSnapshot();
         this._contradictions.forEach((c) => {
             this._contradictionsByEdge.set(edgeKey(c.entityA.id, c.entityB.id), c);
         });
@@ -215,12 +228,186 @@ export default class HealingGraph extends LightningElement {
     }
 
     disconnectedCallback() {
+        this._teardownGraph();
+    }
+
+    _teardownGraph() {
         if (this._simulation) {
             this._simulation.stop();
             this._simulation = null;
         }
         this._d3Sels = null;
         this._d3Inited = false;
+    }
+
+    // ── View toggle ─────────────────────────────────────────────────
+    handleToggleGraphView(event) {
+        const detail = event.detail || {};
+        const on = detail.checked !== undefined ? !!detail.checked : !!event.target.checked;
+        this._graphView = on;
+        // The graph builds lazily in renderedCallback when the <svg> is in
+        // the DOM. lwc:if removes that node when we leave graph view, so we
+        // reset the init guard to force a clean rebuild on the next toggle.
+        if (!on) this._teardownGraph();
+    }
+
+    get headerSubtitle() {
+        return this._graphView
+            ? this.statsLabel
+            : 'Unified view of decisions, expertise, and organizational knowledge';
+    }
+
+    get domainCards() {
+        return this._domainHealth.map((c) => {
+            let status = 'error';
+            if (c.overall >= 85) status = 'success';
+            else if (c.overall >= 70) status = 'warning';
+            return {
+                id: c.id,
+                domain: c.domain,
+                agent: c.agent,
+                overall: c.overall,
+                overallLabel: `${c.overall}%`,
+                trend: c.trend,
+                progressClass: `hg-dash-progress hg-dash-progress_${status}`,
+                accuracyLabel: `${c.accuracy}%`,
+                metadataLabel: `${c.metadata}%`,
+                complianceLabel: `${c.compliance}%`,
+                structureLabel: `${c.structure}%`,
+                hitl: `${c.hitl}`,
+            };
+        });
+    }
+
+    // ── Dashboard: Active Quality Issues ─────────────────────────────
+
+    get _openQualityIssues() {
+        return this._qualityIssues.filter((q) => !this._ignoredIssueIds.includes(q.id));
+    }
+
+    get domainFilterOptions() {
+        const seen = [];
+        this._qualityIssues.forEach((q) => {
+            if (q.domain && !seen.includes(q.domain)) seen.push(q.domain);
+        });
+        return [
+            { label: 'All Domains/Agents', value: '' },
+            ...seen.map((v) => ({ label: v, value: v })),
+        ];
+    }
+
+    get qualityIssueTypeOptions() {
+        return [
+            { label: 'All Issue Types', value: '' },
+            { label: 'Contradiction', value: 'contradiction' },
+            { label: 'Similar Article', value: 'similarity' },
+        ];
+    }
+
+    get priorityFilterOptions() {
+        return [
+            { label: 'All Priorities', value: '' },
+            { label: 'Critical', value: 'Critical' },
+            { label: 'High', value: 'High' },
+            { label: 'Medium', value: 'Medium' },
+            { label: 'Low', value: 'Low' },
+        ];
+    }
+
+    get hasQualityIssues() {
+        return this.qualityIssues.length > 0;
+    }
+
+    get qualityIssues() {
+        const f = this._dashFilters;
+        return this._openQualityIssues
+            .filter((q) => (!f.domain || q.domain === f.domain)
+                && (!f.type || q.type === f.type)
+                && (!f.priority || q.priority === f.priority))
+            .map((q) => {
+                const isContradiction = q.type === 'contradiction';
+                return {
+                    id: q.id,
+                    domain: q.domain,
+                    title: q.title,
+                    description: q.description,
+                    isContradiction,
+                    isSimilarity: !isContradiction,
+                    typeBadgeLabel: isContradiction ? 'Contradiction' : 'Similar Article',
+                    confidenceLabel: `Confidence: ${q.confidence}%`,
+                    itemALabel: isContradiction ? 'Option A' : 'Article 1',
+                    itemBLabel: isContradiction ? 'Option B' : 'Article 2',
+                    itemActionLabel: isContradiction ? 'Pick this' : 'Archive Article',
+                    itemA: { ...q.itemA },
+                    itemB: { ...q.itemB },
+                };
+            });
+    }
+
+    handleDashFilterChange(event) {
+        const field = event.target?.name;
+        if (!field) return;
+        this._dashFilters = { ...this._dashFilters, [field]: event.detail?.value ?? '' };
+    }
+
+    /**
+     * Open the linked article as a Knowledge Article record page in a
+     * new workspace tab (read view), matching the V2 prototype's
+     * `/knowledge-record/:id` flow. Closing the tab returns here via the
+     * shell's `originPath` mechanism.
+     */
+    handleOpenArticle(event) {
+        const { id, title } = event.currentTarget?.dataset || {};
+        if (!id || !title) return;
+        this._openArticleRecord(id, title);
+    }
+
+    _openArticleRecord(id, title) {
+        setRecord({
+            id,
+            title,
+            language: 'English',
+            articleRecordType: 'FAQ',
+            isKnowledgeBlock: false,
+        });
+        const path = `/knowledge-record/${encodeURIComponent(id)}`;
+        window.dispatchEvent(new CustomEvent('workspace:addtab', {
+            detail: { label: title, path, originPath: '/healing-graph' },
+        }));
+        navigate(path);
+    }
+
+    /** Contradiction → pick the correct source and open it for editing. */
+    handlePickOption(event) {
+        const title = event.currentTarget?.dataset?.title;
+        if (!title) return;
+        this._addArticleTab(title);
+        this._navigateToArticle(title);
+    }
+
+    /** Similarity → open a merged knowledge record combining both articles. */
+    handleMergeArticles(event) {
+        const title = event.currentTarget?.dataset?.title || 'Merged Article';
+        this._addArticleTab(title);
+        this._navigateToArticle(title);
+    }
+
+    handleArchiveArticle(event) {
+        const id = event.currentTarget?.dataset?.id;
+        if (!id) return;
+        this._ignoredIssueIds = [...this._ignoredIssueIds, id];
+    }
+
+    handleIgnoreIssue(event) {
+        const id = event.currentTarget?.dataset?.id;
+        if (!id) return;
+        this._ignoredIssueIds = [...this._ignoredIssueIds, id];
+    }
+
+    /** "Explore All" — clear filters and restore any dismissed issues. */
+    handleExploreAll() {
+        this._dashFilters = { domain: '', type: '', priority: '' };
+        this._ignoredIssueIds = [];
     }
 
     // ── Computed getters ─────────────────────────────────────────────
