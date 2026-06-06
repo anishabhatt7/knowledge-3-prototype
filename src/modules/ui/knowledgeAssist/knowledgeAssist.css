@@ -463,6 +463,8 @@ ui-knowledge-assist {
 .ka-badge-updated {
     --sds-c-badge-color-background: var(--slds-g-color-brand-base-95, #edf4ff);
     --sds-c-badge-text-color: var(--slds-g-color-accent-1, #066afe);
+    --slds-c-badge-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
 }
 
 /* ─── Article RAG/AI Score variant (Figma 125:67812) ──────────────
@@ -583,15 +585,29 @@ ui-knowledge-assist {
     margin-top: 4px;
 }
 
+/* Updated state shows only the "Updated" badge, left-aligned. */
+.ka-suggest__footer_updated {
+    justify-content: flex-start;
+}
+
+/* "Increase in Score +X%" rendered as a rounded green pill per Figma. */
 .ka-suggest__score {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    padding: 4px 8px;
+    border-radius: var(--slds-g-radius-border-3, 10px);
+    background: var(--slds-g-color-success-base-90, #e3fff3);
     font-size: 12px;
-    line-height: 17px;
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-2, #5c5c5c);
 }
 
 .ka-suggest__score-value {
-    color: #2e844a;
+    color: var(--slds-g-color-on-surface-1, #181818);
     font-weight: 600;
+    font-size: 16px;
+    line-height: 22px;
 }
 
 /* Small "Update" button — overrides lightning-button so it matches

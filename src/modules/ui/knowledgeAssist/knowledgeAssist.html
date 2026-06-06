@@ -78,7 +78,7 @@
                     </div>
 
                     <template for:each={suggestCards} for:item="s">
-                        <article key={s.id} class="ka-suggest ka-suggest_compact">
+                        <article key={s.id} data-sid={s.id} class="ka-suggest ka-suggest_compact">
                             <header class="ka-suggest__head">
                                 <lightning-icon
                                     icon-name={s.icon}
@@ -89,14 +89,11 @@
                             </header>
                             <p class="ka-suggest__desc">{s.description}</p>
                             <template lwc:if={s.isUpdated}>
-                                <div class="ka-suggest__footer">
-                                    <span class="ka-suggest__score">
-                                        Increase in Score <span class="ka-suggest__score-value">{s.scoreLabel}</span>
-                                    </span>
+                                <div class="ka-suggest__footer ka-suggest__footer_updated">
                                     <lightning-badge
                                         label="Updated"
                                         icon-name="utility:check"
-                                        class="slds-badge_inverse ka-badge-updated">
+                                        class="ka-badge-updated">
                                     </lightning-badge>
                                 </div>
                             </template>

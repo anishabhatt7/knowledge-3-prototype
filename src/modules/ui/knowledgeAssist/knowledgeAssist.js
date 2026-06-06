@@ -89,6 +89,11 @@ export default class KnowledgeAssist extends LightningElement {
     _pendingInAnimation = false;
     _pendingButtonPopId = null;
 
+    // Last-known vertical position of each structural suggestion card,
+    // keyed by suggestion id. Used for a GSAP FLIP when a card is marked
+    // "Updated" and floats to the bottom of the list.
+    _suggestPrevTops = null;
+
     connectedCallback() {
         this._boundGsapToggle = (e) => {
             this._gsapEnabled = e.detail?.enabled !== false;
@@ -375,6 +380,8 @@ export default class KnowledgeAssist extends LightningElement {
             }
         }
 
+        this._animateSuggestReorder();
+
         // ─── Score-ring animation ──────────────────────────────────
         if (this.isCollapsed || this.activeRailTab !== 'metrics') {
             this._ringAnimated = false;
@@ -553,6 +560,41 @@ export default class KnowledgeAssist extends LightningElement {
                 clearProps: 'transform',
             }
         );
+    }
+
+    // FLIP animation for the structural suggestion list. We record every
+    // card's top on each render; when the order changes (a card was marked
+    // Updated and moved to the bottom), each card that shifted is snapped
+    // back to its old position and tweened to its new one.
+    _animateSuggestReorder() {
+        if (this.isCollapsed || this.activeRailTab !== 'metrics') {
+            this._suggestPrevTops = null;
+            return;
+        }
+        const cards = Array.from(this.querySelectorAll('.ka-suggest[data-sid]'));
+        if (!cards.length) {
+            this._suggestPrevTops = null;
+            return;
+        }
+        const newTops = new Map();
+        cards.forEach((c) => newTops.set(c.dataset.sid, c.getBoundingClientRect().top));
+
+        const prev = this._suggestPrevTops;
+        if (prev && this._gsapEnabled) {
+            cards.forEach((c) => {
+                const id = c.dataset.sid;
+                const oldTop = prev.get(id);
+                const newTop = newTops.get(id);
+                if (oldTop != null && Math.abs(oldTop - newTop) > 1) {
+                    gsap.fromTo(
+                        c,
+                        { y: oldTop - newTop },
+                        { y: 0, duration: 0.5, ease: 'power3.inOut', clearProps: 'transform' }
+                    );
+                }
+            });
+        }
+        this._suggestPrevTops = newTops;
     }
 
     _popRailButton(tabId) {

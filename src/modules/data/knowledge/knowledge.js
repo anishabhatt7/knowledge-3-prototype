@@ -144,6 +144,13 @@ export const initialArticle = {
 //   grammar      — amber wavy
 //   readability  — blue wavy
 //   tone         — purple wavy
+//   addition     — green; proposes NEW content rather than a rewrite.
+//
+// Rewrite types (spelling/grammar/readability/tone) use `original` +
+// `replacement`: the matched text is swapped on accept. `addition` types
+// instead use `original` (an existing anchor phrase to underline) + a new
+// `addition` field: on accept the addition is inserted right after the
+// anchor, leaving the original text intact.
 export const inlineAISuggestions = [
     {
         id: 'sg-1',
@@ -153,7 +160,7 @@ export const inlineAISuggestions = [
         type: 'spelling',
         label: 'Spelling',
         explanation:
-            'The airline\u2019s official brand mark is "EasyJet" with a leading capital. The lowercase form "easyJet" can read as a typo to customers, breaks consistency with "Ryanair" earlier in the same sentence, and may degrade results in search and translation tools that key off proper nouns.',
+            'The airline\u2019s official brand mark is "EasyJet" with a leading capital, so the lowercase "easyJet" can read as a typo and breaks consistency with "Ryanair" in the same sentence. It can also weaken search and translation tools that key off proper nouns.',
     },
     {
         id: 'sg-2',
@@ -163,7 +170,7 @@ export const inlineAISuggestions = [
         type: 'tone',
         label: 'Tone',
         explanation:
-            '"Exceeding these limits can result in hefty fees" reads as formal-yet-alarmist — a common pitfall in support copy. "Going over these limits" is plainer and more inviting for a customer-facing FAQ; "significant" replaces the colloquial "hefty" without softening the warning; and "differ between airlines and routes" makes the relationship between the two variables explicit, which is easier to parse than "vary by airline and route" on a first read.',
+            '"Exceeding these limits can result in hefty fees" reads as formal-yet-alarmist for a customer-facing FAQ. "Going over these limits" is plainer and more inviting, and "significant" replaces the colloquial "hefty" without softening the warning.',
     },
     {
         id: 'sg-3',
@@ -173,7 +180,7 @@ export const inlineAISuggestions = [
         type: 'readability',
         label: 'Readability',
         explanation:
-            'The original buries its most important condition — "if not managed carefully" — at the very end, after the reader has already absorbed the threat. Leading with the condition ("Without careful planning,") tells the reader up front what they need to do. The rewrite also swaps "expensive ordeal" — a deliberately emotional phrase — for "costly," which conveys the same meaning without dramatising it for a knowledge article.',
+            'The original buries its key condition — "if not managed carefully" — at the end, so leading with "Without careful planning," tells readers up front what to do. It also swaps the dramatic "expensive ordeal" for the calmer "costly," which better fits a knowledge article.',
     },
     {
         id: 'sg-4',
@@ -183,7 +190,7 @@ export const inlineAISuggestions = [
         type: 'grammar',
         label: 'Grammar & flow',
         explanation:
-            '"Differ based on" is grammatically fine but reads awkwardly when followed by a list of three categories — "based on" sets up a two-step relationship the reader has to mentally untangle. "Vary by" is the standard idiom for this construction in policy and technical writing, and it matches the phrasing already used elsewhere in this article ("which vary by airline and route") so the voice stays consistent across paragraphs.',
+            '"Differ based on" reads awkwardly before a three-item list and makes readers untangle an extra step. "Vary by" is the standard idiom here and matches phrasing used elsewhere in the article, keeping the voice consistent.',
     },
     {
         id: 'sg-5',
@@ -193,7 +200,7 @@ export const inlineAISuggestions = [
         type: 'readability',
         label: 'Word choice',
         explanation:
-            '"Sticks out" is colloquial and a bit imprecise for an instructional bullet — readers can\u2019t always tell whether a low-profile pocket counts. The rewrite makes the action explicit ("Include every external feature when you measure"), restores the Oxford comma in the list, and finishes with the concrete reason this matters ("add to the bag\u2019s total dimensions") so the bullet doubles as a one-line explanation rather than just a rule.',
+            '"Sticks out" is colloquial and imprecise for an instructional bullet, so the rewrite makes the action explicit and restores the Oxford comma. It also ends with the concrete reason this matters, so the bullet doubles as a quick explanation.',
     },
     {
         id: 'sg-6',
@@ -203,7 +210,29 @@ export const inlineAISuggestions = [
         type: 'readability',
         label: 'Tone & conciseness',
         explanation:
-            'The original is a single 35-word clause with two conditions glued together by "or", which is hard to parse on a phone screen. The rewrite splits the conditions with a clear comma break, swaps the formal "If you are" for the contracted "If you\u2019re" so the voice matches the rest of the FAQ, replaces the bureaucratic "contact your airline directly" with the warmer "reach out to your airline", and drops "directly" — an empty word once "reach out" already implies a direct action.',
+            'The original is a single 35-word clause with two conditions glued together by "or", which is hard to read on a phone. The rewrite splits the conditions with a clear comma break and swaps the bureaucratic wording for the warmer "If you\u2019re" and "reach out to your airline".',
+    },
+    {
+        id: 'sg-7',
+        blockId: 'b-p-1',
+        original: 'premium carriers can charge significantly more for overweight bags',
+        addition:
+            'Some carriers also apply a separate oversized-item fee on top of the overweight charge, so a single bag can trigger two fees at once.',
+        type: 'addition',
+        label: 'Add missing detail',
+        explanation:
+            'The paragraph explains overweight fees but never notes that oversized and overweight charges can stack — a frequent source of customer confusion. Adding this point right after the fee example lets readers know a single bag can trigger two fees.',
+    },
+    {
+        id: 'sg-8',
+        blockId: 'b-p-2',
+        original: 'Always check your specific allowance before packing to avoid surprises.',
+        addition:
+            'If you\u2019re flying on a codeshare or partner airline, confirm that carrier\u2019s policy too — baggage rules usually follow the operating airline, not the one you booked with.',
+        type: 'addition',
+        label: 'Add missing detail',
+        explanation:
+            'Codeshare and partner-operated flights are a common edge case the article doesn\u2019t cover, since travelers often assume the booking airline\u2019s allowance applies. Inserting this note after the existing guidance pre-empts a whole class of baggage-fee disputes.',
     },
 ];
 

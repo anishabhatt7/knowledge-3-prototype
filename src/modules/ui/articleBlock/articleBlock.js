@@ -613,6 +613,7 @@ export default class ArticleBlock extends LightningElement {
         const spanRect = span.getBoundingClientRect();
         const top = spanRect.bottom - blockRect.top + 8;
         const left = Math.max(0, spanRect.left - blockRect.left);
+        const isAddition = suggestion.type === 'addition';
         this._activeSuggestion = {
             id: suggestion.id,
             type: suggestion.type,
@@ -620,6 +621,9 @@ export default class ArticleBlock extends LightningElement {
             explanation: suggestion.explanation,
             original: suggestion.original,
             replacement: suggestion.replacement,
+            addition: suggestion.addition,
+            isAddition,
+            acceptLabel: isAddition ? 'Add' : 'Accept',
             popoverClass: `ai-popover ai-popover_${suggestion.type}`,
             style: `top: ${top}px; left: ${left}px;`,
         };
@@ -663,7 +667,17 @@ export default class ArticleBlock extends LightningElement {
         const s = this._activeSuggestion;
         if (!s) return;
         const current = this.block?.content ?? '';
-        const next = current.replace(s.original, s.replacement);
+        let next;
+        if (s.isAddition) {
+            // Insert the new content right after the anchor phrase, leaving
+            // the original text untouched. Fall back to appending if the
+            // anchor is no longer present in the (possibly edited) content.
+            next = current.includes(s.original)
+                ? current.replace(s.original, `${s.original} ${s.addition}`)
+                : `${current} ${s.addition}`.trim();
+        } else {
+            next = current.replace(s.original, s.replacement);
+        }
         this._activeSuggestion = null;
         if (this._popoverHideTimer) {
             clearTimeout(this._popoverHideTimer);

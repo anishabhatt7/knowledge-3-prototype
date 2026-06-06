@@ -68,7 +68,7 @@ export const seedReviewQueue = [
             {
                 id: 'p-image-luggage',
                 kind: 'image',
-                src: '/images/baggage-measure.jpg',
+                src: './images/baggage-measure.jpg',
                 alt: 'Travelers checking baggage at an airline counter',
                 caption: 'A typical check-in counter \u2014 most fees are decided before the bag hits the scale.',
             },
@@ -226,7 +226,7 @@ export const seedReviewQueue = [
         media: {
             kind: 'video',
             label: 'Video Explainer: Know your Baggage Allowance',
-            poster: '/images/baggage-video-poster.svg',
+            poster: './images/baggage-video-poster.svg',
             duration: '2:14',
         },
     },
@@ -341,7 +341,7 @@ export const seedReviewQueue = [
         media: {
             kind: 'image',
             label: 'Sizer reference photo',
-            poster: '/images/carry-on-sizer.svg',
+            poster: './images/carry-on-sizer.svg',
         },
     },
     {
@@ -443,7 +443,7 @@ export const seedReviewQueue = [
         media: {
             kind: 'image',
             label: 'Luggage scale reference',
-            poster: '/images/luggage-scale.svg',
+            poster: './images/luggage-scale.svg',
         },
     },
     {
@@ -541,7 +541,7 @@ export const seedReviewQueue = [
         media: {
             kind: 'image',
             label: 'TSA 3-1-1 quart bag illustration',
-            poster: '/images/tsa-quart-bag.svg',
+            poster: './images/tsa-quart-bag.svg',
         },
     },
     {
@@ -635,7 +635,7 @@ export const seedReviewQueue = [
         media: {
             kind: 'image',
             label: 'Prohibited items reference',
-            poster: '/images/prohibited-items.svg',
+            poster: './images/prohibited-items.svg',
         },
     },
     {
@@ -729,7 +729,7 @@ export const seedReviewQueue = [
         media: {
             kind: 'image',
             label: 'Linear-inch measuring diagram',
-            poster: '/images/measuring-bag.svg',
+            poster: './images/measuring-bag.svg',
         },
     },
     {
@@ -823,7 +823,7 @@ export const seedReviewQueue = [
         media: {
             kind: 'image',
             label: 'Hard-shell sports gear case',
-            poster: '/images/sports-case.svg',
+            poster: './images/sports-case.svg',
         },
     },
 ];

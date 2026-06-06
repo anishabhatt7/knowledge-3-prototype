@@ -802,6 +802,7 @@ page-review-article.ra--entering .ra-editor {
 .ai-suggest_grammar      { --ai-suggest-color: var(--slds-g-color-warning-base-50, #ca8501); }
 .ai-suggest_readability  { --ai-suggest-color: var(--slds-g-color-accent-2, #0250d9); }
 .ai-suggest_tone         { --ai-suggest-color: #5867e8; }
+.ai-suggest_addition     { --ai-suggest-color: var(--slds-g-color-success-base-50, #2e844a); }
 
 /* SLDS 2 card-style popover: surface-1 fill, radius-3, spacing-4
    padding, base font family + scale tokens throughout. Border is
@@ -855,41 +856,35 @@ page-review-article.ra--entering .ra-editor {
 .ai-popover__type {
     display: inline-flex;
     align-items: center;
-    gap: var(--slds-g-spacing-1, 4px);
+    gap: var(--slds-g-spacing-2, 8px);
     font-family: var(--slds-g-font-family-base, 'SF Pro', 'Salesforce Sans', system-ui, sans-serif);
-    font-size: var(--slds-g-font-scale-neg-2, 11px);
-    font-weight: var(--slds-g-font-weight-7, 600);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--slds-g-color-on-surface-2, #444);
+    font-size: var(--slds-g-font-scale-2, 1rem);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    line-height: var(--slds-g-font-line-height-3, 1.375);
+    color: var(--slds-g-color-accent-3, #022ac0);
 }
-
-.ai-popover__dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-}
-
-.ai-popover_spelling     .ai-popover__dot { background: var(--slds-g-color-error-base-50, #ba0517); }
-.ai-popover_grammar      .ai-popover__dot { background: var(--slds-g-color-warning-base-50, #ca8501); }
-.ai-popover_readability  .ai-popover__dot { background: var(--slds-g-color-accent-2, #0250d9); }
-.ai-popover_tone         .ai-popover__dot { background: #5867e8; }
 
 .ai-popover__brand-icon {
-    --slds-c-icon-color-foreground-default: var(--slds-g-color-accent-2, #0250d9);
-    opacity: 0.9;
-    /* Sit slightly closer to the type-color dot than the default flex gap. */
-    margin-right: 2px;
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-accent-3, #022ac0);
 }
 
-/* Bare close button anchored top-right of the popover. Hides the card
-   without marking the suggestion as dismissed. */
+/* Header action group: bordered circular accept + close button-icons,
+   matching the Knowledge 3.0 suggestion card header. */
+.ai-popover__header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    flex-shrink: 0;
+}
+
+.ai-popover__header-btn {
+    --slds-c-button-icon-radius-border: var(--slds-g-radius-border-circle, 50%);
+}
+
+/* Close hides the card without marking the suggestion as dismissed. */
 .ai-popover__close {
-    --slds-c-button-icon-color-foreground: var(--slds-g-color-on-surface-2, #444);
-    --slds-c-button-icon-color-foreground-hover: var(--slds-g-color-on-surface-1, #181818);
-    --slds-c-button-icon-radius-border: 4px;
-    margin-left: var(--slds-g-spacing-2, 8px);
+    --slds-c-button-icon-color-foreground: var(--slds-g-color-error-base-50, #ba0517);
+    --slds-c-button-icon-color-foreground-hover: var(--slds-g-color-error-base-40, #8e030f);
     flex-shrink: 0;
 }
 
@@ -945,6 +940,43 @@ page-review-article.ra--entering .ra-editor {
     word-break: break-word;
 }
 
+/* Content-addition variant: the anchor is shown as muted context and the
+   new content sits in a green "added" block with a leading + icon. */
+.ai-popover__diff-block_anchor {
+    background-color: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.ai-popover__diff-block_add {
+    background-color: var(--slds-g-color-success-base-90, #ecfaf2);
+}
+
+.ai-popover__diff-block_add .ai-popover__diff-label {
+    display: flex;
+    align-items: center;
+}
+
+.ai-popover__add-icon {
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-success-base-30, #2e844a);
+    margin-right: var(--slds-g-spacing-1, 4px);
+}
+
+.ai-popover__anchor {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: var(--slds-g-font-line-height-4, 1.5);
+    color: var(--slds-g-color-on-surface-2, #444);
+    word-break: break-word;
+}
+
+.ai-popover__add {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: var(--slds-g-font-line-height-4, 1.5);
+    font-weight: var(--slds-g-font-weight-7, 600);
+    color: var(--slds-g-color-success-base-30, #2e844a);
+    word-break: break-word;
+}
+
 .ai-popover__explanation {
     margin: 0 0 var(--slds-g-spacing-3, 12px);
     color: var(--slds-g-color-on-surface-2, #444);
@@ -959,7 +991,54 @@ page-review-article.ra--entering .ra-editor {
     justify-content: flex-end;
 }
 
+/* ─── Smart-suggest section insertion: loader + flash highlight ────
+   When a structural suggestion is applied, its section is appended to
+   the editor: first a brief inline loader, then the real content with
+   a flash highlight + left accent bar so the writer sees the change. */
+.ra-added {
+    border-radius: var(--slds-g-radius-border-2, 8px);
+}
+
+.ra-added_loading {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    margin-top: var(--slds-g-spacing-3, 12px);
+    padding: var(--slds-g-spacing-3, 12px);
+    background: var(--slds-g-color-brand-base-95, #edf4ff);
+    color: var(--slds-g-color-accent-1, #066afe);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    user-select: none;
+}
+
+.ra-added__spinner {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border-radius: var(--slds-g-radius-border-circle, 50%);
+    border: var(--slds-g-sizing-border-2, 2px) solid color-mix(in srgb, var(--slds-g-color-accent-1, #066afe) 28%, transparent);
+    border-top-color: var(--slds-g-color-accent-1, #066afe);
+    animation: ra-added-spin 0.7s linear infinite;
+}
+
+@keyframes ra-added-spin {
+    to { transform: rotate(360deg); }
+}
+
+.ra-added_flash {
+    box-shadow: inset 3px 0 0 0 var(--slds-g-color-accent-1, #066afe);
+    animation: ra-added-flash 1.8s ease-out;
+}
+
+@keyframes ra-added-flash {
+    0%   { background-color: var(--slds-g-color-brand-base-95, #edf4ff); }
+    70%  { background-color: var(--slds-g-color-brand-base-95, #edf4ff); }
+    100% { background-color: transparent; }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .ai-popover { animation: none; }
     .ai-suggest { transition: none; }
+    .ra-added__spinner { animation: none; }
+    .ra-added_flash { animation: none; }
 }

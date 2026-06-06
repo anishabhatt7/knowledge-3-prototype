@@ -16,6 +16,17 @@ import {
 
 // Grammarly-style popover dwell time before it closes after a mouse-leave.
 const SUGGESTION_POPOVER_HIDE_DELAY = 220;
+
+// Header brand icon per suggestion type, so each kind of suggestion reads
+// at a glance. Falls back to the AI sparkles mark for unknown types.
+const SUGGESTION_TYPE_ICONS = {
+    spelling: 'utility:edit',
+    grammar: 'utility:comments',
+    readability: 'utility:preview',
+    tone: 'utility:announcement',
+    addition: 'utility:add',
+};
+const DEFAULT_SUGGESTION_ICON = 'utility:sparkles';
 import { consumeDraftSession } from 'data/draftSession';
 import { consumeEditSession } from 'data/editSession';
 import { setArticleEdit } from 'data/articleEdits';
@@ -375,6 +386,7 @@ export default class ReviewArticle extends LightningElement {
         const spanRect = span.getBoundingClientRect();
         const top = spanRect.bottom - hostRect.top + 8;
         const left = Math.max(0, spanRect.left - hostRect.left);
+        const isAddition = suggestion.type === 'addition';
         this._activeSuggestion = {
             id: suggestion.id,
             type: suggestion.type,
@@ -382,6 +394,10 @@ export default class ReviewArticle extends LightningElement {
             explanation: suggestion.explanation,
             original: suggestion.original,
             replacement: suggestion.replacement,
+            addition: suggestion.addition,
+            isAddition,
+            acceptLabel: isAddition ? 'Add' : 'Accept',
+            brandIcon: SUGGESTION_TYPE_ICONS[suggestion.type] || DEFAULT_SUGGESTION_ICON,
             popoverClass: `ai-popover ai-popover_${suggestion.type}`,
             style: `top: ${top}px; left: ${left}px;`,
         };
@@ -431,7 +447,12 @@ export default class ReviewArticle extends LightningElement {
             );
             if (span && span.parentNode) {
                 const parent = span.parentNode;
-                const textNode = document.createTextNode(s.replacement);
+                // Rewrites swap the matched text; additions keep the anchor
+                // text and append the new content right after it.
+                const newText = s.isAddition
+                    ? `${s.original} ${s.addition}`
+                    : s.replacement;
+                const textNode = document.createTextNode(newText);
                 parent.replaceChild(textNode, span);
                 if (parent.normalize) parent.normalize();
             }
@@ -1007,47 +1028,111 @@ export default class ReviewArticle extends LightningElement {
 
     handleUpdateAll() {
         this.pushUndo();
-        this.suggests.forEach((s) => {
-            if (s.status === 'available') this.applySuggestionById(s.id, false);
-        });
+        // Snapshot the available ids first — applySuggestionById reorders
+        // `this.suggests` as it marks each one updated.
+        const ids = this.suggests
+            .filter((s) => s.status === 'available')
+            .map((s) => s.id);
+        ids.forEach((id) => this.applySuggestionById(id, false));
         this.applyHealthBoost(12, 5);
         this.addAgentMessage(
-            'Applied all Smart Suggests. Article coverage score improved and new blocks were added to the draft.'
+            'Applied all structural suggestions. New sections were added to the draft and the coverage score improved.'
         );
     }
 
     handleApplySuggestion(event) {
         const { id } = event.detail;
-        this.applySuggestionById(id, true);
+        this.applySuggestionById(id, true, true);
     }
 
-    applySuggestionById(id, announce) {
+    applySuggestionById(id, announce, animate = false) {
         const idx = this.suggests.findIndex((s) => s.id === id);
         if (idx === -1) return;
         const suggestion = this.suggests[idx];
-        if (suggestion.status === 'applied') return;
+        if (suggestion.status === 'updated') return;
 
         this.pushUndo();
 
         const htmlChunks = this._htmlForSuggestion(suggestion);
-        if (htmlChunks) {
-            this._insertHtmlAtCursor(htmlChunks);
-        }
 
-        this.suggests = this.suggests.map((s, i) => (i === idx ? { ...s, status: 'applied' } : s));
+        // Mark as updated and float the card to the bottom of the list so
+        // the remaining actionable suggestions stay at the top. The card
+        // movement is animated (GSAP FLIP) inside <ui-knowledge-assist>.
+        const updated = { ...suggestion, status: 'updated' };
+        const rest = this.suggests.filter((_, i) => i !== idx);
+        this.suggests = [...rest, updated];
 
         this.applyHealthBoost(suggestion.coverageDelta, suggestion.confidenceDelta);
 
         if (announce) {
             this.addAgentMessage(
-                `Applied "${suggestion.label}". Content added to the article draft.`
+                `Added the "${suggestion.section || suggestion.label}" section to the article. Coverage score improved.`
             );
         }
-        this._updateWordCount();
+
+        // Insert the new section into the editor. A single Update click
+        // plays a loader → highlight → scroll-into-view sequence so the
+        // writer can see exactly what changed; bulk "Update All" appends
+        // instantly to avoid stacked loaders.
+        if (htmlChunks) {
+            if (animate && this.animationEnabled) {
+                this._insertSectionWithLoader(htmlChunks, suggestion);
+            } else {
+                this._appendHtmlToEditor(htmlChunks);
+                this._updateWordCount();
+            }
+        } else {
+            this._updateWordCount();
+        }
+    }
+
+    // Appends a loader where the new section will land, scrolls to it,
+    // then swaps in the real content with a flash highlight and re-scrolls
+    // so the change is unmistakable.
+    _insertSectionWithLoader(html, suggestion) {
+        const editorEl = this._getEditorEl();
+        if (!editorEl) return;
+        const genId = `gen-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const sectionName = suggestion.section || suggestion.label;
+        const loaderHtml =
+            `<div class="ra-added ra-added_loading" data-gen="${genId}" contenteditable="false">` +
+            `<span class="ra-added__spinner" aria-hidden="true"></span>` +
+            `<span class="ra-added__loading-text">Agentforce is adding the \u201c${sectionName}\u201d section\u2026</span>` +
+            `</div>`;
+        editorEl.insertAdjacentHTML('beforeend', loaderHtml);
+        const loaderEl = editorEl.querySelector(`[data-gen="${genId}"]`);
+        if (loaderEl) this._scrollEditorToEl(loaderEl);
+
+        window.setTimeout(() => {
+            const el = editorEl.querySelector(`[data-gen="${genId}"]`);
+            if (!el) return;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'ra-added ra-added_flash';
+            wrapper.innerHTML = html;
+            el.replaceWith(wrapper);
+            this._scrollEditorToEl(wrapper);
+            this._updateWordCount();
+            // Drop the highlight once the flash finishes so the inserted
+            // content settles into normal article styling.
+            window.setTimeout(() => {
+                wrapper.classList.remove('ra-added_flash');
+            }, 1900);
+        }, 1100);
+    }
+
+    _scrollEditorToEl(el) {
+        if (!el || typeof el.scrollIntoView !== 'function') return;
+        try {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (_) {
+            el.scrollIntoView();
+        }
     }
 
     _htmlForSuggestion(s) {
         switch (s.actionKind) {
+            case 'update-section':
+                return this._sectionHtml(s);
             case 'update-video':
                 return `<div class="ra-editor-video"><div class="ra-editor-video__icon">&#9654;</div><div class="ra-editor-video__info"><strong>Video Explainer: Baggage size and weight</strong><p>A short walkthrough showing how to measure bags and avoid fees.</p></div></div>`;
             case 'add-knowledge-block':
@@ -1059,6 +1144,31 @@ export default class ReviewArticle extends LightningElement {
             default:
                 return null;
         }
+    }
+
+    // Answer-first section content for the structural suggestions. Each
+    // adds a heading + a short, direct paragraph so the article reads as
+    // more comprehensive once the writer accepts the suggestion.
+    _sectionHtml(s) {
+        const byId = {
+            'suggest-structure-open-flow-builder':
+                '<p>To open Flow Builder, go to Setup, type Flows in the Quick Find box, select Flows, then click New Flow. Choose the flow type that matches your use case and click Create to open the canvas.</p>',
+            'suggest-structure-add-flow-elements':
+                '<p>To add elements to a flow, drag them from the Elements tab on the left of the canvas onto the flow path. Connect each element in the order it should run, then configure its settings in the panel that opens.</p>',
+            'suggest-structure-activate-the-flow':
+                '<p>To activate a flow, open it in Flow Builder and click Activate in the top-right toolbar. Once active, the flow runs automatically for users based on its trigger; click Deactivate at any time to pause it.</p>',
+        };
+        const heading = s.section || s.label;
+        const body = byId[s.id] || `<p>${s.description}</p>`;
+        return `<h2>${heading}</h2>${body}`;
+    }
+
+    // Always append at the very end of the editor, regardless of where
+    // the caret currently sits.
+    _appendHtmlToEditor(html) {
+        const editorEl = this._getEditorEl();
+        if (!editorEl) return;
+        editorEl.insertAdjacentHTML('beforeend', html);
     }
 
     applyHealthBoost(coverageDelta = 0, confidenceDelta = 0) {

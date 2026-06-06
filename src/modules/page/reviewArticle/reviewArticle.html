@@ -266,33 +266,56 @@
                             <div class="ai-popover__header">
                                 <span class="ai-popover__type">
                                     <lightning-icon
-                                        icon-name="utility:sparkles"
+                                        icon-name={_activeSuggestion.brandIcon}
                                         size="xx-small"
                                         alternative-text="AI suggestion"
                                         class="ai-popover__brand-icon">
                                     </lightning-icon>
-                                    <span class="ai-popover__dot" aria-hidden="true"></span>
                                     <span class="ai-popover__type-label">{_activeSuggestion.label}</span>
                                 </span>
-                                <lightning-button-icon
-                                    icon-name="utility:close"
-                                    variant="bare"
-                                    size="x-small"
-                                    alternative-text="Close suggestion card"
-                                    class="ai-popover__close"
-                                    onclick={handleSuggestionClose}>
-                                </lightning-button-icon>
+                                <span class="ai-popover__header-actions">
+                                    <lightning-button-icon
+                                        icon-name="utility:close"
+                                        variant="border"
+                                        size="small"
+                                        alternative-text="Close suggestion card"
+                                        class="ai-popover__header-btn ai-popover__close"
+                                        onclick={handleSuggestionClose}>
+                                    </lightning-button-icon>
+                                </span>
                             </div>
-                            <div class="ai-popover__diff">
-                                <div class="ai-popover__diff-block ai-popover__diff-block_from">
-                                    <span class="ai-popover__diff-label">Current</span>
-                                    <p class="ai-popover__from">{_activeSuggestion.original}</p>
+                            <template lwc:if={_activeSuggestion.isAddition}>
+                                <div class="ai-popover__diff">
+                                    <div class="ai-popover__diff-block ai-popover__diff-block_anchor">
+                                        <span class="ai-popover__diff-label">After</span>
+                                        <p class="ai-popover__anchor">{_activeSuggestion.original}</p>
+                                    </div>
+                                    <div class="ai-popover__diff-block ai-popover__diff-block_add">
+                                        <span class="ai-popover__diff-label">
+                                            <lightning-icon
+                                                icon-name="utility:add"
+                                                size="xx-small"
+                                                alternative-text="Add"
+                                                class="ai-popover__add-icon">
+                                            </lightning-icon>
+                                            Suggested addition
+                                        </span>
+                                        <p class="ai-popover__add">{_activeSuggestion.addition}</p>
+                                    </div>
                                 </div>
-                                <div class="ai-popover__diff-block ai-popover__diff-block_to">
-                                    <span class="ai-popover__diff-label">Suggested rewrite</span>
-                                    <p class="ai-popover__to">{_activeSuggestion.replacement}</p>
+                            </template>
+                            <template lwc:else>
+                                <div class="ai-popover__diff">
+                                    <div class="ai-popover__diff-block ai-popover__diff-block_from">
+                                        <span class="ai-popover__diff-label">Current</span>
+                                        <p class="ai-popover__from">{_activeSuggestion.original}</p>
+                                    </div>
+                                    <div class="ai-popover__diff-block ai-popover__diff-block_to">
+                                        <span class="ai-popover__diff-label">Suggested rewrite</span>
+                                        <p class="ai-popover__to">{_activeSuggestion.replacement}</p>
+                                    </div>
                                 </div>
-                            </div>
+                            </template>
                             <p class="ai-popover__explanation">{_activeSuggestion.explanation}</p>
                             <div class="ai-popover__actions">
                                 <lightning-button
@@ -302,7 +325,7 @@
                                     onclick={handleSuggestionDismiss}>
                                 </lightning-button>
                                 <lightning-button
-                                    label="Accept"
+                                    label={_activeSuggestion.acceptLabel}
                                     variant="brand"
                                     class="ai-popover__btn ai-popover__btn_accept"
                                     onclick={handleSuggestionAccept}>
