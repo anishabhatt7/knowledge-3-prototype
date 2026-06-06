@@ -79,4 +79,13 @@ export const routes = [
         title: 'Knowledge Blocks | Knowledge',
         navHighlight: 'knowledge',
     },
+    {
+        // Full "Top Quality Issues" list, opened as a workspace tab from the
+        // Knowledge Health dashboard "Explore All" action. Paginated list
+        // with Domain/Agent, Issue Type, Priority, and Assigned filters.
+        path: '/quality-issues',
+        component: 'page-quality-issues',
+        title: 'Top Quality Issues | Knowledge',
+        navHighlight: 'knowledge',
+    },
 ];

@@ -95,6 +95,44 @@ export const seedPlatformMetrics = {
     },
 };
 
+export const seedStructuralViolations = [
+    {
+        id: 'sv-refund-international',
+        article: 'Refund Policy for International Orders',
+        description: 'Missing answer-first sentence in "Returns" section',
+        violations: 4,
+        aiScore: 62,
+    },
+    {
+        id: 'sv-workspace-onboarding',
+        article: 'Workspace Onboarding Checklist',
+        description: 'References deprecated "submitOnboardingForm" workflow',
+        violations: 3,
+        aiScore: 58,
+    },
+    {
+        id: 'sv-api-rate-limits',
+        article: 'API Rate Limits and Throttling',
+        description: 'Contradicts rate-limit values in "Developer Portal" article',
+        violations: 5,
+        aiScore: 45,
+    },
+    {
+        id: 'sv-password-reset',
+        article: 'Password Reset Troubleshooting',
+        description: 'FAQ block uses paragraph headings instead of Q/A format',
+        violations: 2,
+        aiScore: 71,
+    },
+    {
+        id: 'sv-shipping-estimates',
+        article: 'Shipping Time Estimates',
+        description: 'Eligibility table missing alt text and column headers',
+        violations: 6,
+        aiScore: 39,
+    },
+];
+
 export const seedActionItems = [
     {
         id: 'action-1',

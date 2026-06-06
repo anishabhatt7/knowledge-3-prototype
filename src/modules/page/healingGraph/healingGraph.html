@@ -411,45 +411,18 @@
                     </template>
                 </div>
 
-                <!-- ═══ ACTIVE QUALITY ISSUES — Figma 387:48080 ═══ -->
+                <!-- ═══ TOP QUALITY ISSUES — Figma 387:48080 ═══ -->
                 <section class="hg-qi-section">
                     <div class="hg-qi-header">
-                        <h2 class="hg-qi-header__title">Active Quality Issue</h2>
+                        <h2 class="hg-qi-header__title">Top Quality Issues</h2>
+                        <button type="button" class="hg-qi-header__explore" onclick={handleExploreAll}>
+                            Explore All
+                            <lightning-icon icon-name="utility:forward" size="xx-small" alternative-text="" class="hg-qi-header__explore-icon"></lightning-icon>
+                        </button>
                     </div>
 
-                    <!-- Filter bar — Figma 385:47622 -->
-                    <div class="hg-qi-filterbar">
-                        <lightning-combobox
-                            class="hg-qi-filterbar__field"
-                            name="domain"
-                            label="Domain/Agent"
-                            placeholder="Select a Domain"
-                            value={_dashFilters.domain}
-                            options={domainFilterOptions}
-                            onchange={handleDashFilterChange}
-                        ></lightning-combobox>
-                        <lightning-combobox
-                            class="hg-qi-filterbar__field"
-                            name="type"
-                            label="Quality Issue"
-                            placeholder="Select Issue Type"
-                            value={_dashFilters.type}
-                            options={qualityIssueTypeOptions}
-                            onchange={handleDashFilterChange}
-                        ></lightning-combobox>
-                        <lightning-combobox
-                            class="hg-qi-filterbar__field"
-                            name="priority"
-                            label="Priority"
-                            placeholder="Select Priority"
-                            value={_dashFilters.priority}
-                            options={priorityFilterOptions}
-                            onchange={handleDashFilterChange}
-                        ></lightning-combobox>
-                    </div>
-
-                    <template lwc:if={hasQualityIssues}>
-                        <template for:each={qualityIssues} for:item="q">
+                    <template lwc:if={hasTopQualityIssues}>
+                        <template for:each={topQualityIssues} for:item="q">
                             <article key={q.id} class="hg-qi-tile">
                                 <div class="hg-qi-tile__head">
                                     <div class="hg-qi-tile__head-left">
@@ -511,9 +484,143 @@
                     <template lwc:else>
                         <div class="hg-contra-empty">
                             <lightning-icon icon-name="utility:success" size="small" alternative-text="" class="hg-contra-empty__icon"></lightning-icon>
-                            <p class="hg-contra-empty__text">No active quality issues match the selected filters.</p>
+                            <p class="hg-contra-empty__text">No active quality issues right now.</p>
                         </div>
                     </template>
+                </section>
+
+                <!-- ═══ SELF-HEALED QUALITY ISSUE — Figma 402:50197 ═══ -->
+                <section class="hg-shi-section">
+                    <div class="hg-shi-header">
+                        <h2 class="hg-shi-header__title">Self-Healed Quality Issue</h2>
+                        <div class="hg-shi-header__actions">
+                            <lightning-button-icon
+                                class={healedFilterBtnClass}
+                                icon-name="utility:filterList"
+                                variant="border-filled"
+                                size="small"
+                                alternative-text="Filter to items in review"
+                                title="Filter to items in review"
+                                onclick={handleFilterHealed}
+                            ></lightning-button-icon>
+                            <lightning-button-icon
+                                class="hg-shi-iconbtn"
+                                icon-name="utility:refresh"
+                                variant="border-filled"
+                                size="small"
+                                alternative-text="Refresh"
+                                title="Refresh"
+                                onclick={handleRefreshHealed}
+                            ></lightning-button-icon>
+                        </div>
+                    </div>
+
+                    <div class="hg-shi-grid" role="table" aria-label="Self-healed quality issues">
+                        <!-- Header row -->
+                        <div class="hg-shi-grid__head" role="row">
+                            <span class="hg-shi-headcell hg-shi-headcell--check" role="columnheader" aria-label="Select"></span>
+                            <span class="hg-shi-headcell" role="columnheader">Article Updated/Drafted</span>
+                            <span class="hg-shi-headcell" role="columnheader">Issue Type</span>
+                            <span class="hg-shi-headcell" role="columnheader">Status</span>
+                            <span class="hg-shi-headcell" role="columnheader">Domain/Agent</span>
+                            <span class="hg-shi-headcell hg-shi-headcell--menu" role="columnheader" aria-label="Actions"></span>
+                        </div>
+
+                        <template lwc:if={hasSelfHealed}>
+                            <template for:each={selfHealedRows} for:item="row">
+                                <div key={row.id} class="hg-shi-rowgroup">
+                                    <div class={row.rowClass} role="row">
+                                        <span class="hg-shi-cell hg-shi-cell--check" role="cell">
+                                            <lightning-input
+                                                type="checkbox"
+                                                variant="label-hidden"
+                                                label="Select row"
+                                                checked={row.selected}
+                                                data-id={row.id}
+                                                onchange={handleHealedSelect}
+                                            ></lightning-input>
+                                        </span>
+                                        <span class="hg-shi-cell hg-shi-cell--article" role="cell">
+                                            <button
+                                                type="button"
+                                                class="hg-shi-chevron"
+                                                data-id={row.id}
+                                                aria-expanded={row.isExpanded}
+                                                aria-label="Toggle resolution details"
+                                                onclick={handleToggleHealedRow}
+                                            >
+                                                <lightning-icon icon-name={row.chevronIcon} size="xx-small" alternative-text=""></lightning-icon>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="hg-shi-link"
+                                                data-id={row.articleId}
+                                                data-title={row.articleTitle}
+                                                onclick={handleHealedArticleClick}
+                                            >{row.articleTitle}</button>
+                                        </span>
+                                        <span class="hg-shi-cell" role="cell">{row.issueType}</span>
+                                        <span class="hg-shi-cell hg-shi-cell--status" role="cell">
+                                            <lightning-badge label={row.status} class={row.statusBadgeClass}></lightning-badge>
+                                        </span>
+                                        <span class="hg-shi-cell" role="cell">{row.domain}</span>
+                                        <span class="hg-shi-cell hg-shi-cell--menu" role="cell">
+                                            <lightning-button-menu
+                                                icon-name="utility:down"
+                                                icon-size="x-small"
+                                                variant="border-filled"
+                                                menu-alignment="right"
+                                                alternative-text="Row actions"
+                                                data-id={row.id}
+                                                onselect={handleHealedRowAction}
+                                            >
+                                                <lightning-menu-item value="view-article" label="Open Article"></lightning-menu-item>
+                                                <lightning-menu-item value="dismiss" label="Dismiss"></lightning-menu-item>
+                                            </lightning-button-menu>
+                                        </span>
+                                    </div>
+
+                                    <template lwc:if={row.isExpanded}>
+                                        <div class="hg-shi-detail">
+                                            <div class="hg-shi-panel hg-shi-panel--issue">
+                                                <p class="hg-shi-panel__title">{row.issueTitle}</p>
+                                                <p class="hg-shi-panel__text">{row.issueText}</p>
+                                            </div>
+                                            <div class="hg-shi-panel hg-shi-panel--resolution">
+                                                <p class="hg-shi-panel__title">{row.resolution.title}</p>
+                                                <p class="hg-shi-panel__text">
+                                                    <template for:each={row.resolutionParts} for:item="part">
+                                                        <template lwc:if={part.isText}>
+                                                            <span key={part.key}>{part.text}</span>
+                                                        </template>
+                                                        <template lwc:if={part.isLink}>
+                                                            <button
+                                                                key={part.key}
+                                                                type="button"
+                                                                class="hg-shi-reslink"
+                                                                data-id={part.id}
+                                                                data-title={part.title}
+                                                                onclick={handleHealedArticleClick}
+                                                            >
+                                                                <lightning-icon icon-name="utility:knowledge_base" size="xx-small" alternative-text="" class="hg-shi-reslink__icon"></lightning-icon>
+                                                                <span class="hg-shi-reslink__text">{part.title}</span>
+                                                            </button>
+                                                        </template>
+                                                    </template>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </template>
+                        <template lwc:else>
+                            <div class="hg-shi-empty">
+                                <lightning-icon icon-name="utility:success" size="small" alternative-text="" class="hg-shi-empty__icon"></lightning-icon>
+                                <p class="hg-shi-empty__text">No self-healed issues to show.</p>
+                            </div>
+                        </template>
+                    </div>
                 </section>
             </div>
         </template>

@@ -16,6 +16,7 @@ import {
     seedHealingActions,
     seedQualityIssues,
     buildDomainHealthSnapshot,
+    buildSelfHealedIssues,
     CAPABILITY_COLORS,
     CAPABILITY_LABELS,
     SEVERITY_COLORS,
@@ -149,6 +150,12 @@ export default class HealingGraph extends LightningElement {
     @track _ignoredIssueIds = [];
     _qualityIssues = seedQualityIssues;
 
+    // ── Dashboard "Self-Healed Quality Issue" tree-grid ─────────────
+    @track _selfHealed = [];
+    @track _expandedHealedIds = [];
+    @track _selectedHealedIds = [];
+    @track _healedReviewOnly = false;
+
     // ── Graph state ─────────────────────────────────────────────────
     @track _activeFilters = [];
     @track _healingFilter = 'all';
@@ -176,6 +183,7 @@ export default class HealingGraph extends LightningElement {
 
     connectedCallback() {
         this._domainHealth = buildDomainHealthSnapshot();
+        this._selfHealed = buildSelfHealedIssues();
         this._contradictions.forEach((c) => {
             this._contradictionsByEdge.set(edgeKey(c.entityA.id, c.entityB.id), c);
         });
@@ -231,6 +239,7 @@ export default class HealingGraph extends LightningElement {
 
         const cards = [...this.querySelectorAll('.hg-dash-grid .hg-dash-card')];
         const qiSection = this.querySelector('.hg-qi-section');
+        const shiSection = this.querySelector('.hg-shi-section');
 
         if (cards.length) {
             gsap.from(cards, {
@@ -243,13 +252,15 @@ export default class HealingGraph extends LightningElement {
             });
         }
 
-        if (qiSection) {
-            gsap.from(qiSection, {
+        const sections = [qiSection, shiSection].filter(Boolean);
+        if (sections.length) {
+            gsap.from(sections, {
                 opacity: 0,
                 y: 16,
                 duration: 0.5,
                 ease: 'power2.out',
                 delay: 0.15,
+                stagger: 0.08,
                 clearProps: 'opacity,transform',
             });
         }
@@ -469,6 +480,24 @@ export default class HealingGraph extends LightningElement {
         return this.qualityIssues.length > 0;
     }
 
+    /** Dashboard shows only the top 3 issues; the full list lives on the
+     *  "Explore All" page (`/quality-issues`). */
+    get topQualityIssues() {
+        return this.qualityIssues.slice(0, 3);
+    }
+
+    get hasTopQualityIssues() {
+        return this.topQualityIssues.length > 0;
+    }
+
+    /** Open the full, paginated Top Quality Issues list in a workspace tab. */
+    handleExploreAll() {
+        window.dispatchEvent(new CustomEvent('workspace:addtab', {
+            detail: { label: 'Top Quality Issues', path: '/quality-issues', originPath: '/healing-graph' },
+        }));
+        navigate('/quality-issues');
+    }
+
     get qualityIssues() {
         const f = this._dashFilters;
         return this._openQualityIssues
@@ -553,6 +582,89 @@ export default class HealingGraph extends LightningElement {
         const id = event.currentTarget?.dataset?.id;
         if (!id) return;
         this._ignoredIssueIds = [...this._ignoredIssueIds, id];
+    }
+
+    // ── Dashboard: Self-Healed Quality Issues (tree-grid) ────────────
+
+    get selfHealedRows() {
+        const rows = this._healedReviewOnly
+            ? this._selfHealed.filter((r) => r.status === 'In Review')
+            : this._selfHealed;
+        return rows.map((r) => {
+            const expanded = this._expandedHealedIds.includes(r.id);
+            return {
+                ...r,
+                isExpanded: expanded,
+                selected: this._selectedHealedIds.includes(r.id),
+                chevronIcon: expanded ? 'utility:chevrondown' : 'utility:chevronright',
+                rowClass: expanded ? 'hg-shi-row hg-shi-row--expanded' : 'hg-shi-row',
+                statusBadgeClass: r.status === 'Resolved'
+                    ? 'hg-shi-badge slds-theme_success'
+                    : 'hg-shi-badge slds-theme_warning',
+                resolutionParts: r.resolution.parts.map((p, i) => ({
+                    ...p,
+                    key: `${r.id}-rp-${i}`,
+                })),
+            };
+        });
+    }
+
+    get hasSelfHealed() {
+        return this.selfHealedRows.length > 0;
+    }
+
+    get healedFilterBtnClass() {
+        return this._healedReviewOnly ? 'hg-shi-iconbtn hg-shi-iconbtn--active' : 'hg-shi-iconbtn';
+    }
+
+    handleToggleHealedRow(event) {
+        const id = event.currentTarget?.dataset?.id;
+        if (!id) return;
+        const expanded = [...this._expandedHealedIds];
+        const idx = expanded.indexOf(id);
+        if (idx >= 0) expanded.splice(idx, 1);
+        else expanded.push(id);
+        this._expandedHealedIds = expanded;
+    }
+
+    handleHealedSelect(event) {
+        const id = event.currentTarget?.dataset?.id;
+        if (!id) return;
+        const checked = event.detail ? event.detail.checked : event.target?.checked;
+        const selected = this._selectedHealedIds.filter((s) => s !== id);
+        if (checked) selected.push(id);
+        this._selectedHealedIds = selected;
+    }
+
+    handleHealedArticleClick(event) {
+        const { id, title } = event.currentTarget?.dataset || {};
+        if (!id || !title) return;
+        this._openArticleRecord(id, title);
+    }
+
+    /** Header refresh — re-roll the self-healed history. */
+    handleRefreshHealed() {
+        this._selfHealed = buildSelfHealedIssues();
+        this._expandedHealedIds = [];
+        this._selectedHealedIds = [];
+    }
+
+    /** Header filter — toggle showing only items still awaiting review. */
+    handleFilterHealed() {
+        this._healedReviewOnly = !this._healedReviewOnly;
+    }
+
+    handleHealedRowAction(event) {
+        const value = event.detail?.value;
+        const id = event.currentTarget?.dataset?.id;
+        if (!id) return;
+        const row = this._selfHealed.find((r) => r.id === id);
+        if (value === 'view-article' && row) {
+            this._openArticleRecord(row.articleId, row.articleTitle);
+        } else if (value === 'dismiss') {
+            this._selfHealed = this._selfHealed.filter((r) => r.id !== id);
+            this._expandedHealedIds = this._expandedHealedIds.filter((x) => x !== id);
+        }
     }
 
     // ── Computed getters ─────────────────────────────────────────────

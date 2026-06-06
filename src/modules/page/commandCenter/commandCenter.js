@@ -8,6 +8,7 @@ import {
     seedCapabilitySummaries,
     seedWatchlist,
     seedActionItems,
+    seedStructuralViolations,
 } from 'data/commandCenter';
 
 export default class CommandCenter extends LightningElement {
@@ -226,6 +227,86 @@ export default class CommandCenter extends LightningElement {
             detail: { label: title, path: '/new-knowledge', originPath: '/command-center' },
         }));
         navigate('/new-knowledge');
+    }
+
+    // ── Structural Violations ──────────────────────────────────────────
+    @track _selectedViolationIds = [];
+    @track _showReviewQueue = false;
+    @track _violationSortField = null;
+    @track _violationSortDesc = false;
+
+    get showViolationsTable() {
+        return !this._showReviewQueue;
+    }
+
+    get structuralViolations() {
+        let items = [...seedStructuralViolations];
+        if (this._violationSortField) {
+            items.sort((a, b) => {
+                const av = a[this._violationSortField];
+                const bv = b[this._violationSortField];
+                if (typeof av === 'number') return this._violationSortDesc ? bv - av : av - bv;
+                return this._violationSortDesc ? String(bv).localeCompare(String(av)) : String(av).localeCompare(String(bv));
+            });
+        }
+        return items.map((v) => ({
+            ...v,
+            isSelected: this._selectedViolationIds.includes(v.id),
+        }));
+    }
+
+    get reviewQueueItems() {
+        return seedStructuralViolations
+            .filter((v) => this._selectedViolationIds.includes(v.id))
+            .map((v) => ({ ...v, isSelected: true }));
+    }
+
+    get hasSelectedViolations() {
+        return this._selectedViolationIds.length > 0;
+    }
+
+    get selectedViolationCount() {
+        return this._selectedViolationIds.length;
+    }
+
+    get reviewQueueTitle() {
+        return `Review Queue (${this._selectedViolationIds.length})`;
+    }
+
+    handleViolationCheckbox(event) {
+        const id = event.currentTarget.dataset.id;
+        const selected = [...this._selectedViolationIds];
+        const idx = selected.indexOf(id);
+        if (idx >= 0) {
+            selected.splice(idx, 1);
+        } else {
+            selected.push(id);
+        }
+        this._selectedViolationIds = selected;
+    }
+
+    handleReviewInQueue() {
+        if (!this._selectedViolationIds.length) return;
+        this._showReviewQueue = true;
+    }
+
+    handleApproveAll() {
+        this._selectedViolationIds = [];
+        this._showReviewQueue = false;
+    }
+
+    handleBackToViolations() {
+        this._showReviewQueue = false;
+    }
+
+    handleSortViolations(event) {
+        const field = event.currentTarget.dataset.field;
+        if (this._violationSortField === field) {
+            this._violationSortDesc = !this._violationSortDesc;
+        } else {
+            this._violationSortField = field;
+            this._violationSortDesc = true;
+        }
     }
 
     // ── Motion entrance ─────────────────────────────────────────────

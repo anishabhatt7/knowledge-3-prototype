@@ -10,6 +10,7 @@ import KnowledgeRecord from 'page/knowledgeRecord';
 import CommandCenter from 'page/commandCenter';
 import KnowledgeAgents from 'page/knowledgeAgents';
 import KnowledgeBlocks from 'page/knowledgeBlocks';
+import QualityIssues from 'page/qualityIssues';
 
 /** Option A: explicit registration – add one import + one entry here when adding a route */
 const ROUTE_COMPONENTS = {
@@ -21,6 +22,7 @@ const ROUTE_COMPONENTS = {
     'page-command-center': CommandCenter,
     'page-knowledge-agents': KnowledgeAgents,
     'page-knowledge-blocks': KnowledgeBlocks,
+    'page-quality-issues': QualityIssues,
 };
 
 /** Derived from routes.config: component name → nav page id (includes navHighlight for child routes) */

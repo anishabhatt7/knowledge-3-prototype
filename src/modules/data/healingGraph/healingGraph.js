@@ -371,4 +371,172 @@ export const seedQualityIssues = [
         itemA: { articleId: 'kr-temp-housing', articleTitle: 'Temporary Housing Allowance', text: 'Relocating employees are eligible for up to 60 days of temporary housing.' },
         itemB: { articleId: 'kr-interim-housing', articleTitle: 'Interim Accommodation Policy', text: 'Employees on relocation may receive up to 60 days of interim housing.' },
     },
+    {
+        id: 'qi-009',
+        domain: 'Benefits & Payroll',
+        type: 'contradiction',
+        confidence: 93,
+        priority: 'High',
+        title: 'Conflicting FSA Carryover Limits',
+        description: 'The following information has been identified as a contradiction. Both documents state the health FSA carryover limit for the new plan year, but the amounts disagree — $610 versus $640. Employees cannot plan around two different limits.',
+        itemA: { articleId: 'kr-fsa-guide', articleTitle: 'FSA & HSA Guide', text: 'Up to $610 of unused health FSA funds may carry over to the next plan year.' },
+        itemB: { articleId: 'kr-benefits-summary', articleTitle: '2026 Benefits Summary', text: 'Up to $640 of unused health FSA funds may carry over to the next plan year.' },
+    },
+    {
+        id: 'qi-010',
+        domain: 'Travel & Expense',
+        type: 'similarity',
+        confidence: 87,
+        priority: 'Low',
+        title: 'Redundant Mileage Reimbursement Guides',
+        description: 'These two articles have been identified as near-duplicates. Both explain how to claim mileage for personal-vehicle business travel at the same standard rate. Consolidating them keeps the mileage rate consistent across the knowledge base.',
+        itemA: { articleId: 'kr-mileage-policy', articleTitle: 'Mileage Reimbursement Policy', text: 'Personal-vehicle business mileage is reimbursed at the standard IRS rate.' },
+        itemB: { articleId: 'kr-mileage-howto', articleTitle: 'How to Claim Mileage', text: 'Claim personal-vehicle mileage for business travel at the current IRS standard rate.' },
+    },
 ];
+
+// Possible owners for a quality issue. "You" is the signed-in user; the
+// rest are pulled from the expert roster used by the graph view so the
+// assignment filter reads consistently with the rest of the prototype.
+export const QUALITY_ISSUE_ASSIGNEES = [
+    'You',
+    'Sarah Chen',
+    'James Morrison',
+    'Elena Kowalski',
+    'Priya Patel',
+    'Alex Huang',
+    'Marcus Rivera',
+    'Lisa Chang',
+];
+
+// Deterministic owner for an issue id (e.g. "qi-003" → index 3). Keeps the
+// assignment stable across renders without storing it on every record.
+export function assigneeForIssue(id) {
+    const n = parseInt(String(id).replace(/\D/g, ''), 10) || 0;
+    return QUALITY_ISSUE_ASSIGNEES[n % QUALITY_ISSUE_ASSIGNEES.length];
+}
+
+// ── Self-Healed Quality Issues (dashboard tree-grid) — Figma 402:50197 ─
+// Issues the agents have already remediated automatically. Each row maps
+// to a real domain/agent pair and pulls article titles from the same
+// knowledge base the rest of the prototype references, so the table reads
+// as a consistent, realistic history of self-healing actions. Expanding a
+// row reveals what was wrong (issue panel) and what the agent did about it
+// (resolution panel, with links to the affected/created articles).
+
+// Article pools keyed by domain — names are drawn from the articles used
+// across the Active Quality Issues, healing actions, and graph entities so
+// the self-healed history stays consistent with the rest of the prototype.
+export const SELF_HEALED_ARTICLES = {
+    'Employee Onboarding': ['New Hire IT Setup Guide', 'Day-One Equipment Provisioning', 'Onboarding Checklist', 'Employee Handbook', 'New Hire Technical Setup Guide', 'Billing FAQ'],
+    'Relocation & Mobility': ['Domestic Relocation Policy', 'Global Mobility Handbook', 'Temporary Housing Allowance', 'Interim Accommodation Policy', 'Analytics Dashboard v2 Spec'],
+    'Benefits & Payroll': ['2026 Benefits Summary', 'Payroll FAQ', 'Deployment Runbook v4.2', 'Partner Integration Guide', 'Legacy Webhook Configuration'],
+    'HR Compliance': ['Background Check Policy', 'Data Retention Standard', 'Information Security Policy', 'SOC 2 Type II Audit Checklist', 'GDPR Data Retention Policy'],
+    'Travel & Expense': ['Domestic Travel Per Diem Rates', 'Business Travel Meal Allowance', 'Customer Onboarding Wizard Guide', 'Progressive Onboarding Guide'],
+    'Workplace & Facilities': ['How to Reserve a Desk', 'Hot Desk Reservation Guide', 'Acme Analytics Battlecard', 'Competitive Landscape Overview', 'Competitor Pricing Matrix Q1 2026'],
+};
+
+export const SELF_HEALED_ISSUE_TYPES = ['Contradiction', 'Outdated', 'Missing Info', 'Duplicate', 'Broken Link', 'Factual Error'];
+
+const SELF_HEALED_ISSUE_TITLE = {
+    'Contradiction': 'Conflicting details across {domain} articles',
+    'Outdated': 'Outdated content in “{article}”',
+    'Missing Info': 'Missing steps in “{article}”',
+    'Duplicate': 'Duplicate of an existing {domain} article',
+    'Broken Link': 'Broken links found in “{article}”',
+    'Factual Error': 'Factual error in “{article}”',
+};
+
+const SELF_HEALED_ISSUE_DESC = {
+    'Contradiction': 'The following information was identified as a contradiction. Two documents in this domain made mutually-exclusive claims about the same topic, so only one of them could be correct.',
+    'Outdated': 'This article was flagged as outdated. It referenced policies and figures that have since changed, so the content no longer matched the current source of truth.',
+    'Missing Info': 'A required section was missing from this article. Readers could not complete the task because key steps or values were absent.',
+    'Duplicate': 'This article was a near-duplicate of another in the same domain, with substantially overlapping content that risked drifting out of sync.',
+    'Broken Link': 'One or more links in this article pointed to a retired destination, breaking the path readers needed to follow.',
+    'Factual Error': 'A factual error was detected in this article — a stated value conflicted with the verified source data.',
+};
+
+function selfHealedSlug(title) {
+    return 'kr-' + String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// Builds the resolution-panel copy as an ordered list of plain-text and
+// article-link fragments so the template can render inline links between
+// the prose (mirrors the Figma "Resolution by merging two article" layout).
+function buildSelfHealedResolution(type, articles) {
+    const link = (a) => ({ isLink: true, isText: false, title: a.title, id: a.id });
+    const text = (t) => ({ isLink: false, isText: true, text: t });
+    const [a, b, c] = articles;
+    switch (type) {
+        case 'Contradiction':
+            return { title: 'Resolution by merging two articles', parts: [
+                text('Archived two articles '), link(a), text(' and '), link(b),
+                text('. Created a new article draft called '), link(c || a), text(' to resolve the contradiction.'),
+            ] };
+        case 'Duplicate':
+            return { title: 'Resolution by merging duplicates', parts: [
+                text('Merged '), link(a), text(' into '), link(b), text(' and archived the duplicate copy.'),
+            ] };
+        case 'Outdated':
+            return { title: 'Resolution by refreshing content', parts: [
+                text('Refreshed '), link(a), text(' with the current policy and re-validated its references against '), link(b), text('.'),
+            ] };
+        case 'Missing Info':
+            return { title: 'Resolution by adding the missing section', parts: [
+                text('Added the missing steps to '), link(a), text(' and cross-linked '), link(b), text(' for full context.'),
+            ] };
+        case 'Broken Link':
+            return { title: 'Resolution by repairing links', parts: [
+                text('Repaired the broken links in '), link(a), text(' so they point at the current destination.'),
+            ] };
+        default:
+            return { title: 'Resolution by correcting the value', parts: [
+                text('Corrected the value in '), link(a), text(' and verified it against '), link(b), text('.'),
+            ] };
+    }
+}
+
+/**
+ * Builds a randomized-but-realistic set of self-healed quality issues for
+ * the dashboard tree-grid. Domains are spread across the six domain/agent
+ * pairs and article names are pulled from `SELF_HEALED_ARTICLES`, so every
+ * row stays consistent with the rest of the prototype. Status is weighted
+ * toward "Resolved" (these are issues the agent already healed) with the
+ * occasional "In Review" item still awaiting human sign-off.
+ */
+export function buildSelfHealedIssues(count = 9) {
+    const rand = (n) => Math.floor(Math.random() * n);
+    const pick = (arr) => arr[rand(arr.length)];
+    const shuffle = (arr) => {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = rand(i + 1);
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    };
+    const statusPool = ['Resolved', 'Resolved', 'Resolved', 'In Review'];
+
+    return Array.from({ length: count }, (_, i) => {
+        const da = seedDomainAgents[i % seedDomainAgents.length];
+        const picks = shuffle(SELF_HEALED_ARTICLES[da.domain] || ['Untitled Article']);
+        const type = pick(SELF_HEALED_ISSUE_TYPES);
+        const status = pick(statusPool);
+        const primary = picks[0];
+        const linkArticles = picks.slice(0, 3).map((t) => ({ title: t, id: selfHealedSlug(t) }));
+        return {
+            id: `shi-${i + 1}`,
+            articleTitle: primary,
+            articleId: selfHealedSlug(primary),
+            issueType: type,
+            status,
+            domain: da.domain,
+            agent: da.agent,
+            issueTitle: SELF_HEALED_ISSUE_TITLE[type]
+                .replace('{domain}', da.domain)
+                .replace('{article}', primary),
+            issueText: SELF_HEALED_ISSUE_DESC[type],
+            resolution: buildSelfHealedResolution(type, linkArticles),
+        };
+    });
+}

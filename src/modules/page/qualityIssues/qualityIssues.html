@@ -1,0 +1,153 @@
+<template lwc:render-mode="light">
+    <div class="qi-page">
+        <!-- ═══ HEADER ═══ -->
+        <header class="qi-header">
+            <span class="qi-header__icon" aria-hidden="true">
+                <lightning-icon icon-name="standard:incident" size="medium" alternative-text=""></lightning-icon>
+            </span>
+            <div class="qi-header__title-block">
+                <h1 class="qi-header__title">Top Quality Issues</h1>
+                <span class="qi-header__subtitle">{rangeLabel}</span>
+            </div>
+        </header>
+
+        <!-- ═══ FILTER BAR ═══ -->
+        <div class="qi-filterbar">
+            <lightning-combobox
+                class="qi-filterbar__field"
+                name="domain"
+                label="Domain/Agent"
+                placeholder="Select a Domain"
+                value={_filters.domain}
+                options={domainFilterOptions}
+                onchange={handleFilterChange}
+            ></lightning-combobox>
+            <lightning-combobox
+                class="qi-filterbar__field"
+                name="type"
+                label="Quality Issue"
+                placeholder="Select Issue Type"
+                value={_filters.type}
+                options={typeFilterOptions}
+                onchange={handleFilterChange}
+            ></lightning-combobox>
+            <lightning-combobox
+                class="qi-filterbar__field"
+                name="priority"
+                label="Priority"
+                placeholder="Select Priority"
+                value={_filters.priority}
+                options={priorityFilterOptions}
+                onchange={handleFilterChange}
+            ></lightning-combobox>
+            <lightning-combobox
+                class="qi-filterbar__field"
+                name="assigned"
+                label="Assigned"
+                placeholder="Select Assignee"
+                value={_filters.assigned}
+                options={assignedFilterOptions}
+                onchange={handleFilterChange}
+            ></lightning-combobox>
+        </div>
+
+        <template lwc:if={hasResults}>
+            <div class="qi-list">
+                <template for:each={pagedIssues} for:item="q">
+                    <article key={q.id} class="qi-tile">
+                        <div class="qi-tile__head">
+                            <div class="qi-tile__head-left">
+                                <span class="qi-tile__domain">{q.domain}</span>
+                                <lightning-badge label={q.typeBadgeLabel} class="qi-type-badge slds-badge_lightest"></lightning-badge>
+                                <lightning-badge label={q.priority} class={q.priorityBadgeClass}></lightning-badge>
+                                <lightning-badge label={q.confidenceLabel} icon-name="utility:success" class="qi-conf-badge slds-theme_success"></lightning-badge>
+                            </div>
+                            <div class="qi-tile__head-actions">
+                                <span class="qi-assignee" title={q.assignedLabel}>
+                                    <span class="qi-assignee__avatar">{q.assignedInitials}</span>
+                                    <span class="qi-assignee__name">{q.assignedLabel}</span>
+                                </span>
+                                <template lwc:if={q.isSimilarity}>
+                                    <lightning-button variant="brand" label="Merge Articles" data-title={q.title} onclick={handleMergeArticles}></lightning-button>
+                                </template>
+                                <lightning-button variant="brand-outline" label="Ignore Issue" data-id={q.id} onclick={handleIgnoreIssue}></lightning-button>
+                            </div>
+                        </div>
+
+                        <div class="qi-tile__summary">
+                            <p class="qi-tile__summary-title">{q.title}</p>
+                            <p class="qi-tile__summary-text">{q.description}</p>
+                        </div>
+
+                        <div class="qi-tile__columns">
+                            <div class="qi-col">
+                                <span class="qi-col__label">{q.itemALabel}</span>
+                                <button type="button" class="qi-col__article" data-id={q.itemA.articleId} data-title={q.itemA.articleTitle} onclick={handleOpenArticle}>
+                                    <lightning-icon icon-name="utility:knowledge_base" size="xx-small" alternative-text="" class="qi-col__article-icon"></lightning-icon>
+                                    <span class="qi-col__article-text">{q.itemA.articleTitle}</span>
+                                </button>
+                                <p class="qi-col__text">{q.itemA.text}</p>
+                                <div class="qi-col__footer">
+                                    <template lwc:if={q.isContradiction}>
+                                        <lightning-button variant="brand-outline" label="Pick this" data-title={q.itemA.articleTitle} onclick={handlePickOption}></lightning-button>
+                                    </template>
+                                    <template lwc:else>
+                                        <lightning-button variant="brand-outline" label="Archive Article" data-id={q.id} onclick={handleArchiveArticle}></lightning-button>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="qi-col">
+                                <span class="qi-col__label">{q.itemBLabel}</span>
+                                <button type="button" class="qi-col__article" data-id={q.itemB.articleId} data-title={q.itemB.articleTitle} onclick={handleOpenArticle}>
+                                    <lightning-icon icon-name="utility:knowledge_base" size="xx-small" alternative-text="" class="qi-col__article-icon"></lightning-icon>
+                                    <span class="qi-col__article-text">{q.itemB.articleTitle}</span>
+                                </button>
+                                <p class="qi-col__text">{q.itemB.text}</p>
+                                <div class="qi-col__footer">
+                                    <template lwc:if={q.isContradiction}>
+                                        <lightning-button variant="brand-outline" label="Pick this" data-title={q.itemB.articleTitle} onclick={handlePickOption}></lightning-button>
+                                    </template>
+                                    <template lwc:else>
+                                        <lightning-button variant="brand-outline" label="Archive Article" data-id={q.id} onclick={handleArchiveArticle}></lightning-button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </template>
+            </div>
+
+            <template lwc:if={showPagination}>
+                <div class="qi-pagination">
+                    <lightning-button
+                        class="qi-pagination__nav"
+                        label="Previous"
+                        icon-name="utility:chevronleft"
+                        disabled={prevDisabled}
+                        onclick={handlePrev}
+                    ></lightning-button>
+                    <div class="qi-pagination__pages">
+                        <template for:each={pageButtons} for:item="pb">
+                            <button key={pb.key} type="button" class={pb.btnClass} data-page={pb.page} onclick={handleGotoPage}>{pb.label}</button>
+                        </template>
+                    </div>
+                    <lightning-button
+                        class="qi-pagination__nav"
+                        label="Next"
+                        icon-name="utility:chevronright"
+                        icon-position="right"
+                        disabled={nextDisabled}
+                        onclick={handleNext}
+                    ></lightning-button>
+                </div>
+            </template>
+        </template>
+        <template lwc:else>
+            <div class="qi-empty">
+                <lightning-icon icon-name="utility:success" size="small" alternative-text="" class="qi-empty__icon"></lightning-icon>
+                <p class="qi-empty__text">No quality issues match the selected filters.</p>
+            </div>
+        </template>
+    </div>
+</template>

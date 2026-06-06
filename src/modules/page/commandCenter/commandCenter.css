@@ -914,3 +914,160 @@ page-command-center {
     background-color: var(--slds-g-color-brand-base-95, #edf4ff);
 }
 
+/* ── Structural Violations ─────────────────────────────────────── */
+.cc-violations {
+    background: var(--slds-g-color-surface-1, #fff);
+    border: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    padding: var(--slds-g-spacing-5, 20px);
+}
+
+.cc-violations__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: var(--slds-g-spacing-4, 16px);
+}
+
+.cc-violations__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: 0 0 4px;
+}
+
+.cc-violations__subtitle {
+    font-size: 0.8125rem;
+    color: var(--slds-g-color-neutral-base-30, #706e6b);
+    margin: 0;
+}
+
+.cc-violations__actions {
+    display: flex;
+    gap: 8px;
+}
+
+.cc-violations__action {
+    font-size: 0.8125rem;
+    padding: 6px 14px;
+    border-radius: var(--slds-g-radius-border-2, 4px);
+}
+
+/* Violations table */
+.cc-vt {
+    width: 100%;
+}
+
+.cc-vt__header-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 2px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--slds-g-color-neutral-base-30, #706e6b);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.cc-vt__row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--slds-g-color-neutral-base-90, #e5e5e5);
+    font-size: 0.8125rem;
+}
+
+.cc-vt__row:last-child {
+    border-bottom: none;
+}
+
+.cc-vt__cell {
+    padding: 0 8px;
+}
+
+.cc-vt__cell--check {
+    width: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cc-vt__cell--article {
+    flex: 2;
+    font-weight: 500;
+}
+
+.cc-vt__cell--desc {
+    flex: 3;
+    color: var(--slds-g-color-neutral-base-30, #706e6b);
+}
+
+.cc-vt__cell--violations {
+    width: 120px;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.cc-vt__cell--score {
+    width: 80px;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.cc-vt__checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--slds-g-color-brand-base-50, #0176d3);
+}
+
+.cc-vt__sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+    color: inherit;
+    text-transform: uppercase;
+    letter-spacing: inherit;
+}
+
+.cc-vt__sort:hover {
+    color: var(--slds-g-color-brand-base-50, #0176d3);
+}
+
+/* Review queue header */
+.cc-vt__queue-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: var(--slds-g-spacing-4, 16px);
+}
+
+.cc-vt__queue-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+.cc-vt__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    color: var(--slds-g-color-brand-base-50, #0176d3);
+    border-radius: 4px;
+}
+
+.cc-vt__back:hover {
+    background: var(--slds-g-color-brand-base-95, #edf4ff);
+}
+
