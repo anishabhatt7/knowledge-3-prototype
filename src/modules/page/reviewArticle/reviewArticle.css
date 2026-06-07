@@ -124,7 +124,8 @@ page-review-article.ra--entering .ra-editor {
 .ra-hidden { display: none; }
 
 /* Article card — full-height flex column that fills the main column.
-   The header is sticky inside the card; the body is the scroller. */
+   The header + tabs are white; the card body below is a gray surface
+   containing the inner editor card. */
 .ra-article {
     background: var(--slds-g-color-surface-container-1, #ffffff);
     border-radius: 12px;
@@ -155,11 +156,19 @@ page-review-article.ra--entering .ra-editor {
     gap: 12px;
 }
 
+.ra-article__title-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
 .ra-article__title {
     font-size: 16px;
     font-weight: 590;
     color: var(--slds-g-color-on-surface-2, #181818);
-    flex: 1;
+    flex: 0 1 auto;
     margin: 0;
     line-height: 22px;
     white-space: nowrap;
@@ -199,19 +208,64 @@ page-review-article.ra--entering .ra-editor {
     flex-shrink: 0;
 }
 
-/* History + Save split-button groups in the title row. */
-.ra-history-group,
-.ra-save-group {
+/* "Show AI Preview" header toggle — uses lightning-input type="toggle" */
+.ra-ai-toggle {
+    display: flex;
+    align-items: center;
     flex-shrink: 0;
 }
 
-.ra-article__title-row lightning-button-icon {
-    margin-right: 0px;
+.ra-ai-toggle__input {
+    --slds-c-input-toggle-color-border: var(--slds-g-color-neutral-base-90, #e5e5e5);
+    --slds-c-input-toggle-color-background: var(--slds-g-color-neutral-base-90, #e5e5e5);
+    --slds-c-input-toggle-color-background-checked: var(--slds-g-color-accent-1, #066afe);
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
-.ra-save-group .ra-save {
-    font-weight: 590;
+/* Pill-shaped Save split button (Figma 314:49508) */
+.ra-save-split {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.ra-save-split__main {
+    height: 32px;
+    padding: 0 16px;
+    border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+    border-right: none;
+    border-radius: 9999px 0 0 9999px;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    color: var(--slds-g-color-accent-2, #0250d9);
+    font-family: inherit;
     font-size: 14px;
+    font-weight: 590;
+    line-height: 1;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.ra-save-split__main:hover {
+    background: var(--slds-g-color-brand-base-95, #eef4ff);
+}
+
+.ra-save-split__drop {
+    height: 32px;
+    width: 32px;
+    border: 1px solid var(--slds-g-color-border-2, #5c5c5c);
+    border-radius: 0 9999px 9999px 0;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+.ra-save-split__drop:hover {
+    background: var(--slds-g-color-brand-base-95, #eef4ff);
 }
 
 .ra-article__fields {
@@ -271,6 +325,102 @@ page-review-article.ra--entering .ra-editor {
     --slds-c-icon-color-foreground-default: #ffffff;
 }
 
+/* ─── Article tabs (Figma 314:49510) ─────────────────────────────
+   Horizontal tab bar between header and editor card body. Active tab
+   has a 2px brand-color bottom border; others are transparent. */
+.ra-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 0;
+    padding: 0 8px;
+    height: 48px;
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--slds-g-color-border-1, #ededed);
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    flex-shrink: 0;
+}
+
+.ra-tab {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0;
+    white-space: nowrap;
+}
+
+.ra-tab__label {
+    height: 100%;
+    padding: 0 12px;
+    border: none;
+    background: transparent;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 48px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.ra-tab__label:hover {
+    color: var(--slds-g-color-on-surface-2, #181818);
+}
+
+.ra-tab__count {
+    margin-right: var(--slds-g-spacing-2, 8px);
+    --slds-c-badge-color-background: var(--slds-g-color-warning-container-1, #f9e3b6);
+    --slds-c-badge-text-color: var(--slds-g-color-on-warning-1, #8c4b02);
+    --slds-c-badge-radius-border: var(--slds-g-radius-border-1, 4px);
+    --slds-c-badge-sizing-border: 0;
+    --slds-c-badge-spacing-inline-start: var(--slds-g-spacing-2, 8px);
+    --slds-c-badge-spacing-inline-end: var(--slds-g-spacing-2, 8px);
+}
+
+.ra-tab_active .ra-tab__label {
+    color: var(--slds-g-color-accent-1, #066afe);
+    font-weight: 600;
+}
+
+.ra-tab_active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 12px;
+    right: 0;
+    height: 2px;
+    background: var(--slds-g-color-accent-1, #066afe);
+    border-radius: 2px 2px 0 0;
+}
+
+/* ─── Card body + Editor card (Figma 314:49511 / 314:49512) ──────
+   The "Card body" is a padded gray container that sits below the tabs.
+   Inside it, the "Editor card" is a white rounded-corner surface that
+   holds the toolbar and contenteditable. This creates the layered card
+   appearance matching the Figma frame. */
+.ra-card-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background: #ffffff;
+}
+
+.ra-editor-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    border: 1px solid #c9c9c9;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(3, 35, 77, 0.06);
+    overflow: hidden;
+}
+
 /* ─── Editor toolbars (Figma 125:67886) ──────────────────────────
    Two stacked toolbars between the article header and the body:
      1. Menu bar (File ... Help)
@@ -280,7 +430,7 @@ page-review-article.ra--entering .ra-editor {
         align-left center right justify | sep | + (insert) */
 .ra-toolbar {
     position: sticky;
-    top: 56px; /* sit below the sticky article header */
+    top: 0;
     z-index: 1;
     background: var(--slds-g-color-surface-container-1, #ffffff);
     border-bottom: 1px solid var(--slds-g-color-border-1, #ededed);
@@ -498,7 +648,7 @@ page-review-article.ra--entering .ra-editor {
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 32px 48px 64px 48px;
+    padding: 32px 32px 48px 32px;
     scroll-behavior: smooth;
     font-size: 15px;
     line-height: 1.7;
@@ -994,9 +1144,250 @@ page-review-article.ra--entering .ra-editor {
 /* ─── Smart-suggest section insertion: loader + flash highlight ────
    When a structural suggestion is applied, its section is appended to
    the editor: first a brief inline loader, then the real content with
-   a flash highlight + left accent bar so the writer sees the change. */
+   a brief flash highlight so the writer sees the change. */
 .ra-added {
     border-radius: var(--slds-g-radius-border-2, 8px);
+}
+
+/* ─── Synced Knowledge Block (mirrors the V1 authoring experience) ──
+   Reusable blocks — both the ones seeded into the article and those
+   inserted from Knowledge Assist — render inside a dashed outline with a
+   dark "Knowledge Block" badge so writers can see which content is
+   synced from the block library. */
+.ra-kb-block {
+    position: relative;
+    margin: var(--slds-g-spacing-5, 24px) 0;
+    padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-3, 12px);
+    border: var(--slds-g-sizing-border-1, 1px) dashed var(--slds-g-color-border-2, #939393);
+    border-radius: var(--slds-g-radius-border-2, 4px);
+}
+
+.ra-kb-block::before {
+    content: 'Knowledge Block';
+    position: absolute;
+    top: -9px;
+    right: var(--slds-g-spacing-4, 16px);
+    padding: 2px 6px;
+    background: var(--slds-g-color-on-surface-1, #5c5c5c);
+    color: var(--slds-g-color-surface-1, #ffffff);
+    font-size: var(--slds-g-font-scale-neg-2, 10px);
+    font-weight: var(--slds-g-font-weight-7, 700);
+    line-height: 14px;
+    border-radius: var(--slds-g-radius-border-2, 4px);
+    white-space: nowrap;
+    user-select: none;
+}
+
+.ra-kb-block > :first-child {
+    margin-top: 0;
+}
+
+.ra-kb-block > :last-child {
+    margin-bottom: 0;
+}
+
+/* ─── Metadata tab (Figma 437:62640) ───────────────────────────────
+   AI-generated metadata form (two-column grid of editable comboboxes +
+   tag pills) followed by a read-only Properties grid. */
+.ra-meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-5, 24px);
+    padding: var(--slds-g-spacing-4, 16px);
+    overflow-y: auto;
+}
+
+.ra-meta-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.ra-meta-section__head {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    width: 100%;
+    padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
+    border: none;
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    background: var(--slds-g-color-surface-container-2, #f3f3f3);
+    cursor: pointer;
+    text-align: left;
+}
+
+.ra-meta-section__chevron {
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ra-meta-section__title {
+    font-size: var(--slds-g-font-scale-2, 16px);
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.ra-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-5, 24px);
+    padding: 0 var(--slds-g-spacing-3, 12px);
+}
+
+.ra-meta-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-1, 4px);
+    min-width: 0;
+}
+
+.ra-meta-field__label {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    font-size: var(--slds-g-font-scale-neg-1, 13px);
+}
+
+.ra-meta-field__req {
+    color: var(--slds-g-color-on-error-1, #b60554);
+}
+
+.ra-meta-field__name {
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.ra-meta-field__add {
+    margin-left: var(--slds-g-spacing-1, 4px);
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+.ra-meta-combobox {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.ra-meta-combobox__control {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.ra-meta-combobox__input {
+    width: 100%;
+    height: var(--slds-g-sizing-9, 32px);
+    padding: 0 var(--slds-g-sizing-9, 32px) 0 var(--slds-g-spacing-3, 12px);
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-1, 4px);
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    font-size: var(--slds-g-font-scale-neg-1, 13px);
+    font-family: inherit;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.ra-meta-combobox__input:focus {
+    outline: none;
+    border-color: var(--slds-g-color-accent-1, #066afe);
+    box-shadow: 0 0 0 var(--slds-g-sizing-border-1, 1px) var(--slds-g-color-accent-1, #066afe);
+}
+
+.ra-meta-linput {
+    display: block;
+    width: 100%;
+}
+
+.ra-meta-combobox__chevron {
+    position: absolute;
+    top: 50%;
+    right: var(--slds-g-spacing-3, 12px);
+    transform: translateY(-50%);
+    pointer-events: none;
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ra-meta-combobox__ai {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--slds-g-sizing-9, 32px);
+    height: var(--slds-g-sizing-9, 32px);
+    flex-shrink: 0;
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-1, 4px);
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    cursor: pointer;
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+.ra-meta-combobox__ai:hover {
+    background: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.ra-meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    margin-top: var(--slds-g-spacing-1, 4px);
+}
+
+.ra-meta-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    height: var(--slds-g-sizing-7, 24px);
+    padding: 0 var(--slds-g-spacing-2, 8px);
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-circle, 9999px);
+    font-size: var(--slds-g-font-scale-neg-1, 13px);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+}
+
+.ra-meta-tag__remove {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ra-meta-tags__more {
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-size: var(--slds-g-font-scale-neg-1, 13px);
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-accent-1, #066afe);
+    cursor: pointer;
+}
+
+.ra-meta-grid_props {
+    row-gap: var(--slds-g-spacing-5, 24px);
+}
+
+.ra-meta-prop {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-1, 4px);
+    padding-bottom: var(--slds-g-spacing-3, 12px);
+    border-bottom: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #e5e5e5);
+}
+
+.ra-meta-prop__label {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    font-size: var(--slds-g-font-scale-neg-1, 13px);
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.ra-meta-prop__value {
+    font-size: var(--slds-g-font-scale-neg-1, 13px);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
 }
 
 .ra-added_loading {
@@ -1026,7 +1417,6 @@ page-review-article.ra--entering .ra-editor {
 }
 
 .ra-added_flash {
-    box-shadow: inset 3px 0 0 0 var(--slds-g-color-accent-1, #066afe);
     animation: ra-added-flash 1.8s ease-out;
 }
 

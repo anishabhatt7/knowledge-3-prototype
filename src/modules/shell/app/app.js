@@ -164,7 +164,7 @@ export default class App extends LightningElement {
             // the back button, following an in-page link, etc.) drop the
             // article tab so the context bar returns to its empty state.
             const pattern = route?.path;
-            if (pattern && !pattern.startsWith('/knowledge-record/') && this._workspaceTabs.length) {
+            if (pattern && !pattern.startsWith('/knowledge-record/') && this._workspaceTabs.length && !this._closingTab) {
                 const livePath = this._currentLogicalPath;
                 const stillMatches = this._workspaceTabs.some((t) => t.path === livePath);
                 if (!stillMatches) this._workspaceTabs = [];
@@ -226,13 +226,13 @@ export default class App extends LightningElement {
             const page = e.detail?.page;
             if (!page) return;
             const wasActive = this.currentNavPage === page;
-            // Capture the tab BEFORE removing it so we can route back to
-            // the path the user came from. `originPath` was stamped when
-            // the tab was added (or seeded for the default landing tab);
-            // missing values fall back to `/`.
             const closingTab = this._workspaceTabs.find((t) => t.page === page);
             this._workspaceTabs = this._workspaceTabs.filter((t) => t.page !== page);
-            if (wasActive) navigate(closingTab?.originPath || '/');
+            if (wasActive) {
+                this._closingTab = true;
+                navigate(closingTab?.originPath || '/');
+                requestAnimationFrame(() => { this._closingTab = false; });
+            }
         };
         window.addEventListener('workspace:closetab', this._workspaceCloseHandler);
 

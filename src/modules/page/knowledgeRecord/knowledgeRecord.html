@@ -258,7 +258,6 @@
                                         <span class="kr-kpi__value">{metadataCompleteness}</span>
                                         <lightning-badge
                                             label="Trending Average"
-                                            icon-name="utility:warning"
                                             class="slds-theme_warning kr-kpi__badge"
                                         ></lightning-badge>
                                     </div>
@@ -267,20 +266,11 @@
                                         <span class="kr-kpi__value">{structuralViolationsCount}</span>
                                         <lightning-badge
                                             label="Trending below baseline"
-                                            icon-name="utility:error"
                                             class="kr-kpi__badge kr-kpi__badge--error"
                                         ></lightning-badge>
                                     </div>
                                 </div>
                                 <div class="kr-ai__summary">{readinessSummary}</div>
-                                <div class="kr-ai__actions">
-                                    <lightning-button
-                                        variant="brand-outline"
-                                        label="Review Suggestions"
-                                        onclick={handleReviewSuggestions}
-                                        class="kr-ai__cta"
-                                    ></lightning-button>
-                                </div>
                             </div>
                         </div>
                     </section>

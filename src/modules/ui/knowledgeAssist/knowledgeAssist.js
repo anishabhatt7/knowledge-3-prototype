@@ -72,6 +72,10 @@ export default class KnowledgeAssist extends LightningElement {
     @track _tocExpanded = null;
 
     _ringAnimated = false;
+    // True once the score-ring count-up has played to completion. Re-expanding
+    // the collapsed rail must NOT replay it; only a real tab switch away from
+    // Metrics clears this so returning to the tab plays the intro again.
+    _ringHasPlayed = false;
     _animProxy = { deg: 0, pct: 0 };
     _ringTween = null;
     _gsapEnabled = true;
@@ -93,6 +97,11 @@ export default class KnowledgeAssist extends LightningElement {
     // keyed by suggestion id. Used for a GSAP FLIP when a card is marked
     // "Updated" and floats to the bottom of the list.
     _suggestPrevTops = null;
+    // Card id order at the time `_suggestPrevTops` was captured. The FLIP must
+    // only play on a genuine reorder (a card floated to the bottom). When the
+    // rail expands/collapses, cards reflow but keep their order — so comparing
+    // order (not raw position) prevents the cards from jumping on resize.
+    _suggestPrevOrder = null;
 
     connectedCallback() {
         this._boundGsapToggle = (e) => {
@@ -383,41 +392,55 @@ export default class KnowledgeAssist extends LightningElement {
         this._animateSuggestReorder();
 
         // ─── Score-ring animation ──────────────────────────────────
+        const targetPct = Math.max(0, Math.min(100, this.health?.score || 0));
+        const targetDeg = Math.round((targetPct / 100) * 360);
+
         if (this.isCollapsed || this.activeRailTab !== 'metrics') {
-            this._ringAnimated = false;
             if (this._ringTween) {
                 this._ringTween.kill();
                 this._ringTween = null;
             }
-            this._animProxy.deg = 0;
-            this._animProxy.pct = 0;
+            if (this.isCollapsed) {
+                // Collapsing the rail: freeze the ring at its final value so
+                // re-expanding shows it filled without replaying the count-up.
+                if (this._ringAnimated) {
+                    this._animProxy.deg = targetDeg;
+                    this._animProxy.pct = targetPct;
+                    this._ringHasPlayed = true;
+                }
+            } else {
+                // A genuine tab switch away from Metrics — reset so returning
+                // to the tab replays the intro.
+                this._ringAnimated = false;
+                this._ringHasPlayed = false;
+                this._animProxy.deg = 0;
+                this._animProxy.pct = 0;
+            }
             return;
         }
 
         const ring = this.querySelector('.ka-score__ring');
         if (!ring || this._ringTween) return;
 
-        const targetPct = Math.max(0, Math.min(100, this.health?.score || 0));
-        const targetDeg = Math.round((targetPct / 100) * 360);
-
-        this._ringAnimated = true;
-
         const ringColor = this.ringColor;
         const trackColor = this.ringTrackColor;
+        const inner = ring.querySelector('.ka-score__inner');
 
-        if (!this._gsapEnabled) {
+        // Already played once (e.g. re-expanding the rail) or reduced-motion:
+        // render the final state instantly instead of re-animating.
+        if (this._ringHasPlayed || !this._gsapEnabled) {
+            this._ringAnimated = true;
+            this._ringHasPlayed = true;
             this._animProxy.deg = targetDeg;
             this._animProxy.pct = targetPct;
             ring.style.background = `conic-gradient(${ringColor} 0deg ${targetDeg}deg, ${trackColor} ${targetDeg}deg 360deg)`;
-            const inner = ring.querySelector('.ka-score__inner');
             if (inner) inner.textContent = `${targetPct}%`;
             return;
         }
 
+        this._ringAnimated = true;
         this._animProxy.deg = 0;
         this._animProxy.pct = 0;
-
-        const inner = ring.querySelector('.ka-score__inner');
 
         this._ringTween = gsap.to(this._animProxy, {
             deg: targetDeg,
@@ -431,6 +454,7 @@ export default class KnowledgeAssist extends LightningElement {
             },
             onComplete: () => {
                 this._ringTween = null;
+                this._ringHasPlayed = true;
             },
         });
     }
@@ -569,18 +593,32 @@ export default class KnowledgeAssist extends LightningElement {
     _animateSuggestReorder() {
         if (this.isCollapsed || this.activeRailTab !== 'metrics') {
             this._suggestPrevTops = null;
+            this._suggestPrevOrder = null;
             return;
         }
         const cards = Array.from(this.querySelectorAll('.ka-suggest[data-sid]'));
         if (!cards.length) {
             this._suggestPrevTops = null;
+            this._suggestPrevOrder = null;
             return;
         }
         const newTops = new Map();
-        cards.forEach((c) => newTops.set(c.dataset.sid, c.getBoundingClientRect().top));
+        const newOrder = [];
+        cards.forEach((c) => {
+            newTops.set(c.dataset.sid, c.getBoundingClientRect().top);
+            newOrder.push(c.dataset.sid);
+        });
 
         const prev = this._suggestPrevTops;
-        if (prev && this._gsapEnabled) {
+        const prevOrder = this._suggestPrevOrder;
+        // Only FLIP on a genuine reorder. A width change (expand/collapse)
+        // reflows cards but keeps their order, so the position delta is a
+        // layout shift we must ignore — otherwise the cards "jump".
+        const orderChanged =
+            prevOrder != null &&
+            (prevOrder.length !== newOrder.length ||
+                prevOrder.some((id, i) => id !== newOrder[i]));
+        if (prev && orderChanged && this._gsapEnabled) {
             cards.forEach((c) => {
                 const id = c.dataset.sid;
                 const oldTop = prev.get(id);
@@ -595,6 +633,7 @@ export default class KnowledgeAssist extends LightningElement {
             });
         }
         this._suggestPrevTops = newTops;
+        this._suggestPrevOrder = newOrder;
     }
 
     _popRailButton(tabId) {

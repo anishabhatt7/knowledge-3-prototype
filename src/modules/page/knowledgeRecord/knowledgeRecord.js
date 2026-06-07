@@ -1,4 +1,5 @@
 import { LightningElement, track } from 'lwc';
+import { gsap } from 'gsap';
 import { navigate, subscribe } from '../../../router';
 import { getRecord, setRecord } from 'data/recordSession';
 import { setEditSession } from 'data/editSession';
@@ -41,6 +42,8 @@ export default class KnowledgeRecord extends LightningElement {
     @track _categoriesOpen = true;
     @track _inquiryOpen = false;
     @track _feedback = null;
+    @track _animatedReadiness = 0;
+    _donutAnimated = false;
     // Bumped whenever this article's edits change (Review Article saves
     // via `data/articleEdits`, which fires `article:saved`). Templates
     // that read `_articleEdit` look at `_editTick` so LWC's reactive
@@ -84,6 +87,34 @@ export default class KnowledgeRecord extends LightningElement {
             window.removeEventListener('article:saved', this._boundArticleSavedHandler);
             this._boundArticleSavedHandler = null;
         }
+        if (this._donutTween) {
+            this._donutTween.kill();
+            this._donutTween = null;
+        }
+    }
+
+    renderedCallback() {
+        if (this._donutAnimated || !this.isAnalysisTab) return;
+        const labelEl = this.querySelector('.kr-donut__label');
+        const arcEl = this.querySelector('.kr-donut__arc');
+        if (!labelEl) return;
+        this._donutAnimated = true;
+        const target = this.readinessPercent;
+        const circumference = 2 * Math.PI * 52;
+        const proxy = { val: 0 };
+        this._donutTween = gsap.to(proxy, {
+            val: target,
+            duration: 1.4,
+            ease: 'power2.out',
+            onUpdate: () => {
+                const current = Math.round(proxy.val);
+                labelEl.textContent = `${current}%`;
+                if (arcEl) {
+                    const dash = (proxy.val / 100) * circumference;
+                    arcEl.setAttribute('stroke-dasharray', `${dash} ${circumference}`);
+                }
+            },
+        });
     }
 
     // ── Header bindings ────────────────────────────────────────────

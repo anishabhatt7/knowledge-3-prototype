@@ -57,7 +57,14 @@ export default class ReviewArticle extends LightningElement {
 
     @track article = deepClone(initialArticle);
     @track health = { ...articleHealth };
-    @track suggests = smartSuggests.map((s) => ({ ...s }));
+    // Randomize each card's projected score increase (3–9%) so the panel
+    // reads like a live analysis rather than fixed mock numbers. Keep
+    // `coverageDelta` in sync so the health boost on accept matches the
+    // "+X%" shown on the card.
+    @track suggests = smartSuggests.map((s) => {
+        const delta = 3 + Math.floor(Math.random() * 7);
+        return { ...s, scoreDelta: delta, coverageDelta: delta };
+    });
     @track chatMessages = initialChat.map((m) => ({ ...m }));
     @track undoStack = [];
     @track redoStack = [];
@@ -76,6 +83,130 @@ export default class ReviewArticle extends LightningElement {
     @track extraCollaboratorCount = 0;
     @track animationEnabled = true;
     @track wordCount = 0;
+
+    // Article tab navigation (Figma 430:55705). AI Preview is no longer a
+    // tab — it lives as the "Show AI Preview" toggle in the header.
+    @track activeTab = 'editor';
+    @track openTabs = [
+        { id: 'editor', label: 'Editor', count: 12 },
+        { id: 'metadata', label: 'Metadata', count: 8 },
+        { id: 'enrichments', label: 'Enrichments', count: 6 },
+    ];
+
+    // Header "Show AI Preview" toggle (Figma 430:57332). Off by default to
+    // match the design's resting state.
+    @track showAiPreview = false;
+
+    // ─── Metadata tab (Figma 437:62640) ──────────────────────────────
+    // AI-generated metadata the writer can edit. Multi-value fields keep
+    // their selections as removable tag pills; single-value fields show
+    // the value inline. `ai` fields get the sparkle "generate" affordance.
+    @track metadataFields = [
+        { id: 'products', label: 'Products', required: true, ai: true, kind: 'combobox', value: '', tags: [{ id: 'products-platform', label: 'Platform' }], extra: 0 },
+        { id: 'features', label: 'Features', required: true, ai: true, kind: 'combobox', value: '', tags: [{ id: 'features-flows', label: 'Flows' }], extra: 0 },
+        { id: 'primary-audience', label: 'Primary Audience', required: true, ai: true, kind: 'combobox', value: 'Admin', tags: [], extra: 0 },
+        { id: 'content-type', label: 'Content Type', required: true, ai: true, kind: 'combobox', value: 'Procedure', tags: [], extra: 0 },
+        { id: 'release-versions', label: 'Release Versions', required: true, ai: true, kind: 'combobox', value: '', tags: [{ id: 'rv-spring26', label: "Spring '26" }], extra: 0 },
+        { id: 'use-cases', label: 'Use Cases', required: true, ai: true, kind: 'combobox', value: '', tags: [{ id: 'uc-setup', label: 'Setup' }, { id: 'uc-config', label: 'Configuration' }], extra: 0 },
+        { id: 'confidence-level', label: 'Confidence Level', required: true, ai: true, kind: 'combobox', value: 'In Review', tags: [], extra: 0 },
+        { id: 'complexity-level', label: 'Complexity Level', required: true, ai: true, kind: 'combobox', value: 'Intermediate', tags: [], extra: 0 },
+        { id: 'industry-vertical', label: 'Industry/Vertical', required: true, ai: true, kind: 'combobox', value: '', tags: [{ id: 'iv-aviation', label: 'Aviation & Travel' }], extra: 0 },
+        { id: 'language-region', label: 'Language/Region', required: false, ai: false, kind: 'input', value: 'English (US)', tags: [], extra: 0 },
+        { id: 'article-owner', label: 'Article Owner', required: true, ai: false, kind: 'input', value: 'Jordan Avery', tags: [], extra: 0 },
+    ];
+
+    @track metadataProperties = [
+        { id: 'article-number', label: 'Article Number', value: '000123456', addable: true },
+        { id: 'publication-status', label: 'Publication Status', value: 'Draft', addable: false },
+        { id: 'version-number', label: 'Version Number', value: '3', addable: false },
+        { id: 'last-modified', label: 'Last Modified Date', value: 'Jun 6, 2026', addable: false },
+        { id: 'total-views', label: 'Article Total View Count', value: '12,480', addable: false },
+        { id: 'first-published', label: 'First Published Date', value: 'Mar 2, 2026', addable: false },
+    ];
+
+    @track metaSectionOpen = true;
+    @track propsSectionOpen = true;
+
+    get articleTabs() {
+        return this.openTabs.map((t) => ({
+            ...t,
+            active: t.id === this.activeTab ? 'true' : 'false',
+            class: `ra-tab${t.id === this.activeTab ? ' ra-tab_active' : ''}`,
+        }));
+    }
+
+
+    handleTabClick(event) {
+        const tabId = event.currentTarget.dataset.tab;
+        if (!tabId || tabId === this.activeTab) return;
+        // The editor lives in the Editor/Enrichments view and is unmounted
+        // when the Metadata tab is shown. Stash its current HTML and clear the
+        // init guard so renderedCallback restores it (with edits intact) when
+        // the writer returns.
+        if (this.activeTab === 'editor' || this.activeTab === 'enrichments') {
+            const editorEl = this._getEditorEl();
+            if (editorEl) {
+                this._seedEditorHtml = editorEl.innerHTML;
+                this._editorInitialized = false;
+            }
+        }
+        this.activeTab = tabId;
+    }
+
+    get isMetadataTab() {
+        return this.activeTab === 'metadata';
+    }
+
+    // Decorate each metadata field with the booleans the template needs so
+    // the markup stays declarative (no expressions in the template).
+    get metadataFieldRows() {
+        return this.metadataFields.map((f) => ({
+            ...f,
+            isCombobox: f.kind === 'combobox',
+            isInput: f.kind === 'input',
+            hasTags: (f.tags || []).length > 0,
+            showExtra: (f.extra || 0) > 0,
+            extraLabel: `+${f.extra || 0} more`,
+        }));
+    }
+
+    get metaChevron() {
+        return this.metaSectionOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    get propsChevron() {
+        return this.propsSectionOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    handleToggleMetaSection() {
+        this.metaSectionOpen = !this.metaSectionOpen;
+    }
+
+    handleTogglePropsSection() {
+        this.propsSectionOpen = !this.propsSectionOpen;
+    }
+
+    handleMetaInput(event) {
+        const id = event.currentTarget.dataset.id;
+        const value = event.target.value;
+        this.metadataFields = this.metadataFields.map((f) =>
+            f.id === id ? { ...f, value } : f
+        );
+    }
+
+    handleMetaTagRemove(event) {
+        const fieldId = event.currentTarget.dataset.field;
+        const tagId = event.currentTarget.dataset.tag;
+        this.metadataFields = this.metadataFields.map((f) =>
+            f.id === fieldId
+                ? { ...f, tags: (f.tags || []).filter((t) => t.id !== tagId) }
+                : f
+        );
+    }
+
+    handleToggleAiPreview(event) {
+        this.showAiPreview = event.target.checked;
+    }
 
     // Editor state
     @track editorBlockStyle = 'p';
@@ -181,12 +312,15 @@ export default class ReviewArticle extends LightningElement {
         return this.article.status?.charAt(0).toUpperCase() + this.article.status?.slice(1);
     }
 
+    // Tracks blocks the user explicitly inserts from the Knowledge Assist
+    // list during this session. The article may already contain seeded
+    // knowledge blocks, but those aren't counted as "inserted from the
+    // list" — so the library starts clean (every block shows "Insert
+    // Block") and only flips to "Block Inserted" once the user adds it.
+    @track _insertedBlockIds = [];
+
     get insertedBlockIds() {
-        const ids = new Set();
-        for (const b of this.article.blockData || []) {
-            if (b.syncGroupId) ids.add(b.syncGroupId);
-        }
-        return [...ids];
+        return this._insertedBlockIds;
     }
 
     get assistPanelClass() {
@@ -216,31 +350,60 @@ export default class ReviewArticle extends LightningElement {
     }
 
     // ─── Convert block data to HTML ───────────────────────────────────
+    // Render a single block (heading, paragraph, list item, etc.) to HTML.
+    _blockHtml(b) {
+        const content = b.content || '';
+        switch (b.type) {
+            case 'h1':
+                return `<h1>${content}</h1>`;
+            case 'h2':
+                return `<h2>${content}</h2>`;
+            case 'h3':
+                return `<h3>${content}</h3>`;
+            case 'p':
+                return `<p>${content}</p>`;
+            case 'li':
+                return `<ul><li>${content}</li></ul>`;
+            case 'blockquote':
+                return `<blockquote>${content}</blockquote>`;
+            case 'image':
+                return `<figure class="ra-editor-figure"><img src="${import.meta.env.BASE_URL}images/baggage-measure.jpg" alt="${b.caption || ''}" /><figcaption>${b.caption || ''}</figcaption></figure>`;
+            case 'video':
+                return `<div class="ra-editor-video"><div class="ra-editor-video__icon">&#9654;</div><div class="ra-editor-video__info"><strong>${b.title || ''}</strong><p>${content}</p></div></div>`;
+            default:
+                return `<p>${content}</p>`;
+        }
+    }
+
+    // Wrap one or more block-HTML strings as a synced Knowledge Block, so
+    // the editor shows the same dashed-outline + "Knowledge Block" badge
+    // treatment as the V1 authoring experience.
+    _wrapKnowledgeBlock(innerHtml, syncGroupId) {
+        return `<div class="ra-kb-block" data-sync-group="${syncGroupId || ''}">${innerHtml}</div>`;
+    }
+
     _blocksToHtml(blocks) {
         if (!blocks || !blocks.length) return '<p><br></p>';
-        return blocks.map((b) => {
-            const content = b.content || '';
-            switch (b.type) {
-                case 'h1':
-                    return `<h1>${content}</h1>`;
-                case 'h2':
-                    return `<h2>${content}</h2>`;
-                case 'h3':
-                    return `<h3>${content}</h3>`;
-                case 'p':
-                    return `<p>${content}</p>`;
-                case 'li':
-                    return `<ul><li>${content}</li></ul>`;
-                case 'blockquote':
-                    return `<blockquote>${content}</blockquote>`;
-                case 'image':
-                    return `<figure class="ra-editor-figure"><img src="images/baggage-measure.jpg" alt="${b.caption || ''}" /><figcaption>${b.caption || ''}</figcaption></figure>`;
-                case 'video':
-                    return `<div class="ra-editor-video"><div class="ra-editor-video__icon">&#9654;</div><div class="ra-editor-video__info"><strong>${b.title || ''}</strong><p>${content}</p></div></div>`;
-                default:
-                    return `<p>${content}</p>`;
+        // Consecutive blocks that share a `syncGroupId` are collapsed into a
+        // single Knowledge Block wrapper so the dashed outline + badge spans
+        // the whole synced group (matching the V1 authoring experience).
+        const parts = [];
+        let i = 0;
+        while (i < blocks.length) {
+            const sync = blocks[i].syncGroupId;
+            if (sync) {
+                const group = [];
+                while (i < blocks.length && blocks[i].syncGroupId === sync) {
+                    group.push(this._blockHtml(blocks[i]));
+                    i += 1;
+                }
+                parts.push(this._wrapKnowledgeBlock(group.join('\n'), sync));
+            } else {
+                parts.push(this._blockHtml(blocks[i]));
+                i += 1;
             }
-        }).join('\n');
+        }
+        return parts.join('\n');
     }
 
     // ─── Editor initialization ────────────────────────────────────────
@@ -264,6 +427,13 @@ export default class ReviewArticle extends LightningElement {
                     : this._blocksToHtml(this.article.blockData);
                 editorEl.innerHTML = html;
                 this._updateWordCount();
+                // If suggestions were already applied before the editor was
+                // unmounted (e.g. the writer toggled to the Metadata tab and
+                // back), the restored HTML still carries the suggestion spans
+                // — just re-bind their popover listeners instead of re-wrapping.
+                if (this._suggestionsApplied) {
+                    this._rebindInlineSuggestions(editorEl);
+                }
             }
         }
 
@@ -375,6 +545,20 @@ export default class ReviewArticle extends LightningElement {
         });
     }
 
+    // After an Undo restores the editor's innerHTML, the inline-suggestion
+    // spans come back but their hover/click listeners are gone (replacing
+    // innerHTML discards them). Re-bind each surviving span to its
+    // descriptor so the Grammarly-style popovers keep working.
+    _rebindInlineSuggestions(root) {
+        if (!root) return;
+        const spans = root.querySelectorAll('.ai-suggest[data-suggest-id]');
+        spans.forEach((span) => {
+            const id = span.dataset.suggestId;
+            const suggestion = (inlineAISuggestions || []).find((x) => x.id === id);
+            if (suggestion) this._attachSuggestionListeners(span, suggestion);
+        });
+    }
+
     _openPopoverFor(span, suggestion) {
         if (this._popoverHideTimer) {
             clearTimeout(this._popoverHideTimer);
@@ -440,6 +624,7 @@ export default class ReviewArticle extends LightningElement {
         event?.stopPropagation();
         const s = this._activeSuggestion;
         if (!s) return;
+        this.pushUndo();
         const editorEl = this._getEditorEl();
         if (editorEl) {
             const span = editorEl.querySelector(
@@ -464,6 +649,9 @@ export default class ReviewArticle extends LightningElement {
             this._popoverHideTimer = null;
         }
         this._updateWordCount();
+        // Accepting an inline suggestion improves the article — nudge the
+        // RAG/AI score up by a small, realistic amount.
+        this.applyHealthBoost(2 + Math.floor(Math.random() * 3), 1);
     }
 
     handleSuggestionDismiss(event) {
@@ -502,13 +690,40 @@ export default class ReviewArticle extends LightningElement {
     }
 
     // ─── Undo / Redo ──────────────────────────────────────────────────
+    // Snapshot the live editor HTML + health + article metadata before an
+    // agent-driven change (applied suggestion, inline accept, inserted
+    // block). The browser's native undo stack doesn't track these
+    // programmatic edits, so we restore from this snapshot on Undo.
     pushUndo() {
-        this.undoStack = [...this.undoStack, deepClone(this.article)].slice(-20);
+        const editorEl = this._getEditorEl();
+        this.undoStack = [
+            ...this.undoStack,
+            {
+                html: editorEl ? editorEl.innerHTML : null,
+                health: { ...this.health },
+                article: deepClone(this.article),
+            },
+        ].slice(-30);
         this.redoStack = [];
     }
 
     handleUndo() {
-        // Use execCommand undo for the contenteditable
+        // Restore the most recent snapshot (covers applied suggestions,
+        // inline accepts, and inserted blocks — including the AI score
+        // boost they applied). Fall back to native undo for plain typing.
+        if (this.undoStack.length > 0) {
+            const snap = this.undoStack[this.undoStack.length - 1];
+            this.undoStack = this.undoStack.slice(0, -1);
+            if (snap.article) this.article = deepClone(snap.article);
+            if (snap.health) this.health = { ...snap.health };
+            const editorEl = this._getEditorEl();
+            if (editorEl && snap.html != null) {
+                editorEl.innerHTML = snap.html;
+                this._rebindInlineSuggestions(editorEl);
+                this._updateWordCount();
+            }
+            return;
+        }
         try {
             document.execCommand('undo', false, null);
         } catch (_) {
@@ -567,6 +782,10 @@ export default class ReviewArticle extends LightningElement {
         }
         this.addAgentMessage('Article draft saved successfully.');
         this.showToast('Article draft saved');
+    }
+
+    handleSaveDropdown() {
+        this.showToast('Save options (prototype)');
     }
 
     handleSaveMenuSelect(event) {
@@ -674,20 +893,20 @@ export default class ReviewArticle extends LightningElement {
         const entry = this.knowledgeBlockLibrary.find((kb) => kb.syncGroupId === syncGroupId);
         if (!entry || !entry.blocks) return;
 
-        // Convert the knowledge block's blocks to HTML and insert at cursor
-        const html = entry.blocks.map((b) => {
-            const content = b.content || '';
-            switch (b.type) {
-                case 'h1': return `<h1>${content}</h1>`;
-                case 'h2': return `<h2>${content}</h2>`;
-                case 'h3': return `<h3>${content}</h3>`;
-                case 'li': return `<ul><li>${content}</li></ul>`;
-                case 'blockquote': return `<blockquote>${content}</blockquote>`;
-                default: return `<p>${content}</p>`;
-            }
-        }).join('');
+        this.pushUndo();
+
+        // Convert the knowledge block's blocks to HTML, then wrap the whole
+        // group in the synced Knowledge Block treatment (dashed outline +
+        // badge) so the inserted block looks like the V1 authoring blocks.
+        const inner = entry.blocks.map((b) => this._blockHtml(b)).join('');
+        const html = this._wrapKnowledgeBlock(inner, entry.syncGroupId);
 
         this._insertHtmlAtCursor(html);
+
+        // Flip the library card to "Block Inserted".
+        if (entry.syncGroupId && !this._insertedBlockIds.includes(entry.syncGroupId)) {
+            this._insertedBlockIds = [...this._insertedBlockIds, entry.syncGroupId];
+        }
 
         this.addAgentMessage(
             `Inserted knowledge block "${entry.title}" — ${entry.blocks.length} synced block(s) added.`
@@ -1309,6 +1528,8 @@ export default class ReviewArticle extends LightningElement {
         const suggestion = (msg.suggestions || []).find((s) => s.id === suggestionId);
         if (!suggestion) return;
 
+        this.pushUndo();
+
         const html = this._htmlForChatSuggestion(suggestion);
         if (html) {
             this._insertHtmlAtCursor(html);
@@ -1333,7 +1554,7 @@ export default class ReviewArticle extends LightningElement {
     _htmlForChatSuggestion(s) {
         switch (s.actionKind) {
             case 'add-image':
-                return `<figure class="ra-editor-figure"><img src="images/baggage-measure.jpg" alt="Measurement diagram" /><figcaption>Measurement diagram — check both linear inches and weight.</figcaption></figure>`;
+                return `<figure class="ra-editor-figure"><img src="${import.meta.env.BASE_URL}images/baggage-measure.jpg" alt="Measurement diagram" /><figcaption>Measurement diagram — check both linear inches and weight.</figcaption></figure>`;
             case 'add-quote':
                 return `<blockquote>"Most overweight fees we see are from bags that missed the limit by under a pound. A cheap luggage scale pays for itself on the first trip." — Travel policy desk</blockquote>`;
             case 'add-list':

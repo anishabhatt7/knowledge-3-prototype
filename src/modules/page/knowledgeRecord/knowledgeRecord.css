@@ -356,8 +356,7 @@ page-knowledge-record {
     background-color: var(--slds-g-color-surface-1, #fff);
     border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
     border-radius: var(--slds-g-radius-border-4, 20px);
-    padding: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-4, 16px)
-        var(--slds-g-spacing-5, 24px) var(--slds-g-spacing-5, 24px);
+    padding: var(--slds-g-spacing-5, 24px);
     display: flex;
     flex-direction: column;
     gap: var(--slds-g-spacing-4, 16px);
@@ -371,23 +370,23 @@ page-knowledge-record {
 
 .kr-ai__title {
     margin: 0;
-    font-size: var(--slds-g-font-scale-3, 16px);
+    font-size: 20px;
     line-height: 28px;
-    font-weight: var(--slds-g-font-weight-6, 600);
-    color: var(--slds-g-color-on-surface-3, #001e5b);
+    font-weight: 590;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
 }
 
 .kr-ai__body {
     display: flex;
-    align-items: flex-start;
-    gap: var(--slds-g-spacing-6, 32px);
+    align-items: flex-end;
+    gap: 32px;
 }
 
 /* ── Donut chart ───────────────────────────────────────────────────── */
 .kr-donut {
     position: relative;
-    width: 173px;
-    height: 173px;
+    width: 158px;
+    height: 158px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -424,9 +423,10 @@ page-knowledge-record {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--slds-g-font-scale-6, 32px);
-    line-height: var(--slds-g-font-line-height-1, 1);
-    font-weight: var(--slds-g-font-weight-4, 400);
+    font-family: 'Instrument Sans', var(--slds-g-font-family-base, system-ui, sans-serif);
+    font-size: 36px;
+    line-height: 40px;
+    font-weight: 400;
     color: var(--slds-g-color-on-surface-2, #2e2e2e);
 }
 
@@ -455,19 +455,19 @@ page-knowledge-record {
 }
 
 .kr-kpi__label {
-    font-size: var(--slds-g-font-scale-base, 13px);
+    font-size: 13px;
     line-height: 18px;
-    font-weight: var(--slds-g-font-weight-6, 600);
-    color: var(--slds-g-color-on-surface-3, #001e5b);
+    font-weight: 590;
+    color: #032d60;
 }
 
 .kr-kpi__value {
-    font-size: var(--slds-g-font-scale-2, 16px);
+    font-size: 16px;
     line-height: 22px;
-    font-weight: var(--slds-g-font-weight-6, 600);
-    color: var(--slds-g-color-on-surface-3, #001e5b);
+    font-weight: 590;
+    color: #001e5b;
     min-width: 24px;
-    text-align: end;
+    text-align: center;
 }
 
 /* Override `slds-theme_warning` is not allowed — we keep the LBC's own

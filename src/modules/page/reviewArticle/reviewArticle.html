@@ -36,106 +36,158 @@
             <div class="ra-article">
                 <header class="ra-article__head">
                     <div class="ra-article__title-row">
-                        <h1 class="ra-article__title"
-                            contenteditable="true"
-                            spellcheck="false"
-                            oninput={handleTitleInput}
-                            onkeydown={handleTitleKeyDown}>{article.title}</h1>
-                        <lightning-badge
-                            label={statusLabel}
-                            icon-name="utility:list"
-                            class="ra-status">
-                        </lightning-badge>
-                        <template lwc:if={showCollaborators}>
-                            <ui-collaborator-avatars
-                                collaborators={activeCollaborators}
-                                extra-count={extraCollaboratorCount}
-                                class="ra-collab-heads">
-                            </ui-collaborator-avatars>
-                        </template>
-                        <lightning-button-group class="ra-history-group">
-                            <lightning-button-icon
-                                icon-name="utility:undo"
-                                variant="border-filled"
-                                alternative-text="Undo"
-                                onclick={handleUndo}>
-                            </lightning-button-icon>
-                            <lightning-button-icon
-                                icon-name="utility:redo"
-                                variant="border-filled"
-                                alternative-text="Redo"
-                                onclick={handleRedo}>
-                            </lightning-button-icon>
-                        </lightning-button-group>
-                        <lightning-button-group class="ra-save-group">
-                            <lightning-button
-                                label="Save"
-                                variant="neutral"
-                                class="ra-save"
-                                onclick={handleSave}>
-                            </lightning-button>
-                            <lightning-button-menu
-                                icon-name="utility:down"
-                                variant="border-filled"
-                                menu-alignment="right"
-                                alternative-text="More save options"
-                                class="ra-save-menu"
-                                onselect={handleSaveMenuSelect}>
-                                <lightning-menu-item value="submit-for-approval" label="Submit for Approval"></lightning-menu-item>
-                                <lightning-menu-item value="invite-collaborators" label="Invite Collaborators"></lightning-menu-item>
-                                <lightning-menu-item value="edit-sources" label="Edit Sources"></lightning-menu-item>
-                                <lightning-menu-item value="add-translations" label="Add Translations"></lightning-menu-item>
-                            </lightning-button-menu>
-                        </lightning-button-group>
-                    </div>
-                    <div class="ra-article__fields">
-                        <div class="ra-field">
-                            <span class="ra-field__label">Record Type:</span>
-                            <lightning-pill
-                                label={recordTypeLabel}
-                                class="ra-pill ra-pill_record"
-                                onremove={handleIgnorePillRemove}>
-                                <lightning-icon
-                                    icon-name="standard:knowledge"
-                                    size="xx-small"
-                                    alternative-text="Record type">
-                                </lightning-icon>
-                            </lightning-pill>
-                        </div>
-                        <div class="ra-field">
-                            <span class="ra-field__label">Data Categories:</span>
-                            <template for:each={dataCategoryList} for:item="c">
-                                <lightning-pill
-                                    key={c.key}
-                                    label={c.label}
-                                    class="ra-pill ra-pill_category"
-                                    onremove={handleIgnorePillRemove}>
-                                    <lightning-icon
-                                        icon-name="standard:topic2"
-                                        size="xx-small"
-                                        alternative-text="Data category">
-                                    </lightning-icon>
-                                </lightning-pill>
+                        <div class="ra-article__title-left">
+                            <h1 class="ra-article__title"
+                                contenteditable="true"
+                                spellcheck="false"
+                                oninput={handleTitleInput}
+                                onkeydown={handleTitleKeyDown}>{article.title}</h1>
+                            <lightning-badge
+                                label={statusLabel}
+                                icon-name="utility:list"
+                                class="ra-status">
+                            </lightning-badge>
+                            <template lwc:if={showCollaborators}>
+                                <ui-collaborator-avatars
+                                    collaborators={activeCollaborators}
+                                    extra-count={extraCollaboratorCount}
+                                    class="ra-collab-heads">
+                                </ui-collaborator-avatars>
                             </template>
                         </div>
-                        <div class="ra-field">
-                            <span class="ra-field__label">Audience:</span>
-                            <template for:each={audienceList} for:item="a">
-                                <lightning-pill
-                                    key={a.key}
-                                    label={a.label}
-                                    class="ra-pill ra-pill_audience"
-                                    onremove={handleIgnorePillRemove}>
-                                    <lightning-icon
-                                        icon-name="standard:user"
-                                        size="xx-small"
-                                        alternative-text="Audience">
-                                    </lightning-icon>
-                                </lightning-pill>
-                            </template>
+                        <div class="ra-ai-toggle">
+                            <lightning-input
+                                type="toggle"
+                                label="Show AI Preview"
+                                checked={showAiPreview}
+                                onchange={handleToggleAiPreview}
+                                class="ra-ai-toggle__input"
+                                message-toggle-active=""
+                                message-toggle-inactive="">
+                            </lightning-input>
+                        </div>
+                        <div class="ra-save-split">
+                            <button type="button" class="ra-save-split__main" onclick={handleSave}>Save</button>
+                            <button type="button" class="ra-save-split__drop" aria-label="More save options" onclick={handleSaveDropdown}>
+                                <lightning-icon icon-name="utility:down" size="xx-small"></lightning-icon>
+                            </button>
                         </div>
                     </div>
                 </header>
+                <nav class="ra-tabs" role="tablist" aria-label="Article view">
+                    <template for:each={articleTabs} for:item="tab">
+                        <div key={tab.id} class={tab.class} role="tab" aria-selected={tab.active}>
+                            <button
+                                type="button"
+                                class="ra-tab__label"
+                                data-tab={tab.id}
+                                onclick={handleTabClick}>{tab.label}</button>
+                            <lightning-badge label={tab.count} class="ra-tab__count"></lightning-badge>
+                        </div>
+                    </template>
+                </nav>
+                <div class="ra-card-body">
+                <template lwc:if={isMetadataTab}>
+                    <div class="ra-meta">
+                        <!-- Metadata section (AI-generated, editable) -->
+                        <section class="ra-meta-section">
+                            <button type="button" class="ra-meta-section__head"
+                                aria-expanded={metaSectionOpen} onclick={handleToggleMetaSection}>
+                                <lightning-icon icon-name={metaChevron} size="x-small"
+                                    class="ra-meta-section__chevron" alternative-text="Toggle section"></lightning-icon>
+                                <span class="ra-meta-section__title">Metadata</span>
+                            </button>
+                            <template lwc:if={metaSectionOpen}>
+                                <div class="ra-meta-grid">
+                                    <template for:each={metadataFieldRows} for:item="f">
+                                        <div key={f.id} class="ra-meta-field">
+                                            <div class="ra-meta-field__label">
+                                                <template lwc:if={f.required}>
+                                                    <span class="ra-meta-field__req" aria-hidden="true">*</span>
+                                                </template>
+                                                <span class="ra-meta-field__name">{f.label}</span>
+                                                <template lwc:if={f.ai}>
+                                                    <lightning-icon icon-name="utility:add" size="xx-small"
+                                                        class="ra-meta-field__add" alternative-text="Add value"></lightning-icon>
+                                                </template>
+                                            </div>
+                                            <template lwc:if={f.isCombobox}>
+                                                <div class="ra-meta-combobox">
+                                                    <div class="ra-meta-combobox__control">
+                                                        <input type="text" class="ra-meta-combobox__input"
+                                                            placeholder="Search or select…" value={f.value}
+                                                            data-id={f.id} oninput={handleMetaInput} />
+                                                        <lightning-icon icon-name="utility:down" size="xx-small"
+                                                            class="ra-meta-combobox__chevron" alternative-text=""></lightning-icon>
+                                                    </div>
+                                                    <template lwc:if={f.ai}>
+                                                        <button type="button" class="ra-meta-combobox__ai"
+                                                            aria-label="Generate with AI">
+                                                            <lightning-icon icon-name="utility:sparkles" size="xx-small"
+                                                                alternative-text=""></lightning-icon>
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                                <template lwc:if={f.hasTags}>
+                                                    <div class="ra-meta-tags">
+                                                        <template for:each={f.tags} for:item="t">
+                                                            <span key={t.id} class="ra-meta-tag">
+                                                                <span class="ra-meta-tag__label">{t.label}</span>
+                                                                <button type="button" class="ra-meta-tag__remove"
+                                                                    aria-label="Remove value" data-field={f.id}
+                                                                    data-tag={t.id} onclick={handleMetaTagRemove}>
+                                                                    <lightning-icon icon-name="utility:close" size="xx-small"
+                                                                        alternative-text=""></lightning-icon>
+                                                                </button>
+                                                            </span>
+                                                        </template>
+                                                        <template lwc:if={f.showExtra}>
+                                                            <button type="button" class="ra-meta-tags__more">{f.extraLabel}</button>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </template>
+                                            <template lwc:if={f.isInput}>
+                                                <lightning-input type="text" variant="label-hidden"
+                                                    label={f.label} placeholder="Input text" value={f.value}
+                                                    data-id={f.id} onchange={handleMetaInput}
+                                                    class="ra-meta-linput"></lightning-input>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </section>
+
+                        <!-- Properties section (read-only) -->
+                        <section class="ra-meta-section">
+                            <button type="button" class="ra-meta-section__head"
+                                aria-expanded={propsSectionOpen} onclick={handleTogglePropsSection}>
+                                <lightning-icon icon-name={propsChevron} size="x-small"
+                                    class="ra-meta-section__chevron" alternative-text="Toggle section"></lightning-icon>
+                                <span class="ra-meta-section__title">Properties</span>
+                            </button>
+                            <template lwc:if={propsSectionOpen}>
+                                <div class="ra-meta-grid ra-meta-grid_props">
+                                    <template for:each={metadataProperties} for:item="p">
+                                        <div key={p.id} class="ra-meta-prop">
+                                            <div class="ra-meta-prop__label">
+                                                <span class="ra-meta-prop__name">{p.label}</span>
+                                                <template lwc:if={p.addable}>
+                                                    <lightning-icon icon-name="utility:add" size="xx-small"
+                                                        class="ra-meta-field__add" alternative-text="Add"></lightning-icon>
+                                                </template>
+                                            </div>
+                                            <div class="ra-meta-prop__value">{p.value}</div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </section>
+                    </div>
+                </template>
+                <template lwc:else>
+                <div class="ra-editor-card">
                 <!-- Editor toolbars (Figma 125:67886) ─────────────────
                      Two-row toolbar above the article body: a menu bar
                      (File, Edit, ...) and a format toolbar that drives
@@ -337,6 +389,9 @@
                 <!-- Word count footer -->
                 <div class="ra-editor__footer">
                     <span class="ra-editor__wordcount">{wordCount} words</span>
+                </div>
+                </div>
+                </template>
                 </div>
             </div>
         </main>
