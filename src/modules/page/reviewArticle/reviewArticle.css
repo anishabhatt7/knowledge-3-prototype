@@ -421,6 +421,25 @@ page-review-article.ra--entering .ra-editor {
     overflow: hidden;
 }
 
+/* Tab panes (Editor / Metadata / Enrichments) are mounted fresh on each
+   tab switch, so this entry animation replays automatically and gives a
+   seamless cross-fade + lift as the writer moves between views. */
+.ra-tabpane {
+    animation: ra-tabpane-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    will-change: opacity, transform;
+}
+
+@keyframes ra-tabpane-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* ─── Editor toolbars (Figma 125:67886) ──────────────────────────
    Two stacked toolbars between the article header and the body:
      1. Menu bar (File ... Help)
@@ -1534,4 +1553,178 @@ page-review-article.ra--entering .ra-editor {
     .ai-suggest { transition: none; }
     .ra-added__spinner { animation: none; }
     .ra-added_flash { animation: none; }
+    .ra-tabpane { animation: none; }
+}
+
+/* ─── Enrichments tab (Figma 462:63733) ─────────────────────────────── */
+.ra-enrich {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-5, 24px);
+    padding: 0;
+    overflow-y: auto;
+}
+
+/* AI Generated Abstract card */
+.ra-enrich-abstract {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-3, 12px);
+    padding: var(--slds-g-spacing-4, 16px);
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-neutral-base-90, #e5e5e5);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+}
+
+.ra-enrich-abstract__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ra-enrich-abstract__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-3, 20px);
+    font-weight: var(--slds-g-font-weight-4, 400);
+    line-height: 28px;
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+}
+
+.ra-enrich-abstract__refresh {
+    --slds-c-button-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+}
+
+/* Lavender "Article Summary" panel. The agentic surface/text colors are not
+   expressed as --slds-g hooks, so the brand values are inlined as fallbacks. */
+.ra-enrich-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+    padding: var(--slds-g-spacing-3, 12px);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    background: var(--slds-g-color-palette-violet-95, #ece1f9);
+}
+
+.ra-enrich-summary__label {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.ra-enrich-summary__sparkle {
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+.ra-enrich-summary__info {
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.ra-enrich-summary__title {
+    font-size: var(--slds-g-font-size-base, 13px);
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.ra-enrich-summary__text {
+    margin: 0;
+    font-size: var(--slds-g-font-size-base, 13px);
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+/* Top Questions grid */
+.ra-enrich-questions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--slds-g-spacing-4, 16px);
+    padding: 0;
+}
+
+.ra-enrich-q-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.ra-enrich-q {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+    padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-neutral-base-90, #e5e5e5);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+}
+
+.ra-enrich-q__head {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.ra-enrich-q__chevron {
+    flex-shrink: 0;
+    cursor: pointer;
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-on-surface-3, #001e5b);
+}
+
+.ra-enrich-q__text {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--slds-g-font-size-base, 13px);
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-on-surface-3, #001e5b);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Answer revealed when a question card is expanded. Indented to align with
+   the question title (chevron width + gap). */
+.ra-enrich-q__answer {
+    margin: 0;
+    padding-left: calc(0.875rem + var(--slds-g-spacing-2, 8px));
+    font-size: var(--slds-g-font-size-base, 13px);
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-2, #747474);
+}
+
+.ra-enrich-q__edit {
+    flex-shrink: 0;
+    --slds-c-button-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+}
+
+/* Inline edit mode: title input + answer textarea, with save/discard controls
+   sitting outside the card aligned to the question input row. */
+.ra-enrich-q__editactions {
+    display: flex;
+    flex-shrink: 0;
+    gap: var(--slds-g-spacing-2, 8px);
+    margin-top: var(--slds-g-spacing-2, 8px);
+}
+
+.ra-enrich-q__save {
+    --slds-c-button-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+    --slds-c-button-icon-color-border: var(--slds-g-color-accent-1, #066afe);
+    --slds-c-button-icon-radius-border: var(--slds-g-radius-border-circle, 9999px);
+}
+
+.ra-enrich-q__cancel {
+    --slds-c-button-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+    --slds-c-button-icon-color-border: var(--slds-g-color-accent-1, #066afe);
+    --slds-c-button-icon-radius-border: var(--slds-g-radius-border-circle, 9999px);
+}
+
+.ra-enrich-q__delete {
+    flex-shrink: 0;
+    /* Keep the delete control aligned with the question title row even when the
+       card expands. Offset matches the card's top padding. */
+    margin-top: var(--slds-g-spacing-2, 8px);
+    --slds-c-button-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+    --slds-c-button-icon-color-border: var(--slds-g-color-accent-1, #066afe);
+    --slds-c-button-icon-radius-border: var(--slds-g-radius-border-circle, 9999px);
 }

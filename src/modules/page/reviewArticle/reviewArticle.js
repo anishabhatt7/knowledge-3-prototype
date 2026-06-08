@@ -141,6 +141,56 @@ export default class ReviewArticle extends LightningElement {
     @track metaSectionOpen = true;
     @track propsSectionOpen = true;
 
+    // ─── Enrichments tab (Figma 462:63733) ───────────────────────────
+    // AI-derived enrichments: a generated abstract, the top questions the
+    // article answers, and related entities (products/features).
+    @track aiAbstract = {
+        summary:
+            'This article summarizes how airline baggage policies impact operational ' +
+            'efficiency, passenger satisfaction, and airline revenue. It analyzes the ' +
+            '"de-bundling" of ancillary fees and offers a framework for balancing optimal ' +
+            'baggage allowance with profitability.',
+    };
+
+    @track enrichmentQuestions = [
+        { id: 'q1', text: 'What is the standard carry-on baggage allowance?',
+            answer: 'Each passenger may bring one carry-on bag plus one personal item that fits in the overhead bin or under the seat in front of them.' },
+        { id: 'q2', text: 'How much does it cost to add a checked bag?',
+            answer: 'The first checked bag is $35 when added online during booking, or $45 if added at the airport.' },
+        { id: 'q3', text: 'What are the size and weight limits for checked luggage?',
+            answer: 'Checked luggage must not exceed 62 linear inches (length + width + height) and 50 lbs to avoid additional fees.' },
+        { id: 'q4', text: 'Are there fees for overweight or oversized bags?',
+            answer: 'Bags between 51–70 lbs incur a $100 overweight fee, and bags exceeding 62 linear inches are charged a $150 oversize fee.' },
+        { id: 'q5', text: 'What items are prohibited in carry-on baggage?',
+            answer: 'Liquids over 3.4 oz, sharp objects, and flammable materials are not permitted in carry-on bags and must be checked or left behind.' },
+        { id: 'q6', text: 'How do I report delayed or lost baggage?',
+            answer: 'File a report at the airline’s baggage service desk before leaving the airport, or submit a claim online within 24 hours.' },
+    ];
+
+    _expandedQuestions = new Set();
+    _editingQuestionId = null;
+
+    @track relatedFields = [
+        { id: 'related-products', label: 'Related Products', required: true, ai: true, kind: 'combobox', multi: true, value: '', extra: 6,
+            tags: [
+                { id: 'related-products-analytics', label: 'Analytics' },
+                { id: 'related-products-dashboard', label: 'Dashboard' },
+                { id: 'related-products-crm-suite', label: 'CRM Suite' },
+            ],
+            options: ['Analytics', 'Dashboard', 'CRM Suite', 'Sales Cloud', 'Service Cloud', 'Marketing Cloud', 'Commerce Cloud', 'Data Cloud', 'Tableau'] },
+        { id: 'related-features', label: 'Related Features', required: true, ai: true, kind: 'combobox', multi: true, value: '', extra: 6,
+            tags: [
+                { id: 'related-features-data-export', label: 'Data Export' },
+                { id: 'related-features-real-time-sync', label: 'Real-time Sync' },
+                { id: 'related-features-api-access', label: 'API Access' },
+            ],
+            options: ['Data Export', 'Real-time Sync', 'API Access', 'Webhooks', 'SSO', 'Audit Logs', 'Custom Fields', 'Bulk Import', 'Notifications'] },
+    ];
+
+    @track abstractSectionOpen = true;
+    @track questionsSectionOpen = true;
+    @track entitiesSectionOpen = true;
+
     get articleTabs() {
         return this.openTabs.map((t) => ({
             ...t,
@@ -153,11 +203,11 @@ export default class ReviewArticle extends LightningElement {
     handleTabClick(event) {
         const tabId = event.currentTarget.dataset.tab;
         if (!tabId || tabId === this.activeTab) return;
-        // The editor lives in the Editor/Enrichments view and is unmounted
-        // when the Metadata tab is shown. Stash its current HTML and clear the
-        // init guard so renderedCallback restores it (with edits intact) when
-        // the writer returns.
-        if (this.activeTab === 'editor' || this.activeTab === 'enrichments') {
+        // The editor lives in the Editor view and is unmounted when the
+        // Metadata/Enrichments tabs are shown. Stash its current HTML and clear
+        // the init guard so renderedCallback restores it (with edits intact)
+        // when the writer returns.
+        if (this.activeTab === 'editor') {
             const editorEl = this._getEditorEl();
             if (editorEl) {
                 this._seedEditorHtml = editorEl.innerHTML;
@@ -169,6 +219,100 @@ export default class ReviewArticle extends LightningElement {
 
     get isMetadataTab() {
         return this.activeTab === 'metadata';
+    }
+
+    get isEnrichmentsTab() {
+        return this.activeTab === 'enrichments';
+    }
+
+    // ─── Enrichments getters / handlers ──────────────────────────────
+    get relatedEntityFields() {
+        return this.relatedFields.map((f) => this._decorateField(f));
+    }
+
+    get enrichmentQuestionList() {
+        return this.enrichmentQuestions.map((q) => {
+            const expanded = this._expandedQuestions.has(q.id);
+            const editing = q.id === this._editingQuestionId;
+            return {
+                ...q,
+                expanded,
+                editing,
+                chevron: expanded ? 'utility:chevrondown' : 'utility:chevronright',
+                cardClass: `ra-enrich-q${expanded ? ' ra-enrich-q_expanded' : ''}`,
+            };
+        });
+    }
+
+    get questionsChevron() {
+        return this.questionsSectionOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    get entitiesChevron() {
+        return this.entitiesSectionOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    handleToggleQuestionsSection() {
+        this.questionsSectionOpen = !this.questionsSectionOpen;
+    }
+
+    handleToggleEntitiesSection() {
+        this.entitiesSectionOpen = !this.entitiesSectionOpen;
+    }
+
+    handleRegenerateAbstract() {
+        // Prototype: re-trigger the "AI" summary (no-op refresh affordance).
+        this.aiAbstract = { ...this.aiAbstract };
+    }
+
+    handleQuestionToggle(event) {
+        const id = event.currentTarget.dataset.id;
+        const next = new Set(this._expandedQuestions);
+        if (next.has(id)) {
+            next.delete(id);
+        } else {
+            next.add(id);
+        }
+        this._expandedQuestions = next;
+    }
+
+    handleQuestionDelete(event) {
+        const id = event.currentTarget.dataset.id;
+        this.enrichmentQuestions = this.enrichmentQuestions.filter((q) => q.id !== id);
+    }
+
+    handleQuestionEdit(event) {
+        // Enter inline edit mode for this question: the title becomes an input
+        // and the answer a textarea, with save/discard controls.
+        const id = event.currentTarget.dataset.id;
+        this._editingQuestionId = id;
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        requestAnimationFrame(() => {
+            const el = this.template.querySelector(`.ra-enrich-q__qinput[data-id="${id}"]`);
+            if (el) el.focus();
+        });
+    }
+
+    handleQuestionEditSave(event) {
+        const id = event.currentTarget.dataset.id;
+        const input = this.template.querySelector(`.ra-enrich-q__qinput[data-id="${id}"]`);
+        const textarea = this.template.querySelector(`.ra-enrich-q__ainput[data-id="${id}"]`);
+        this.enrichmentQuestions = this.enrichmentQuestions.map((q) =>
+            q.id === id
+                ? {
+                      ...q,
+                      text: input ? input.value : q.text,
+                      answer: textarea ? textarea.value : q.answer,
+                  }
+                : q
+        );
+        this._editingQuestionId = null;
+    }
+
+    handleQuestionEditCancel() {
+        // Discard changes by leaving edit mode; the editable controls are
+        // destroyed, so any unsaved input is dropped.
+        this._editingQuestionId = null;
     }
 
     _decorateField(f) {
@@ -271,11 +415,25 @@ export default class ReviewArticle extends LightningElement {
         });
     }
 
+    // Combobox fields live in two arrays (metadata + related entities);
+    // these helpers find/update a field by id in whichever array owns it.
+    _findComboField(id) {
+        return this.metadataFields.find((f) => f.id === id)
+            || this.relatedFields.find((f) => f.id === id);
+    }
+
+    _setComboField(id, mapper) {
+        if (this.metadataFields.some((f) => f.id === id)) {
+            this.metadataFields = this.metadataFields.map((f) => (f.id === id ? mapper(f) : f));
+        } else if (this.relatedFields.some((f) => f.id === id)) {
+            this.relatedFields = this.relatedFields.map((f) => (f.id === id ? mapper(f) : f));
+        }
+    }
+
     handleMetaTagRemove(event) {
         const fieldId = event.currentTarget.dataset.field;
         const tagId = event.currentTarget.dataset.tag;
-        this.metadataFields = this.metadataFields.map((f) => {
-            if (f.id !== fieldId) return f;
+        this._setComboField(fieldId, (f) => {
             const updated = { ...f, tags: (f.tags || []).filter((t) => t.id !== tagId) };
             if (f.ai && !f._original) {
                 updated._original = { value: f.value, tags: f.tags ? [...f.tags] : [] };
@@ -330,11 +488,10 @@ export default class ReviewArticle extends LightningElement {
         event.preventDefault();
         const fieldId = event.currentTarget.dataset.field;
         const label = event.currentTarget.dataset.label;
-        const field = this.metadataFields.find((f) => f.id === fieldId);
+        const field = this._findComboField(fieldId);
         if (!field) return;
         const isMulti = !!field.multi;
-        this.metadataFields = this.metadataFields.map((f) => {
-            if (f.id !== fieldId) return f;
+        this._setComboField(fieldId, (f) => {
             const updated = { ...f };
             if (f.ai && !f._original) {
                 updated._original = { value: f.value, tags: f.tags ? [...f.tags] : [] };
