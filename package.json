@@ -12,7 +12,7 @@
     "build": "node scripts/prebuild-icons.mjs && vite build",
     "build:gh-pages": "node scripts/prebuild-icons.mjs && vite build --mode gh-pages",
     "preview": "vite preview",
-    "deploy": "npm run build:gh-pages && gh-pages -d dist --nojekyll",
+    "deploy": "npm run build:gh-pages && gh-pages -d dist --dest pm --add --nojekyll -r https://github.com/anishabhatt7/knowledge-3-prototype.git",
     "heroku-postbuild": "npm run build",
     "clean": "rm -rf dist .vite node_modules"
   },
