@@ -87,7 +87,7 @@
                 <div class="cc-header">
                     <div class="cc-header__left">
                         <lightning-icon
-                            icon-name="standard:agent_astro"
+                            icon-name="standard:sub_metric"
                             size="medium"
                             alternative-text="Command Center"
                             class="cc-header__icon"
@@ -227,113 +227,6 @@
                                 ></lightning-button>
                             </div>
                         </article>
-                    </template>
-                </div>
-            </section>
-
-            <!-- Structural Violations -->
-            <section class="cc-section">
-                <div class="cc-violations">
-                    <header class="cc-violations__header">
-                        <div class="cc-violations__heading">
-                            <h2 class="cc-violations__title">Structural Violations</h2>
-                            <p class="cc-violations__subtitle">Unified view of decisions, expertise, and organizational knowledge</p>
-                        </div>
-                        <div class="cc-violations__actions slds-button-group">
-                            <button
-                                type="button"
-                                class="slds-button slds-button_outline-brand cc-violations__action cc-violations__action--left"
-                                onclick={handleReviewInQueue}
-                            >Review in Queue</button>
-                            <button
-                                type="button"
-                                class="slds-button slds-button_brand cc-violations__action"
-                                onclick={handleApproveAll}
-                            >Approve All</button>
-                        </div>
-                    </header>
-
-                    <template lwc:if={_showReviewQueue}>
-                        <div class="cc-vt__queue-header">
-                            <button type="button" class="slds-button slds-button_icon cc-vt__back" onclick={handleBackToViolations}>
-                                <lightning-icon icon-name="utility:back" size="x-small" alternative-text="Back"></lightning-icon>
-                                <span>Back to all violations</span>
-                            </button>
-                            <h3 class="cc-vt__queue-title">{reviewQueueTitle}</h3>
-                        </div>
-                        <div class="cc-vt">
-                            <div class="cc-vt__header-row">
-                                <div class="cc-vt__cell cc-vt__cell--check"></div>
-                                <div class="cc-vt__cell cc-vt__cell--article">Article</div>
-                                <div class="cc-vt__cell cc-vt__cell--desc">Description</div>
-                                <div class="cc-vt__cell cc-vt__cell--violations">No. of Violations</div>
-                                <div class="cc-vt__cell cc-vt__cell--score">AI Score</div>
-                            </div>
-                            <template for:each={reviewQueueItems} for:item="item">
-                                <div key={item.id} class="cc-vt__row">
-                                    <div class="cc-vt__cell cc-vt__cell--check">
-                                        <input
-                                            class="cc-vt__checkbox"
-                                            type="checkbox"
-                                            checked={item.isSelected}
-                                            data-id={item.id}
-                                            aria-label="Select violation"
-                                            onclick={handleViolationCheckbox}
-                                        />
-                                    </div>
-                                    <div class="cc-vt__cell cc-vt__cell--article">{item.article}</div>
-                                    <div class="cc-vt__cell cc-vt__cell--desc">{item.description}</div>
-                                    <div class="cc-vt__cell cc-vt__cell--violations">{item.violations}</div>
-                                    <div class="cc-vt__cell cc-vt__cell--score">{item.aiScore}</div>
-                                </div>
-                            </template>
-                        </div>
-                    </template>
-
-                    <template lwc:if={showViolationsTable}>
-                        <div class="cc-vt">
-                            <div class="cc-vt__header-row">
-                                <div class="cc-vt__cell cc-vt__cell--check"></div>
-                                <div class="cc-vt__cell cc-vt__cell--article">
-                                    <button type="button" class="cc-vt__sort" data-field="article" onclick={handleSortViolations}>
-                                        Article <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort"></lightning-icon>
-                                    </button>
-                                </div>
-                                <div class="cc-vt__cell cc-vt__cell--desc">
-                                    <button type="button" class="cc-vt__sort" data-field="description" onclick={handleSortViolations}>
-                                        Description <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
-                                    </button>
-                                </div>
-                                <div class="cc-vt__cell cc-vt__cell--violations">
-                                    <button type="button" class="cc-vt__sort" data-field="violations" onclick={handleSortViolations}>
-                                        No. of Violations <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
-                                    </button>
-                                </div>
-                                <div class="cc-vt__cell cc-vt__cell--score">
-                                    <button type="button" class="cc-vt__sort" data-field="aiScore" onclick={handleSortViolations}>
-                                        AI Score <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
-                                    </button>
-                                </div>
-                            </div>
-                            <template for:each={structuralViolations} for:item="item">
-                                <div key={item.id} class="cc-vt__row">
-                                    <div class="cc-vt__cell cc-vt__cell--check">
-                                        <input
-                                            class="cc-vt__checkbox"
-                                            type="checkbox"
-                                            checked={item.isSelected}
-                                            data-id={item.id}
-                                            aria-label="Select violation"
-                                            onclick={handleViolationCheckbox}
-                                        />
-                                    </div>
-                                    <div class="cc-vt__cell cc-vt__cell--article">{item.article}</div>
-                                    <div class="cc-vt__cell cc-vt__cell--desc">{item.description}</div>
-                                    <div class="cc-vt__cell cc-vt__cell--violations">{item.violations}</div>
-                                    <div class="cc-vt__cell cc-vt__cell--score">{item.aiScore}</div>
-                                </div>
-                            </template>
-                        </div>
                     </template>
                 </div>
             </section>
