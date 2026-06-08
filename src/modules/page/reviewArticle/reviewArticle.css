@@ -1635,10 +1635,17 @@ page-review-article.ra--entering .ra-editor {
 /* Top Questions grid */
 .ra-enrich-questions {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: 1fr;
     column-gap: 42px;
     row-gap: var(--slds-g-spacing-4, 16px);
     padding: 0 8px;
+}
+
+/* Cap at two columns on wider viewports; single column when narrow. */
+@media (min-width: 48em) {
+    .ra-enrich-questions {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 .ra-enrich-q-item {
