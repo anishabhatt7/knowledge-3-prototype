@@ -23,3 +23,16 @@
 lightning-toast-container {
     top: 56px !important;
 }
+
+/*
+ * Metadata "AI generated" sparkle. lightning-icon's smallest preset
+ * (size="xx-small") renders the SVG at 0.875rem/14px via the global
+ * .slds-icon_xx-small class, which sits inside the icon's shadow and so
+ * can't be overridden from the component-scoped stylesheet. This global
+ * rule reaches that SVG and shrinks the sparkle to read smaller than the
+ * 13px field label. Specificity (0,2,0) beats .slds-icon_xx-small (0,1,0).
+ */
+.ra-meta-field__sparkle .slds-icon {
+    width: 7px;
+    height: 7px;
+}

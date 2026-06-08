@@ -102,18 +102,32 @@ export default class ReviewArticle extends LightningElement {
     // their selections as removable tag pills; single-value fields show
     // the value inline. `ai` fields get the sparkle "generate" affordance.
     @track metadataFields = [
-        { id: 'products', label: 'Products', required: true, ai: true, kind: 'combobox', value: '', tags: [{ id: 'products-platform', label: 'Platform' }], extra: 0 },
-        { id: 'features', label: 'Features', required: true, ai: true, kind: 'combobox', value: '', tags: [{ id: 'features-flows', label: 'Flows' }], extra: 0 },
-        { id: 'primary-audience', label: 'Primary Audience', required: true, ai: true, kind: 'combobox', value: 'Admin', tags: [], extra: 0 },
-        { id: 'content-type', label: 'Content Type', required: true, ai: true, kind: 'combobox', value: 'Procedure', tags: [], extra: 0 },
-        { id: 'release-versions', label: 'Release Versions', required: true, ai: true, kind: 'combobox', value: '', tags: [{ id: 'rv-spring26', label: "Spring '26" }], extra: 0 },
-        { id: 'use-cases', label: 'Use Cases', required: true, ai: true, kind: 'combobox', value: '', tags: [{ id: 'uc-setup', label: 'Setup' }, { id: 'uc-config', label: 'Configuration' }], extra: 0 },
-        { id: 'confidence-level', label: 'Confidence Level', required: true, ai: true, kind: 'combobox', value: 'In Review', tags: [], extra: 0 },
-        { id: 'complexity-level', label: 'Complexity Level', required: true, ai: true, kind: 'combobox', value: 'Intermediate', tags: [], extra: 0 },
-        { id: 'industry-vertical', label: 'Industry/Vertical', required: true, ai: true, kind: 'combobox', value: '', tags: [{ id: 'iv-aviation', label: 'Aviation & Travel' }], extra: 0 },
+        { id: 'products', label: 'Products', required: true, ai: true, kind: 'combobox', multi: true, value: '', tags: [{ id: 'products-platform', label: 'Platform' }], extra: 0,
+            options: ['Platform', 'Sales Cloud', 'Service Cloud', 'Marketing Cloud', 'Commerce Cloud', 'Data Cloud', 'Slack', 'Tableau', 'MuleSoft'] },
+        { id: 'features', label: 'Features', required: true, ai: true, kind: 'combobox', multi: true, value: '', tags: [{ id: 'features-flows', label: 'Flows' }], extra: 0,
+            options: ['Flows', 'Apex', 'Lightning Web Components', 'Reports & Dashboards', 'Permissions', 'Automation', 'Einstein'] },
+        { id: 'primary-audience', label: 'Primary Audience', required: true, ai: true, kind: 'combobox', multi: false, value: 'Admin', tags: [], extra: 0,
+            options: ['Admin', 'Developer', 'End User', 'Architect', 'Business Analyst'] },
+        { id: 'content-type', label: 'Content Type', required: true, ai: true, kind: 'combobox', multi: false, value: 'Procedure', tags: [], extra: 0,
+            options: ['Procedure', 'Concept', 'Reference', 'Troubleshooting', 'FAQ', 'Release Notes'] },
+        { id: 'release-versions', label: 'Release Versions', required: true, ai: true, kind: 'combobox', multi: true, value: '', tags: [{ id: 'rv-spring26', label: "Spring '26" }], extra: 0,
+            options: ["Winter '26", "Spring '26", "Summer '26", "Winter '27"] },
+        { id: 'use-cases', label: 'Use Cases', required: true, ai: true, kind: 'combobox', multi: true, value: '', tags: [{ id: 'uc-setup', label: 'Setup' }, { id: 'uc-config', label: 'Configuration' }], extra: 0,
+            options: ['Setup', 'Configuration', 'Integration', 'Migration', 'Administration', 'Reporting'] },
+        { id: 'confidence-level', label: 'Confidence Level', required: true, ai: true, kind: 'combobox', multi: false, value: 'In Review', tags: [], extra: 0,
+            options: ['In Review', 'Draft', 'Verified', 'High', 'Medium', 'Low'] },
+        { id: 'complexity-level', label: 'Complexity Level', required: true, ai: true, kind: 'combobox', multi: false, value: 'Intermediate', tags: [], extra: 0,
+            options: ['Beginner', 'Intermediate', 'Advanced', 'Expert'] },
+        { id: 'industry-vertical', label: 'Industry/Vertical', required: true, ai: true, kind: 'combobox', multi: true, value: '', tags: [{ id: 'iv-aviation', label: 'Aviation & Travel' }], extra: 0,
+            options: ['Aviation & Travel', 'Financial Services', 'Healthcare', 'Retail', 'Manufacturing', 'Public Sector', 'Education'] },
         { id: 'language-region', label: 'Language/Region', required: false, ai: false, kind: 'input', value: 'English (US)', tags: [], extra: 0 },
         { id: 'article-owner', label: 'Article Owner', required: true, ai: false, kind: 'input', value: 'Jordan Avery', tags: [], extra: 0 },
     ];
+
+    // Combobox dropdown UI state — only one open at a time. `_comboQuery`
+    // is the live search text for the open field; it filters `options`.
+    @track _openComboId = null;
+    @track _comboQuery = '';
 
     @track metadataProperties = [
         { id: 'article-number', label: 'Article Number', value: '000123456', addable: true },
@@ -157,17 +171,75 @@ export default class ReviewArticle extends LightningElement {
         return this.activeTab === 'metadata';
     }
 
-    // Decorate each metadata field with the booleans the template needs so
-    // the markup stays declarative (no expressions in the template).
-    get metadataFieldRows() {
-        return this.metadataFields.map((f) => ({
+    _decorateField(f) {
+        const isOpen = f.id === this._openComboId;
+        const query = isOpen ? (this._comboQuery || '') : '';
+        const selectedLabels = f.multi
+            ? new Set((f.tags || []).map((t) => t.label))
+            : new Set(f.value ? [f.value] : []);
+        let options = f.options || [];
+        if (query) {
+            const q = query.toLowerCase();
+            options = options.filter((o) => o.toLowerCase().includes(q));
+        }
+        const filteredOptions = options.map((label, i) => {
+            const selected = selectedLabels.has(label);
+            return {
+                id: `${f.id}-opt-${i}`,
+                label,
+                selected,
+                optionClass: `ra-meta-listbox__option${selected ? ' ra-meta-listbox__option_selected' : ''}`,
+            };
+        });
+        // While open, the input doubles as a search box (shows the query).
+        // When closed, single-select fields show their committed value;
+        // multi-select fields summarize the selection count (or stay empty
+        // so the placeholder shows when nothing is selected).
+        const selectedCount = f.multi ? (f.tags || []).length : 0;
+        let inputValue;
+        if (isOpen) {
+            inputValue = query;
+        } else if (f.multi) {
+            inputValue = selectedCount > 0
+                ? `${selectedCount} selected`
+                : '';
+        } else {
+            inputValue = f.value || '';
+        }
+        return {
             ...f,
             isCombobox: f.kind === 'combobox',
             isInput: f.kind === 'input',
             hasTags: (f.tags || []).length > 0,
             showExtra: (f.extra || 0) > 0,
             extraLabel: `+${f.extra || 0} more`,
-        }));
+            isDirty: !!f._original,
+            // The "AI generated" sparkle only applies while the value is
+            // untouched; once the writer edits the field it's no longer
+            // AI-authored, so the sparkle gives way to the undo affordance.
+            showSparkle: f.ai && !f._original,
+            fieldClass: `ra-meta-field${f._original ? ' ra-meta-field_dirty' : ''}`,
+            isOpen,
+            inputValue,
+            filteredOptions,
+            noOptions: isOpen && filteredOptions.length === 0,
+        };
+    }
+
+    get metadataFieldRows() {
+        return this.metadataFields.map((f) => this._decorateField(f));
+    }
+
+    get metadataFieldsLeft() {
+        return this.metadataFields
+            .filter((_, i) => i % 2 === 0)
+            .map((f) => this._decorateField(f));
+    }
+
+    get metadataFieldsRight() {
+        return this.metadataFields
+            .filter((_, i) => i % 2 === 1)
+            .map((f) => this._decorateField(f));
     }
 
     get metaChevron() {
@@ -189,19 +261,118 @@ export default class ReviewArticle extends LightningElement {
     handleMetaInput(event) {
         const id = event.currentTarget.dataset.id;
         const value = event.target.value;
-        this.metadataFields = this.metadataFields.map((f) =>
-            f.id === id ? { ...f, value } : f
-        );
+        this.metadataFields = this.metadataFields.map((f) => {
+            if (f.id !== id) return f;
+            const updated = { ...f, value };
+            if (f.ai && !f._original) {
+                updated._original = { value: f.value, tags: f.tags ? [...f.tags] : [] };
+            }
+            return updated;
+        });
     }
 
     handleMetaTagRemove(event) {
         const fieldId = event.currentTarget.dataset.field;
         const tagId = event.currentTarget.dataset.tag;
-        this.metadataFields = this.metadataFields.map((f) =>
-            f.id === fieldId
-                ? { ...f, tags: (f.tags || []).filter((t) => t.id !== tagId) }
-                : f
-        );
+        this.metadataFields = this.metadataFields.map((f) => {
+            if (f.id !== fieldId) return f;
+            const updated = { ...f, tags: (f.tags || []).filter((t) => t.id !== tagId) };
+            if (f.ai && !f._original) {
+                updated._original = { value: f.value, tags: f.tags ? [...f.tags] : [] };
+            }
+            return updated;
+        });
+    }
+
+    handleMetaUndo(event) {
+        const id = event.currentTarget.dataset.id;
+        this.metadataFields = this.metadataFields.map((f) => {
+            if (f.id !== id || !f._original) return f;
+            return { ...f, value: f._original.value, tags: [...f._original.tags], _original: undefined };
+        });
+    }
+
+    // ─── Combobox dropdown (searchable listbox) ──────────────────────
+    handleComboFocus(event) {
+        this._openComboId = event.currentTarget.dataset.id;
+        this._comboQuery = '';
+    }
+
+    handleComboInput(event) {
+        this._openComboId = event.currentTarget.dataset.id;
+        this._comboQuery = event.target.value;
+    }
+
+    handleComboBlur() {
+        // Options use mousedown + preventDefault to keep input focus, so a
+        // blur here means focus left the combobox entirely — close it.
+        this._openComboId = null;
+        this._comboQuery = '';
+    }
+
+    handleComboChevron(event) {
+        // mousedown (not click) so we run before the input's blur and can
+        // toggle without the dropdown closing from under us.
+        event.preventDefault();
+        const id = event.currentTarget.dataset.id;
+        if (this._openComboId === id) {
+            this._openComboId = null;
+            this._comboQuery = '';
+        } else {
+            this._openComboId = id;
+            this._comboQuery = '';
+            this._focusComboInput(id);
+        }
+    }
+
+    handleOptionSelect(event) {
+        // Keep focus on the input so the dropdown doesn't blur-close mid-click.
+        event.preventDefault();
+        const fieldId = event.currentTarget.dataset.field;
+        const label = event.currentTarget.dataset.label;
+        const field = this.metadataFields.find((f) => f.id === fieldId);
+        if (!field) return;
+        const isMulti = !!field.multi;
+        this.metadataFields = this.metadataFields.map((f) => {
+            if (f.id !== fieldId) return f;
+            const updated = { ...f };
+            if (f.ai && !f._original) {
+                updated._original = { value: f.value, tags: f.tags ? [...f.tags] : [] };
+            }
+            if (isMulti) {
+                const exists = (f.tags || []).some((t) => t.label === label);
+                updated.tags = exists
+                    ? (f.tags || []).filter((t) => t.label !== label)
+                    : [...(f.tags || []), { id: `${f.id}-${this._slug(label)}`, label }];
+            } else {
+                updated.value = label;
+            }
+            return updated;
+        });
+        if (isMulti) {
+            // Multi-select stays open for rapid tagging; reset the filter.
+            this._comboQuery = '';
+            this._focusComboInput(fieldId);
+        } else {
+            this._openComboId = null;
+            this._comboQuery = '';
+        }
+    }
+
+    _slug(label) {
+        return String(label)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+    }
+
+    _focusComboInput(id) {
+        // Defer until the dropdown has rendered.
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        requestAnimationFrame(() => {
+            const input = this.template.querySelector(`input.ra-meta-combobox__input[data-id="${id}"]`);
+            if (input) input.focus();
+        });
     }
 
     handleToggleAiPreview(event) {
