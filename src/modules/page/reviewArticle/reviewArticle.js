@@ -169,22 +169,27 @@ export default class ReviewArticle extends LightningElement {
 
     _expandedQuestions = new Set();
     _editingQuestionId = null;
+    // Draft buffer for the question currently in inline-edit mode. The edit
+    // inputs are bound to these (controlled), so re-renders never wipe typed
+    // text and Save reads a guaranteed-fresh value instead of querying the DOM.
+    @track _draftQuestionText = '';
+    @track _draftQuestionAnswer = '';
 
     @track relatedFields = [
         { id: 'related-products', label: 'Related Products', required: true, ai: true, kind: 'combobox', multi: true, value: '', extra: 6,
             tags: [
-                { id: 'related-products-analytics', label: 'Analytics' },
-                { id: 'related-products-dashboard', label: 'Dashboard' },
-                { id: 'related-products-crm-suite', label: 'CRM Suite' },
+                { id: 'related-products-checked-baggage', label: 'Checked Baggage' },
+                { id: 'related-products-carry-on', label: 'Carry-On Allowance' },
+                { id: 'related-products-priority-boarding', label: 'Priority Boarding' },
             ],
-            options: ['Analytics', 'Dashboard', 'CRM Suite', 'Sales Cloud', 'Service Cloud', 'Marketing Cloud', 'Commerce Cloud', 'Data Cloud', 'Tableau'] },
+            options: ['Checked Baggage', 'Carry-On Allowance', 'Priority Boarding', 'Excess Baggage', 'Travel Insurance', 'Seat Selection', 'Lounge Access', 'Sports Equipment', 'Pet in Cabin'] },
         { id: 'related-features', label: 'Related Features', required: true, ai: true, kind: 'combobox', multi: true, value: '', extra: 6,
             tags: [
-                { id: 'related-features-data-export', label: 'Data Export' },
-                { id: 'related-features-real-time-sync', label: 'Real-time Sync' },
-                { id: 'related-features-api-access', label: 'API Access' },
+                { id: 'related-features-online-checkin', label: 'Online Check-in' },
+                { id: 'related-features-baggage-tracking', label: 'Baggage Tracking' },
+                { id: 'related-features-bag-fee-calculator', label: 'Bag Fee Calculator' },
             ],
-            options: ['Data Export', 'Real-time Sync', 'API Access', 'Webhooks', 'SSO', 'Audit Logs', 'Custom Fields', 'Bulk Import', 'Notifications'] },
+            options: ['Online Check-in', 'Baggage Tracking', 'Bag Fee Calculator', 'Mobile Boarding Pass', 'Lost Baggage Claim', 'Weight Allowance Alerts', 'Fare Rules Lookup', 'Auto Rebooking', 'Trip Notifications'] },
     ];
 
     @track abstractSectionOpen = true;
@@ -281,10 +286,22 @@ export default class ReviewArticle extends LightningElement {
         this.enrichmentQuestions = this.enrichmentQuestions.filter((q) => q.id !== id);
     }
 
+    get draftQuestionText() {
+        return this._draftQuestionText;
+    }
+
+    get draftQuestionAnswer() {
+        return this._draftQuestionAnswer;
+    }
+
     handleQuestionEdit(event) {
         // Enter inline edit mode for this question: the title becomes an input
-        // and the answer a textarea, with save/discard controls.
+        // and the answer a textarea, with save/discard controls. Seed the draft
+        // buffer from the current values so the controlled inputs start correct.
         const id = event.currentTarget.dataset.id;
+        const question = this.enrichmentQuestions.find((q) => q.id === id);
+        this._draftQuestionText = question ? question.text : '';
+        this._draftQuestionAnswer = question ? question.answer : '';
         this._editingQuestionId = id;
         // eslint-disable-next-line @lwc/lwc/no-async-operation
         requestAnimationFrame(() => {
@@ -293,26 +310,37 @@ export default class ReviewArticle extends LightningElement {
         });
     }
 
+    handleQuestionDraftTextChange(event) {
+        this._draftQuestionText = event.target.value;
+    }
+
+    handleQuestionDraftAnswerChange(event) {
+        this._draftQuestionAnswer = event.target.value;
+    }
+
     handleQuestionEditSave(event) {
         const id = event.currentTarget.dataset.id;
-        const input = this.template.querySelector(`.ra-enrich-q__qinput[data-id="${id}"]`);
-        const textarea = this.template.querySelector(`.ra-enrich-q__ainput[data-id="${id}"]`);
+        // Read from the controlled draft buffer (kept in sync via onchange), not
+        // the DOM, so edits are reliably captured regardless of render timing.
+        const text = this._draftQuestionText;
+        const answer = this._draftQuestionAnswer;
         this.enrichmentQuestions = this.enrichmentQuestions.map((q) =>
-            q.id === id
-                ? {
-                      ...q,
-                      text: input ? input.value : q.text,
-                      answer: textarea ? textarea.value : q.answer,
-                  }
-                : q
+            q.id === id ? { ...q, text, answer } : q
         );
+        // Exit edit mode (back to accordion card) and expand the item so the
+        // freshly saved answer is visible rather than collapsed behind the header.
         this._editingQuestionId = null;
+        const next = new Set(this._expandedQuestions);
+        next.add(id);
+        this._expandedQuestions = next;
     }
 
     handleQuestionEditCancel() {
-        // Discard changes by leaving edit mode; the editable controls are
-        // destroyed, so any unsaved input is dropped.
+        // Discard changes by leaving edit mode; the draft buffer is reset so
+        // any unsaved input is dropped.
         this._editingQuestionId = null;
+        this._draftQuestionText = '';
+        this._draftQuestionAnswer = '';
     }
 
     _decorateField(f) {

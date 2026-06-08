@@ -347,20 +347,22 @@
                                             <template lwc:if={q.editing}>
                                                 <div class="ra-enrich-q ra-enrich-q_editing">
                                                     <lightning-input type="text" variant="label-hidden"
-                                                        label="Question" data-id={q.id} value={q.text}
+                                                        label="Question" data-id={q.id} value={draftQuestionText}
+                                                        onchange={handleQuestionDraftTextChange}
                                                         class="ra-enrich-q__qinput"></lightning-input>
                                                     <lightning-textarea variant="label-hidden" label="Answer"
-                                                        data-id={q.id} value={q.answer}
+                                                        data-id={q.id} value={draftQuestionAnswer}
+                                                        onchange={handleQuestionDraftAnswerChange}
                                                         class="ra-enrich-q__ainput"></lightning-textarea>
                                                 </div>
                                                 <div class="ra-enrich-q__editactions">
                                                     <lightning-button-icon icon-name="utility:check"
-                                                        variant="border-filled" size="small"
+                                                        variant="border-filled" size="medium"
                                                         alternative-text="Save changes" data-id={q.id}
                                                         onclick={handleQuestionEditSave}
                                                         class="ra-enrich-q__save"></lightning-button-icon>
                                                     <lightning-button-icon icon-name="utility:close"
-                                                        variant="border-filled" size="small"
+                                                        variant="border-filled" size="medium"
                                                         alternative-text="Discard changes" data-id={q.id}
                                                         onclick={handleQuestionEditCancel}
                                                         class="ra-enrich-q__cancel"></lightning-button-icon>
@@ -384,7 +386,7 @@
                                                     </template>
                                                 </div>
                                                 <lightning-button-icon icon-name="utility:delete"
-                                                    variant="border-filled" size="small"
+                                                    variant="border-filled" size="medium"
                                                     alternative-text="Delete question" data-id={q.id}
                                                     onclick={handleQuestionDelete}
                                                     class="ra-enrich-q__delete"></lightning-button-icon>
@@ -413,8 +415,8 @@
                                                         <span class="ra-meta-field__req" aria-hidden="true">*</span>
                                                     </template>
                                                     <span class="ra-meta-field__name">{f.label}</span>
-                                                    <lightning-icon icon-name="utility:add" size="xx-small"
-                                                        class="ra-meta-field__add" alternative-text="Add"></lightning-icon>
+                                                    <lightning-icon icon-name="utility:sparkle" size="xx-small"
+                                                        class="ra-meta-field__add" alternative-text="Add with AI"></lightning-icon>
                                                 </div>
                                                 <div class="ra-meta-combobox-wrap">
                                                     <div class="ra-meta-combobox">

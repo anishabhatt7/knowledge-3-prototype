@@ -1635,9 +1635,10 @@ page-review-article.ra--entering .ra-editor {
 /* Top Questions grid */
 .ra-enrich-questions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--slds-g-spacing-4, 16px);
-    padding: 0;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    column-gap: 42px;
+    row-gap: var(--slds-g-spacing-4, 16px);
+    padding: 0 8px;
 }
 
 .ra-enrich-q-item {
@@ -1653,6 +1654,7 @@ page-review-article.ra--entering .ra-editor {
     flex-direction: column;
     gap: var(--slds-g-spacing-2, 8px);
     padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
+    padding-bottom: var(--slds-g-spacing-3, 12px);
     border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-neutral-base-90, #e5e5e5);
     border-radius: var(--slds-g-radius-border-2, 8px);
     background: var(--slds-g-color-surface-container-1, #ffffff);
