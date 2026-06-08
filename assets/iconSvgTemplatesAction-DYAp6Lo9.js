@@ -1,0 +1,1 @@
+import{a as t,_ as n}from"./empty_html-mXddYNJE.js";import o from"./iconSvgTemplatesAction-om9kFn3G.js";const a=t(o,{tmpl:n,sel:"lightning-icon-svg-templates-action",apiVersion:66});export{a as default};
