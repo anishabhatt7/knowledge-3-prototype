@@ -599,18 +599,20 @@ export default class ReviewArticle extends LightningElement {
         const edit = consumeEditSession();
         if (edit && edit.id) {
             this._editingArticleId = String(edit.id);
+            this._seedEditorHtml = edit.html || null;
             this.article = {
                 ...this.article,
                 id: this._editingArticleId,
                 title: edit.title || this.article.title,
                 status: 'draft',
-                // Empty out blockData — the seed HTML below replaces
-                // the demo baggage-allowance content that ships with
-                // `initialArticle`.
-                blockData: [],
+                // Only replace the default article body when the session
+                // carries seed HTML (an in-flight edit). With no seed (e.g.
+                // launched from the Command Center "Edit to Resolve"), keep
+                // the standard article content so the editor shows the same
+                // content and only the header/title reflects the article.
+                blockData: this._seedEditorHtml ? [] : this.article.blockData,
             };
             if (edit.recordType) this.recordTypeLabel = edit.recordType;
-            this._seedEditorHtml = edit.html || null;
             this._arrivedFromDraft = true;
             this.classList.add('ra--entering');
         } else {
