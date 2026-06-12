@@ -40,7 +40,6 @@ export default class HealingGraph extends LightningElement {
         { id: 'command-center', label: 'Command Center', icon: 'utility:trending' },
         { id: 'healing-graph', label: 'Knowledge Health', icon: 'utility:graph', active: true },
         { id: 'knowledge-agents', label: 'Knowledge Agents', icon: 'utility:agent_astro' },
-        { id: 'decision-hub', label: 'Decision Hub', icon: 'utility:dataspaces' },
     ];
 
     railCreate = [
