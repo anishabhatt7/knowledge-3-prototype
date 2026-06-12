@@ -88,4 +88,14 @@ export const routes = [
         title: 'Top Quality Issues | Knowledge',
         navHighlight: 'knowledge',
     },
+    {
+        // Review Queue workspace tab, opened from the Command Center
+        // "Review Article Drafts" CTA on each Knowledge Action row. The
+        // launching row's articles are stashed via `setQueueSession()`
+        // so the queue's rail + article headers match the table.
+        path: '/review-queue',
+        component: 'page-review-queue',
+        title: 'Review Queue | Knowledge',
+        navHighlight: 'knowledge',
+    },
 ];

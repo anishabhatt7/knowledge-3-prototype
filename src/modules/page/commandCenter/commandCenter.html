@@ -289,6 +289,8 @@
                                             label={action.ctaLabel}
                                             icon-name="utility:sparkles"
                                             class="cc-action__cta"
+                                            data-id={action.id}
+                                            onclick={handleReviewArticleDrafts}
                                         ></lightning-button>
                                         <template lwc:if={action.highlighted}>
                                             <lightning-button-icon
@@ -305,26 +307,51 @@
                                             <table class="cc-action-table">
                                                 <thead>
                                                     <tr>
-                                                        <th>Article Number</th>
-                                                        <th>Article Title</th>
-                                                        <th>Views</th>
-                                                        <th>Viewers</th>
-                                                        <th>Linked Cases</th>
-                                                        <th>Last Modified Date</th>
-                                                        <th class="cc-action-table__actions-th"></th>
+                                                        <th scope="col">
+                                                            <span class="cc-action-table__th-inner">
+                                                                <span>Article</span>
+                                                                <lightning-icon icon-name="utility:chevrondown" size="xx-small" alternative-text="Sort"></lightning-icon>
+                                                            </span>
+                                                        </th>
+                                                        <th scope="col">
+                                                            <span class="cc-action-table__th-inner">
+                                                                <span>Description</span>
+                                                                <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
+                                                            </span>
+                                                        </th>
+                                                        <th scope="col">
+                                                            <span class="cc-action-table__th-inner">
+                                                                <span>No. of Violations</span>
+                                                                <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
+                                                            </span>
+                                                        </th>
+                                                        <th scope="col">
+                                                            <span class="cc-action-table__th-inner">
+                                                                <span>AI Score</span>
+                                                                <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
+                                                            </span>
+                                                        </th>
+                                                        <th scope="col">
+                                                            <span class="cc-action-table__th-inner">
+                                                                <span>Last Updated on</span>
+                                                                <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
+                                                            </span>
+                                                        </th>
+                                                        <th class="cc-action-table__actions-th" scope="col"><span class="slds-assistive-text">Actions</span></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <template for:each={action.tableData} for:item="row">
-                                                        <tr key={row.articleNumber}>
-                                                            <td class="cc-action-table__link">{row.articleNumber}</td>
-                                                            <td class="cc-action-table__title">{row.articleTitle}</td>
-                                                            <td>{row.views}</td>
-                                                            <td>{row.viewers}</td>
-                                                            <td>{row.linkedCases}</td>
-                                                            <td>{row.lastModified}</td>
+                                                    <template for:each={action.tableRows} for:item="row">
+                                                        <tr key={row.id}>
+                                                            <td class="cc-action-table__title">
+                                                                <a href="javascript:void(0);" class="cc-action-table__article-link" data-title={row.article} onclick={handleReviewDraft}>{row.article}</a>
+                                                            </td>
+                                                            <td class="cc-action-table__desc">{row.description}</td>
+                                                            <td>{row.violations}</td>
+                                                            <td><span class={row.aiCellClass}>{row.aiScore}</span></td>
+                                                            <td>{row.lastUpdated}</td>
                                                             <td class="cc-action-table__action-cell">
-                                                                <button type="button" class="cc-action-table__btn" data-title={row.articleTitle} onclick={handleReviewDraft}>
+                                                                <button type="button" class="cc-action-table__btn" data-title={row.article} onclick={handleReviewDraft}>
                                                                     <lightning-icon icon-name="utility:sparkles" size="xx-small" alternative-text=""></lightning-icon>
                                                                     <span>Review Draft</span>
                                                                 </button>

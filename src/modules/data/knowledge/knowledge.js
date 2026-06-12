@@ -144,6 +144,13 @@ export const initialArticle = {
 //   grammar      — amber wavy
 //   readability  — blue wavy
 //   tone         — purple wavy
+//   addition     — green; proposes NEW content rather than a rewrite.
+//
+// Rewrite types (spelling/grammar/readability/tone) use `original` +
+// `replacement`: the matched text is swapped on accept. `addition` types
+// instead use `original` (an existing anchor phrase to underline) + a new
+// `addition` field: on accept the addition is inserted right after the
+// anchor, leaving the original text intact.
 export const inlineAISuggestions = [
     {
         id: 'sg-1',
@@ -153,7 +160,7 @@ export const inlineAISuggestions = [
         type: 'spelling',
         label: 'Spelling',
         explanation:
-            'The airline\u2019s official brand mark is "EasyJet" with a leading capital. The lowercase form "easyJet" can read as a typo to customers, breaks consistency with "Ryanair" earlier in the same sentence, and may degrade results in search and translation tools that key off proper nouns.',
+            'The airline\u2019s official brand mark is "EasyJet" with a leading capital, so the lowercase "easyJet" can read as a typo and breaks consistency with "Ryanair" in the same sentence. It can also weaken search and translation tools that key off proper nouns.',
     },
     {
         id: 'sg-2',
@@ -163,7 +170,7 @@ export const inlineAISuggestions = [
         type: 'tone',
         label: 'Tone',
         explanation:
-            '"Exceeding these limits can result in hefty fees" reads as formal-yet-alarmist — a common pitfall in support copy. "Going over these limits" is plainer and more inviting for a customer-facing FAQ; "significant" replaces the colloquial "hefty" without softening the warning; and "differ between airlines and routes" makes the relationship between the two variables explicit, which is easier to parse than "vary by airline and route" on a first read.',
+            '"Exceeding these limits can result in hefty fees" reads as formal-yet-alarmist for a customer-facing FAQ. "Going over these limits" is plainer and more inviting, and "significant" replaces the colloquial "hefty" without softening the warning.',
     },
     {
         id: 'sg-3',
@@ -173,7 +180,7 @@ export const inlineAISuggestions = [
         type: 'readability',
         label: 'Readability',
         explanation:
-            'The original buries its most important condition — "if not managed carefully" — at the very end, after the reader has already absorbed the threat. Leading with the condition ("Without careful planning,") tells the reader up front what they need to do. The rewrite also swaps "expensive ordeal" — a deliberately emotional phrase — for "costly," which conveys the same meaning without dramatising it for a knowledge article.',
+            'The original buries its key condition — "if not managed carefully" — at the end, so leading with "Without careful planning," tells readers up front what to do. It also swaps the dramatic "expensive ordeal" for the calmer "costly," which better fits a knowledge article.',
     },
     {
         id: 'sg-4',
@@ -183,7 +190,7 @@ export const inlineAISuggestions = [
         type: 'grammar',
         label: 'Grammar & flow',
         explanation:
-            '"Differ based on" is grammatically fine but reads awkwardly when followed by a list of three categories — "based on" sets up a two-step relationship the reader has to mentally untangle. "Vary by" is the standard idiom for this construction in policy and technical writing, and it matches the phrasing already used elsewhere in this article ("which vary by airline and route") so the voice stays consistent across paragraphs.',
+            '"Differ based on" reads awkwardly before a three-item list and makes readers untangle an extra step. "Vary by" is the standard idiom here and matches phrasing used elsewhere in the article, keeping the voice consistent.',
     },
     {
         id: 'sg-5',
@@ -193,7 +200,7 @@ export const inlineAISuggestions = [
         type: 'readability',
         label: 'Word choice',
         explanation:
-            '"Sticks out" is colloquial and a bit imprecise for an instructional bullet — readers can\u2019t always tell whether a low-profile pocket counts. The rewrite makes the action explicit ("Include every external feature when you measure"), restores the Oxford comma in the list, and finishes with the concrete reason this matters ("add to the bag\u2019s total dimensions") so the bullet doubles as a one-line explanation rather than just a rule.',
+            '"Sticks out" is colloquial and imprecise for an instructional bullet, so the rewrite makes the action explicit and restores the Oxford comma. It also ends with the concrete reason this matters, so the bullet doubles as a quick explanation.',
     },
     {
         id: 'sg-6',
@@ -203,68 +210,142 @@ export const inlineAISuggestions = [
         type: 'readability',
         label: 'Tone & conciseness',
         explanation:
-            'The original is a single 35-word clause with two conditions glued together by "or", which is hard to parse on a phone screen. The rewrite splits the conditions with a clear comma break, swaps the formal "If you are" for the contracted "If you\u2019re" so the voice matches the rest of the FAQ, replaces the bureaucratic "contact your airline directly" with the warmer "reach out to your airline", and drops "directly" — an empty word once "reach out" already implies a direct action.',
+            'The original is a single 35-word clause with two conditions glued together by "or", which is hard to read on a phone. The rewrite splits the conditions with a clear comma break and swaps the bureaucratic wording for the warmer "If you\u2019re" and "reach out to your airline".',
+    },
+    {
+        id: 'sg-7',
+        blockId: 'b-p-1',
+        original: 'premium carriers can charge significantly more for overweight bags',
+        addition:
+            'Some carriers also apply a separate oversized-item fee on top of the overweight charge, so a single bag can trigger two fees at once.',
+        type: 'addition',
+        label: 'Add missing detail',
+        explanation:
+            'The paragraph explains overweight fees but never notes that oversized and overweight charges can stack — a frequent source of customer confusion. Adding this point right after the fee example lets readers know a single bag can trigger two fees.',
+    },
+    {
+        id: 'sg-8',
+        blockId: 'b-p-2',
+        original: 'Always check your specific allowance before packing to avoid surprises.',
+        addition:
+            'If you\u2019re flying on a codeshare or partner airline, confirm that carrier\u2019s policy too — baggage rules usually follow the operating airline, not the one you booked with.',
+        type: 'addition',
+        label: 'Add missing detail',
+        explanation:
+            'Codeshare and partner-operated flights are a common edge case the article doesn\u2019t cover, since travelers often assume the booking airline\u2019s allowance applies. Inserting this note after the existing guidance pre-empts a whole class of baggage-fee disputes.',
     },
 ];
 
 // ─── Article Health Score shown in the left panel ───────────────────
+// ─── Article RAG/AI Score (left panel) ─────────────────────────────
+// New shape per Figma 125:67812. Replaces the prior "Article Health Score"
+// model (donut + cases averted + delta) with an Article RAG/AI Score view:
+// a red donut for a poor score plus an "Overall Performance" row with a
+// badge + reason note. `casesAverted`/`delta` are retained on the model
+// for compatibility but no longer rendered in V2.
 export const articleHealth = {
-    score: 78,
+    score: 48,
     delta: 8,
     casesAverted: 40,
     contactReason: { id: 'baggage', label: 'Baggage allowance' },
+    performanceLabel: 'Poor Score',
+    performanceVariant: 'error',
     reasonNote:
         'Detected from a 25% spike in customer cases regarding baggage allowance policy change at various San Francisco airports.',
 };
 
-// ─── Smart Suggests (left panel) ────────────────────────────────────
-// Each suggestion can produce blocks / field changes when "Apply" is clicked.
-// Mirrors the Authoring Agent action contract from the React app:
-// - add-section, update-section, add-image, add-video, add-quote, add-list
+// ─── Structural Suggestion (left panel) ─────────────────────────────
+// New shape per Figma 125:67812. Each card surfaces an answer-first
+// structural recommendation tied to a specific section in the article,
+// plus the projected score increase if the writer accepts the change.
+//
+// The `actionKind` values still drive the existing Authoring Agent
+// pipeline in reviewArticle.js — the new cards reuse `update-section`
+// so accepting one rewrites that section's first two sentences.
 export const smartSuggests = [
     {
-        id: 'suggest-video',
-        label: 'Switch to Explainer Video',
-        description: 'Add a video to explain the types of warranties for solar panel.',
-        coverageDelta: 6,
-        confidenceDelta: 2,
-        badge: 'Best',
-        status: 'updated',
-        icon: 'utility:video',
-        actionKind: 'update-video',
-    },
-    {
-        id: 'suggest-knowledge-block',
-        label: 'Add Knowledge Block',
-        description: 'Add a knowledge block to provide the basic Login information.',
+        id: 'suggest-structure-open-flow-builder',
+        label: 'No answer-first structure',
+        description:
+            'First 2 sentences should state the direct answer in "Open Flow Builder" section',
+        section: 'Open Flow Builder',
+        scoreDelta: 6,
         coverageDelta: 6,
         confidenceDelta: 2,
         badge: null,
         status: 'available',
-        icon: 'utility:knowledge_base',
-        actionKind: 'add-knowledge-block',
+        icon: 'utility:warning',
+        actionKind: 'update-section',
     },
     {
-        id: 'suggest-wizard',
-        label: 'Add Interactive Wizard',
-        description: 'Let users follow along with voice instructions. Hands-free help, anywhere.',
+        id: 'suggest-structure-add-flow-elements',
+        label: 'No answer-first structure',
+        description:
+            'First 2 sentences should state the direct answer in "Add Flow Elements" section',
+        section: 'Add Flow Elements',
+        scoreDelta: 6,
         coverageDelta: 6,
         confidenceDelta: 2,
         badge: null,
         status: 'available',
-        icon: 'utility:magicwand',
-        actionKind: 'add-wizard',
+        icon: 'utility:warning',
+        actionKind: 'update-section',
     },
     {
-        id: 'suggest-faq',
-        label: 'Add FAQ Block',
-        description: 'Surface the top 5 customer questions from recent cases as a Q&A list.',
-        coverageDelta: 4,
+        id: 'suggest-structure-activate-the-flow',
+        label: 'No answer-first structure',
+        description:
+            'First 2 sentences should state the direct answer in "Activate the Flow" section',
+        section: 'Activate the Flow',
+        scoreDelta: 6,
+        coverageDelta: 6,
+        confidenceDelta: 2,
+        badge: null,
+        status: 'available',
+        icon: 'utility:warning',
+        actionKind: 'update-section',
+    },
+    {
+        id: 'suggest-heading-carry-on',
+        label: 'Vague heading',
+        description:
+            'Use a specific heading like "Carry-On Size & Weight Limits" in "Carry-On Allowance" section',
+        section: 'Carry-On Allowance',
+        scoreDelta: 6,
+        coverageDelta: 6,
         confidenceDelta: 3,
         badge: null,
         status: 'available',
-        icon: 'utility:question',
-        actionKind: 'add-faq',
+        icon: 'utility:warning',
+        actionKind: 'update-section',
+    },
+    {
+        id: 'suggest-heading-checked-bag',
+        label: 'Vague heading',
+        description:
+            'Use a specific heading like "Checked Baggage Fees by Fare Class" in "Checked Baggage" section',
+        section: 'Checked Baggage',
+        scoreDelta: 5,
+        coverageDelta: 5,
+        confidenceDelta: 2,
+        badge: null,
+        status: 'available',
+        icon: 'utility:warning',
+        actionKind: 'update-section',
+    },
+    {
+        id: 'suggest-heading-excess-fees',
+        label: 'Vague heading',
+        description:
+            'Use a specific heading like "How to Avoid Excess Baggage Charges" in "Excess Baggage" section',
+        section: 'Excess Baggage',
+        scoreDelta: 4,
+        coverageDelta: 4,
+        confidenceDelta: 2,
+        badge: null,
+        status: 'available',
+        icon: 'utility:warning',
+        actionKind: 'update-section',
     },
 ];
 

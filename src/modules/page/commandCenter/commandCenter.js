@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { animate, inView, stagger } from 'motion';
 import { navigate } from '../../../router';
 import { setDraftSession } from 'data/draftSession';
+import { setQueueSession } from 'data/queueSession';
 import {
     seedAIReadiness,
     seedCapabilitySummaries,
@@ -200,6 +201,14 @@ export default class CommandCenter extends LightningElement {
     get actionItemsComputed() {
         return this._actionItems.map((item) => ({
             ...item,
+            // Mirror the V2 Structural Violations table columns: tone the AI
+            // Score cell green (positive) or amber (warning).
+            tableRows: (item.tableData || []).map((row) => ({
+                ...row,
+                aiCellClass: row.aiTone === 'positive'
+                    ? 'cc-action-table__ai cc-action-table__ai--positive'
+                    : 'cc-action-table__ai cc-action-table__ai--warning',
+            })),
             rowClass: item.highlighted
                 ? 'cc-action-row cc-action-row--highlighted'
                 : 'cc-action-row',
@@ -226,6 +235,26 @@ export default class CommandCenter extends LightningElement {
             detail: { label: title, path: '/new-knowledge', originPath: '/command-center' },
         }));
         navigate('/new-knowledge');
+    }
+
+    /**
+     * "Review Article Drafts" CTA on a Knowledge Action row → open the
+     * Review Queue in a workspace tab. The launching action's table
+     * articles are stashed in `queueSession` so the queue's rail and
+     * article headers mirror the articles listed in that row's table.
+     */
+    handleReviewArticleDrafts(event) {
+        const id = event.currentTarget?.dataset?.id;
+        const action = this._actionItems.find((a) => a.id === id);
+        if (!action) return;
+        setQueueSession({
+            title: action.title,
+            articles: action.tableData || [],
+        });
+        window.dispatchEvent(new CustomEvent('workspace:addtab', {
+            detail: { label: 'Review Queue', path: '/review-queue', originPath: '/command-center' },
+        }));
+        navigate('/review-queue');
     }
 
     // ── Structural Violations ──────────────────────────────────────────

@@ -42,7 +42,10 @@ ui-knowledge-assist {
 }
 
 /* In collapsed mode every rail button shows the accent pill so the
-   rail reads as a single blue-filled navigation strip, matching Figma. */
+   rail reads as a single blue-filled navigation strip — matches the
+   V1 panel's Figma spec (1:92800). Clicking any of them dispatches
+   `expand` with the tab id so the parent widens the aside and sets
+   the active tab. */
 .ka-panel_collapsed .ka-rail__btn {
     background: var(--slds-g-color-brand-base-95, #eef4ff);
 }
@@ -57,6 +60,7 @@ ui-knowledge-assist {
 
 /* ─── Rail ─────────────────────────────────────────────────────── */
 .ka-rail {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -64,7 +68,33 @@ ui-knowledge-assist {
     padding: 12px 4px 4px;
 }
 
+/* GSAP-driven pill that tracks the active rail tab. Sits behind the
+   buttons (z-index 0) so the icons stay legible on top. JS positions
+   it via `top:` so we can tween a single property; on tab switches
+   handleRailClick animates it with an `expo.out` ease for the iOS-
+   tabbar feel. Collapsed mode paints every button instead of
+   highlighting one, so the pill is hidden in that state. */
+.ka-rail__indicator {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    margin-left: -16px;
+    border-radius: 999px;
+    background: var(--slds-g-color-brand-base-95, #eef4ff);
+    z-index: 0;
+    pointer-events: none;
+    will-change: top, transform;
+}
+
+.ka-panel_collapsed .ka-rail__indicator {
+    display: none;
+}
+
 .ka-rail__btn {
+    position: relative;
+    z-index: 1;
     width: 32px;
     height: 32px;
     border-radius: 999px;
@@ -82,12 +112,12 @@ ui-knowledge-assist {
     background: var(--slds-g-color-surface-container-2, #f3f3f3);
 }
 
-.ka-rail__btn_active {
-    background: var(--slds-g-color-brand-base-95, #eef4ff);
-}
-
+/* Active state owns no background of its own — the indicator pill
+   paints the fill so it can slide between positions. Hover stays
+   transparent on the active button to avoid covering the pill. */
+.ka-rail__btn_active,
 .ka-rail__btn_active:hover {
-    background: var(--slds-g-color-brand-base-95, #eef4ff);
+    background: transparent;
 }
 
 .ka-rail__btn lightning-icon {
@@ -140,6 +170,45 @@ ui-knowledge-assist {
     color: var(--slds-g-color-on-surface-3, #03234d);
     margin: 0;
 }
+
+/* Header actions group (expand toggle + close) — Figma 140:26134
+   shows them side by side at the right edge of the panel header. */
+.ka-card__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+/* Native button so the click handler reliably fires; styled to match
+   the bare close button next to it (no fill, brand-blue glyph). */
+.ka-card__expand {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 4px;
+    margin: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--slds-g-color-accent-1, #066afe);
+    --sds-c-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+    --slds-c-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+.ka-card__expand:hover {
+    background: var(--slds-g-color-surface-container-2, #f3f3f3);
+}
+
+.ka-card__expand:focus-visible {
+    outline: 2px solid var(--slds-g-color-accent-1, #066afe);
+    outline-offset: 2px;
+}
+
 
 /* ─── Section block ────────────────────────────────────────────── */
 .ka-section {
@@ -312,7 +381,10 @@ ui-knowledge-assist {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-width: 291px;
+    /* Fill the section column instead of capping at the Figma default
+       291px width — the panel can now stretch to 600px in its expanded
+       state (Figma 140:26133/26134) and the cards should grow with it. */
+    width: 100%;
     border: none;
 }
 
@@ -391,6 +463,163 @@ ui-knowledge-assist {
 .ka-badge-updated {
     --sds-c-badge-color-background: var(--slds-g-color-brand-base-95, #edf4ff);
     --sds-c-badge-text-color: var(--slds-g-color-accent-1, #066afe);
+    --slds-c-badge-icon-color-foreground: var(--slds-g-color-accent-1, #066afe);
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-accent-1, #066afe);
+}
+
+/* ─── Article RAG/AI Score variant (Figma 125:67812) ──────────────
+   Centered title + standalone donut + Overall Performance row.
+   The donut color is driven by inline `progressStyle` so we can
+   keep these styles framework-agnostic. */
+.ka-section__title_centered {
+    text-align: center;
+    align-self: center;
+    font-size: 14px;
+    line-height: 22px;
+    color: #181818;
+}
+
+.ka-score_compact {
+    justify-content: center;
+    padding: 0;
+}
+
+/* Overall Performance row + reason note */
+.ka-perf {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid #d9d9d9;
+    border-radius: 10px;
+    padding: 8px;
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+}
+
+.ka-perf__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.ka-perf__label {
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    color: #242424;
+}
+
+.ka-perf__note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 20px;
+    color: #444444;
+}
+
+/* Variant badges for Poor / Fair / Healthy scores */
+.ka-perf-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 17px;
+}
+
+.ka-perf-badge__icon {
+    flex-shrink: 0;
+}
+
+.ka-perf-badge_error {
+    background: #fde7e9;
+    color: #ba0517;
+    --sds-c-icon-color-foreground-default: #ba0517;
+}
+
+.ka-perf-badge_warning {
+    background: #fef1e1;
+    color: #8c4b03;
+    --sds-c-icon-color-foreground-default: #fe9339;
+}
+
+.ka-perf-badge_success {
+    background: #cdefc4;
+    color: #194e31;
+    --sds-c-icon-color-foreground-default: #2e844a;
+}
+
+/* ─── Structural Suggestion cards (Figma 125:67812) ──────────────
+   Compact variant of .ka-suggest: white background, thin border,
+   no metrics row — replaced by a single "Increase in Score +X%"
+   line on the left and a small Update button on the right. */
+.ka-suggest_compact {
+    background: var(--slds-g-color-surface-container-1, #ffffff);
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 12px;
+    gap: 8px;
+}
+
+.ka-suggest_compact .ka-suggest__title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 18px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.ka-suggest_compact .ka-suggest__desc {
+    font-size: 12px;
+    line-height: 17px;
+    color: #444444;
+}
+
+.ka-suggest__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+/* Updated state shows only the "Updated" badge, left-aligned. */
+.ka-suggest__footer_updated {
+    justify-content: flex-start;
+}
+
+/* "Increase in Score +X%" rendered as a rounded green pill per Figma. */
+.ka-suggest__score {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    padding: 4px 8px;
+    border-radius: var(--slds-g-radius-border-3, 10px);
+    background: var(--slds-g-color-success-base-90, #e3fff3);
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-2, #5c5c5c);
+}
+
+.ka-suggest__score-value {
+    color: var(--slds-g-color-on-surface-1, #181818);
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 22px;
+}
+
+/* Small "Update" button — overrides lightning-button so it matches
+   the compact pill in the Figma frame (32px tall, brand-outline). */
+.ka-suggest__update {
+    --sds-c-button-brand-color-background: transparent;
+    --sds-c-button-brand-color-border: var(--slds-g-color-accent-1, #066afe);
+    --sds-c-button-brand-text-color: var(--slds-g-color-accent-1, #066afe);
+}
+
+.ka-update-all {
+    --sds-c-button-brand-text-color: var(--slds-g-color-accent-1, #066afe);
 }
 
 /* ─── Empty placeholder for non-metrics rail tabs ──────────────── */
@@ -414,6 +643,8 @@ ui-knowledge-assist {
 /* ─── Sources tab — Knowledge Block library ──────────────────── */
 .ka-section_sources {
     gap: 12px;
+    flex: 1;
+    min-height: 0;
 }
 
 .ka-sources__header {
@@ -468,7 +699,8 @@ ui-knowledge-assist {
     flex-direction: column;
     gap: 16px;
     overflow-y: auto;
-    max-height: 400px;
+    flex: 1;
+    min-height: 0;
     padding-bottom: 10px;
 }
 

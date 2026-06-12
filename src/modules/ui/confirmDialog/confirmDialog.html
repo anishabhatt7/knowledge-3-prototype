@@ -1,0 +1,19 @@
+<template>
+    <lightning-modal-header label={label}></lightning-modal-header>
+    <lightning-modal-body>
+        <p>{message}</p>
+    </lightning-modal-body>
+    <lightning-modal-footer>
+        <lightning-button
+            label={cancelLabel}
+            variant="neutral"
+            onclick={handleCancel}>
+        </lightning-button>
+        <lightning-button
+            label={confirmLabel}
+            variant={confirmVariant}
+            onclick={handleConfirm}
+            class="slds-m-left_x-small">
+        </lightning-button>
+    </lightning-modal-footer>
+</template>

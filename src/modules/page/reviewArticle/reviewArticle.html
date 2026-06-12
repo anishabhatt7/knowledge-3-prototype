@@ -15,8 +15,10 @@
                     toc-tree={knowledgeToc}
                     current-article-id={article.id}
                     collapsed={isAssistCollapsed}
+                    expanded={isAssistExpanded}
                     onclose={handleAssistClose}
                     onexpand={handleAssistExpand}
+                    ontogglewidth={handleAssistToggleWidth}
                     onupdateall={handleUpdateAll}
                     onapplysuggestion={handleApplySuggestion}
                     oninsertblock={handleInsertBlock}>
@@ -134,6 +136,418 @@
                         </div>
                     </div>
                 </header>
+                <nav class="ra-tabs" role="tablist" aria-label="Article view">
+                    <template for:each={articleTabs} for:item="tab">
+                        <div key={tab.id} class={tab.class} role="tab" aria-selected={tab.active}>
+                            <button
+                                type="button"
+                                class="ra-tab__label"
+                                data-tab={tab.id}
+                                onclick={handleTabClick}>{tab.label}</button>
+                            <lightning-badge label={tab.count} class="ra-tab__count"></lightning-badge>
+                        </div>
+                    </template>
+                </nav>
+                <template lwc:if={isMetadataTab}>
+                    <div class="ra-card-body">
+                    <div class="ra-meta ra-tabpane">
+                        <!-- Metadata section (AI-generated, editable) -->
+                        <section class="ra-meta-section">
+                            <button type="button" class="ra-meta-section__head"
+                                aria-expanded={metaSectionOpen} onclick={handleToggleMetaSection}>
+                                <lightning-icon icon-name={metaChevron} size="x-small"
+                                    class="ra-meta-section__chevron" alternative-text="Toggle section"></lightning-icon>
+                                <span class="ra-meta-section__title">Metadata</span>
+                            </button>
+                            <template lwc:if={metaSectionOpen}>
+                                <div class="ra-meta-grid">
+                                    <div class="ra-meta-col">
+                                        <template for:each={metadataFieldsLeft} for:item="f">
+                                            <div key={f.id} class={f.fieldClass}>
+                                                <div class="ra-meta-field__label">
+                                                    <template lwc:if={f.required}>
+                                                        <span class="ra-meta-field__req" aria-hidden="true">*</span>
+                                                    </template>
+                                                    <span class="ra-meta-field__name">{f.label}</span>
+                                                    <template lwc:if={f.showSparkle}>
+                                                        <lightning-icon icon-name="utility:sparkle" size="xx-small"
+                                                            class="ra-meta-field__sparkle" alternative-text="AI generated"></lightning-icon>
+                                                    </template>
+                                                    <template lwc:if={f.isDirty}>
+                                                        <lightning-button-icon
+                                                            icon-name="utility:undo"
+                                                            variant="bare"
+                                                            size="small"
+                                                            alternative-text="Revert changes"
+                                                            data-id={f.id}
+                                                            onclick={handleMetaUndo}
+                                                            class="ra-meta-field__undo">
+                                                        </lightning-button-icon>
+                                                    </template>
+                                                </div>
+                                                <template lwc:if={f.isCombobox}>
+                                                    <div class="ra-meta-combobox-wrap">
+                                                        <div class="ra-meta-combobox">
+                                                            <input type="text" class="ra-meta-combobox__input"
+                                                                placeholder="Search or select…" value={f.inputValue}
+                                                                data-id={f.id} role="combobox" aria-expanded={f.isOpen}
+                                                                onfocus={handleComboFocus} oninput={handleComboInput}
+                                                                onblur={handleComboBlur} />
+                                                            <button type="button" class="ra-meta-combobox__chevron-btn"
+                                                                data-id={f.id} tabindex="-1" aria-label="Toggle options"
+                                                                onmousedown={handleComboChevron}>
+                                                                <lightning-icon icon-name="utility:down" size="xx-small"
+                                                                    class="ra-meta-combobox__chevron" alternative-text=""></lightning-icon>
+                                                            </button>
+                                                            <template lwc:if={f.ai}>
+                                                                <div class="ra-meta-combobox__sparkle-wrap">
+                                                                    <lightning-icon icon-name="utility:sparkles" size="x-small"
+                                                                        class="ra-meta-combobox__sparkle" alternative-text="Generate with AI"></lightning-icon>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                        <template lwc:if={f.isOpen}>
+                                                            <ul class="ra-meta-listbox" role="listbox">
+                                                                <template for:each={f.filteredOptions} for:item="opt">
+                                                                    <li key={opt.id} role="option" class={opt.optionClass}
+                                                                        aria-selected={opt.selected}
+                                                                        data-field={f.id} data-label={opt.label}
+                                                                        onmousedown={handleOptionSelect}>
+                                                                        <span class="ra-meta-listbox__check-slot">
+                                                                            <template lwc:if={opt.selected}>
+                                                                                <lightning-icon icon-name="utility:check" size="xx-small"
+                                                                                    class="ra-meta-listbox__check" alternative-text="Selected"></lightning-icon>
+                                                                            </template>
+                                                                        </span>
+                                                                        <span class="ra-meta-listbox__label">{opt.label}</span>
+                                                                    </li>
+                                                                </template>
+                                                                <template lwc:if={f.noOptions}>
+                                                                    <li class="ra-meta-listbox__empty">No matches</li>
+                                                                </template>
+                                                            </ul>
+                                                        </template>
+                                                    </div>
+                                                    <template lwc:if={f.hasTags}>
+                                                        <div class="ra-meta-tags">
+                                                            <template for:each={f.tags} for:item="t">
+                                                                <lightning-pill key={t.id} label={t.label}
+                                                                    data-field={f.id} data-tag={t.id}
+                                                                    onremove={handleMetaTagRemove}
+                                                                    class="ra-meta-pill">
+                                                                </lightning-pill>
+                                                            </template>
+                                                            <template lwc:if={f.showExtra}>
+                                                                <button type="button" class="ra-meta-tags__more">{f.extraLabel}</button>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <template lwc:if={f.isInput}>
+                                                    <lightning-input type="text" variant="label-hidden"
+                                                        label={f.label} placeholder="Input text" value={f.value}
+                                                        data-id={f.id} onchange={handleMetaInput}
+                                                        class="ra-meta-linput"></lightning-input>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div class="ra-meta-col">
+                                        <template for:each={metadataFieldsRight} for:item="f">
+                                            <div key={f.id} class={f.fieldClass}>
+                                                <div class="ra-meta-field__label">
+                                                    <template lwc:if={f.required}>
+                                                        <span class="ra-meta-field__req" aria-hidden="true">*</span>
+                                                    </template>
+                                                    <span class="ra-meta-field__name">{f.label}</span>
+                                                    <template lwc:if={f.showSparkle}>
+                                                        <lightning-icon icon-name="utility:sparkle" size="xx-small"
+                                                            class="ra-meta-field__sparkle" alternative-text="AI generated"></lightning-icon>
+                                                    </template>
+                                                    <template lwc:if={f.isDirty}>
+                                                        <lightning-button-icon
+                                                            icon-name="utility:undo"
+                                                            variant="bare"
+                                                            size="small"
+                                                            alternative-text="Revert changes"
+                                                            data-id={f.id}
+                                                            onclick={handleMetaUndo}
+                                                            class="ra-meta-field__undo">
+                                                        </lightning-button-icon>
+                                                    </template>
+                                                </div>
+                                                <template lwc:if={f.isCombobox}>
+                                                    <div class="ra-meta-combobox-wrap">
+                                                        <div class="ra-meta-combobox">
+                                                            <input type="text" class="ra-meta-combobox__input"
+                                                                placeholder="Search or select…" value={f.inputValue}
+                                                                data-id={f.id} role="combobox" aria-expanded={f.isOpen}
+                                                                onfocus={handleComboFocus} oninput={handleComboInput}
+                                                                onblur={handleComboBlur} />
+                                                            <button type="button" class="ra-meta-combobox__chevron-btn"
+                                                                data-id={f.id} tabindex="-1" aria-label="Toggle options"
+                                                                onmousedown={handleComboChevron}>
+                                                                <lightning-icon icon-name="utility:down" size="xx-small"
+                                                                    class="ra-meta-combobox__chevron" alternative-text=""></lightning-icon>
+                                                            </button>
+                                                            <template lwc:if={f.ai}>
+                                                                <div class="ra-meta-combobox__sparkle-wrap">
+                                                                    <lightning-icon icon-name="utility:sparkles" size="x-small"
+                                                                        class="ra-meta-combobox__sparkle" alternative-text="Generate with AI"></lightning-icon>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                        <template lwc:if={f.isOpen}>
+                                                            <ul class="ra-meta-listbox" role="listbox">
+                                                                <template for:each={f.filteredOptions} for:item="opt">
+                                                                    <li key={opt.id} role="option" class={opt.optionClass}
+                                                                        aria-selected={opt.selected}
+                                                                        data-field={f.id} data-label={opt.label}
+                                                                        onmousedown={handleOptionSelect}>
+                                                                        <span class="ra-meta-listbox__check-slot">
+                                                                            <template lwc:if={opt.selected}>
+                                                                                <lightning-icon icon-name="utility:check" size="xx-small"
+                                                                                    class="ra-meta-listbox__check" alternative-text="Selected"></lightning-icon>
+                                                                            </template>
+                                                                        </span>
+                                                                        <span class="ra-meta-listbox__label">{opt.label}</span>
+                                                                    </li>
+                                                                </template>
+                                                                <template lwc:if={f.noOptions}>
+                                                                    <li class="ra-meta-listbox__empty">No matches</li>
+                                                                </template>
+                                                            </ul>
+                                                        </template>
+                                                    </div>
+                                                    <template lwc:if={f.hasTags}>
+                                                        <div class="ra-meta-tags">
+                                                            <template for:each={f.tags} for:item="t">
+                                                                <lightning-pill key={t.id} label={t.label}
+                                                                    data-field={f.id} data-tag={t.id}
+                                                                    onremove={handleMetaTagRemove}
+                                                                    class="ra-meta-pill">
+                                                                </lightning-pill>
+                                                            </template>
+                                                            <template lwc:if={f.showExtra}>
+                                                                <button type="button" class="ra-meta-tags__more">{f.extraLabel}</button>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                                <template lwc:if={f.isInput}>
+                                                    <lightning-input type="text" variant="label-hidden"
+                                                        label={f.label} placeholder="Input text" value={f.value}
+                                                        data-id={f.id} onchange={handleMetaInput}
+                                                        class="ra-meta-linput"></lightning-input>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </section>
+
+                        <!-- Properties section (read-only) -->
+                        <section class="ra-meta-section">
+                            <button type="button" class="ra-meta-section__head"
+                                aria-expanded={propsSectionOpen} onclick={handleTogglePropsSection}>
+                                <lightning-icon icon-name={propsChevron} size="x-small"
+                                    class="ra-meta-section__chevron" alternative-text="Toggle section"></lightning-icon>
+                                <span class="ra-meta-section__title">Properties</span>
+                            </button>
+                            <template lwc:if={propsSectionOpen}>
+                                <div class="ra-meta-grid ra-meta-grid_props">
+                                    <template for:each={metadataProperties} for:item="p">
+                                        <div key={p.id} class="ra-meta-prop">
+                                            <span class="ra-meta-prop__label">
+                                                <span class="ra-meta-prop__name">{p.label}</span>
+                                            </span>
+                                            <lightning-formatted-text value={p.value}
+                                                class="ra-meta-prop__value"></lightning-formatted-text>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </section>
+                    </div>
+                    </div>
+                </template>
+                <template lwc:elseif={isEnrichmentsTab}>
+                    <div class="ra-card-body">
+                    <div class="ra-enrich ra-tabpane">
+                        <!-- AI Generated Abstract -->
+                        <article class="ra-enrich-abstract">
+                            <div class="ra-enrich-abstract__head">
+                                <h2 class="ra-enrich-abstract__title">AI Generated Abstract</h2>
+                                <lightning-button-icon icon-name="utility:refresh" variant="bare"
+                                    size="small" alternative-text="Regenerate abstract"
+                                    onclick={handleRegenerateAbstract}
+                                    class="ra-enrich-abstract__refresh"></lightning-button-icon>
+                            </div>
+                            <div class="ra-enrich-summary">
+                                <div class="ra-enrich-summary__label">
+                                    <lightning-icon icon-name="utility:sparkles" size="xx-small"
+                                        class="ra-enrich-summary__sparkle" alternative-text=""></lightning-icon>
+                                    <span class="ra-enrich-summary__title">Article Summary</span>
+                                    <lightning-icon icon-name="utility:info" size="xx-small"
+                                        class="ra-enrich-summary__info" alternative-text="About this summary"></lightning-icon>
+                                </div>
+                                <p class="ra-enrich-summary__text">{aiAbstract.summary}</p>
+                            </div>
+                        </article>
+
+                        <!-- Top Questions this Article answers -->
+                        <section class="ra-meta-section">
+                            <button type="button" class="ra-meta-section__head"
+                                aria-expanded={questionsSectionOpen} onclick={handleToggleQuestionsSection}>
+                                <lightning-icon icon-name={questionsChevron} size="x-small"
+                                    class="ra-meta-section__chevron" alternative-text="Toggle section"></lightning-icon>
+                                <span class="ra-meta-section__title">Top Questions this Article answers</span>
+                            </button>
+                            <template lwc:if={questionsSectionOpen}>
+                                <div class="ra-enrich-questions">
+                                    <template for:each={enrichmentQuestionList} for:item="q">
+                                        <div key={q.id} class="ra-enrich-q-item">
+                                            <template lwc:if={q.editing}>
+                                                <div class="ra-enrich-q ra-enrich-q_editing">
+                                                    <lightning-input type="text" variant="label-hidden"
+                                                        label="Question" data-id={q.id} value={draftQuestionText}
+                                                        onchange={handleQuestionDraftTextChange}
+                                                        class="ra-enrich-q__qinput"></lightning-input>
+                                                    <lightning-textarea variant="label-hidden" label="Answer"
+                                                        data-id={q.id} value={draftQuestionAnswer}
+                                                        onchange={handleQuestionDraftAnswerChange}
+                                                        class="ra-enrich-q__ainput"></lightning-textarea>
+                                                </div>
+                                                <div class="ra-enrich-q__editactions">
+                                                    <lightning-button-icon icon-name="utility:check"
+                                                        variant="border-filled" size="medium"
+                                                        alternative-text="Save changes" data-id={q.id}
+                                                        onclick={handleQuestionEditSave}
+                                                        class="ra-enrich-q__save"></lightning-button-icon>
+                                                    <lightning-button-icon icon-name="utility:close"
+                                                        variant="border-filled" size="medium"
+                                                        alternative-text="Discard changes" data-id={q.id}
+                                                        onclick={handleQuestionEditCancel}
+                                                        class="ra-enrich-q__cancel"></lightning-button-icon>
+                                                </div>
+                                            </template>
+                                            <template lwc:else>
+                                                <div class={q.cardClass}>
+                                                    <div class="ra-enrich-q__head">
+                                                        <lightning-icon icon-name={q.chevron} size="xx-small"
+                                                            class="ra-enrich-q__chevron" alternative-text="Toggle answer"
+                                                            data-id={q.id} onclick={handleQuestionToggle}></lightning-icon>
+                                                        <span class="ra-enrich-q__text" data-id={q.id}
+                                                            onclick={handleQuestionToggle}>{q.text}</span>
+                                                        <lightning-button-icon icon-name="utility:edit" variant="bare"
+                                                            size="small" alternative-text="Edit question"
+                                                            data-id={q.id} onclick={handleQuestionEdit}
+                                                            class="ra-enrich-q__edit"></lightning-button-icon>
+                                                    </div>
+                                                    <template lwc:if={q.expanded}>
+                                                        <p class="ra-enrich-q__answer">{q.answer}</p>
+                                                    </template>
+                                                </div>
+                                                <lightning-button-icon icon-name="utility:delete"
+                                                    variant="border-filled" size="medium"
+                                                    alternative-text="Delete question" data-id={q.id}
+                                                    onclick={handleQuestionDelete}
+                                                    class="ra-enrich-q__delete"></lightning-button-icon>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </section>
+
+                        <!-- Related Entities -->
+                        <section class="ra-meta-section">
+                            <button type="button" class="ra-meta-section__head"
+                                aria-expanded={entitiesSectionOpen} onclick={handleToggleEntitiesSection}>
+                                <lightning-icon icon-name={entitiesChevron} size="x-small"
+                                    class="ra-meta-section__chevron" alternative-text="Toggle section"></lightning-icon>
+                                <span class="ra-meta-section__title">Related Entities</span>
+                            </button>
+                            <template lwc:if={entitiesSectionOpen}>
+                                <div class="ra-meta-grid">
+                                    <template for:each={relatedEntityFields} for:item="f">
+                                        <div key={f.id} class="ra-meta-col">
+                                            <div class="ra-meta-field">
+                                                <div class="ra-meta-field__label">
+                                                    <template lwc:if={f.required}>
+                                                        <span class="ra-meta-field__req" aria-hidden="true">*</span>
+                                                    </template>
+                                                    <span class="ra-meta-field__name">{f.label}</span>
+                                                    <lightning-icon icon-name="utility:sparkle" size="xx-small"
+                                                        class="ra-meta-field__add" alternative-text="Add with AI"></lightning-icon>
+                                                </div>
+                                                <div class="ra-meta-combobox-wrap">
+                                                    <div class="ra-meta-combobox">
+                                                        <input type="text" class="ra-meta-combobox__input"
+                                                            placeholder="Search or select…" value={f.inputValue}
+                                                            data-id={f.id} role="combobox" aria-expanded={f.isOpen}
+                                                            onfocus={handleComboFocus} oninput={handleComboInput}
+                                                            onblur={handleComboBlur} />
+                                                        <button type="button" class="ra-meta-combobox__chevron-btn"
+                                                            data-id={f.id} tabindex="-1" aria-label="Toggle options"
+                                                            onmousedown={handleComboChevron}>
+                                                            <lightning-icon icon-name="utility:down" size="xx-small"
+                                                                class="ra-meta-combobox__chevron" alternative-text=""></lightning-icon>
+                                                        </button>
+                                                        <template lwc:if={f.ai}>
+                                                            <div class="ra-meta-combobox__sparkle-wrap">
+                                                                <lightning-icon icon-name="utility:sparkles" size="x-small"
+                                                                    class="ra-meta-combobox__sparkle" alternative-text="Generate with AI"></lightning-icon>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                    <template lwc:if={f.isOpen}>
+                                                        <ul class="ra-meta-listbox" role="listbox">
+                                                            <template for:each={f.filteredOptions} for:item="opt">
+                                                                <li key={opt.id} role="option" class={opt.optionClass}
+                                                                    aria-selected={opt.selected}
+                                                                    data-field={f.id} data-label={opt.label}
+                                                                    onmousedown={handleOptionSelect}>
+                                                                    <span class="ra-meta-listbox__check-slot">
+                                                                        <template lwc:if={opt.selected}>
+                                                                            <lightning-icon icon-name="utility:check" size="xx-small"
+                                                                                class="ra-meta-listbox__check" alternative-text="Selected"></lightning-icon>
+                                                                        </template>
+                                                                    </span>
+                                                                    <span class="ra-meta-listbox__label">{opt.label}</span>
+                                                                </li>
+                                                            </template>
+                                                            <template lwc:if={f.noOptions}>
+                                                                <li class="ra-meta-listbox__empty">No matches</li>
+                                                            </template>
+                                                        </ul>
+                                                    </template>
+                                                </div>
+                                                <template lwc:if={f.hasTags}>
+                                                    <div class="ra-meta-tags">
+                                                        <template for:each={f.tags} for:item="t">
+                                                            <lightning-pill key={t.id} label={t.label}
+                                                                data-field={f.id} data-tag={t.id}
+                                                                onremove={handleMetaTagRemove}
+                                                                class="ra-meta-pill">
+                                                            </lightning-pill>
+                                                        </template>
+                                                        <template lwc:if={f.showExtra}>
+                                                            <button type="button" class="ra-meta-tags__more">{f.extraLabel}</button>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </section>
+                    </div>
+                    </div>
+                </template>
+                <template lwc:else>
                 <div class="ra-article__body"
                     onblockchange={handleBlockChange}
                     onblockremove={handleBlockRemove}
@@ -157,6 +571,7 @@
                         <ui-collaborator-cursors collaborators={activeCollaborators}></ui-collaborator-cursors>
                     </template>
                 </div>
+                </template>
             </div>
         </main>
 

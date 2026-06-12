@@ -7,8 +7,11 @@ import { gsap } from 'gsap';
  * Renders two visual states driven by the @api `collapsed` flag:
  *  - Expanded (Figma 1:131481): 44px icon rail + nested analytics card
  *    (health donut, contact reason, Smart Suggests).
- *  - Collapsed (Figma 1:92800): 40px icon rail only, inside a 56px
- *    `rounded-16` white shell. No analytics card is rendered.
+ *  - Collapsed (Figma 1:92800): same 40px icon rail (Analytics /
+ *    Sources mapping / Table of contents), inside a 56px
+ *    `rounded-16` white shell. The analytics card is hidden via CSS
+ *    (`.ka-panel_collapsed .ka-card { display: none }`) so the rail
+ *    stays as the only visible content.
  *
  * Props:  @api health, @api suggests, @api collapsed
  * Events: close, expand, updateall, applysuggestion
@@ -16,6 +19,17 @@ import { gsap } from 'gsap';
  * In collapsed mode the rail acts as an "expand" affordance: clicking
  * any rail button fires `expand` with the tab id so the parent can
  * widen the aside and set the active tab.
+ *
+ * Tab-switch motion (expanded state):
+ *  1. The `.ka-rail__indicator` pill slides from the old tab's button
+ *     to the new one on an `expo.out` ease (~0.42s) — JS animates
+ *     `top:` only so the tween stays compositor-friendly.
+ *  2. The outgoing tab's body fades up and out briefly (~0.14s).
+ *  3. `activeRailTab` flips inside the outgoing tween's `onComplete`.
+ *  4. The new tab's body fades in with a tiny stagger (~0.32s), and
+ *     the newly active rail button does a `back.out` scale pop (~0.45s).
+ * All four motions short-circuit to instant swaps when `_gsapEnabled`
+ * is false (driven by the `gsap:toggle` reduced-motion event).
  */
 const RAIL_TABS = [
     { id: 'metrics', icon: 'utility:metrics', ariaLabel: 'Analytics' },
@@ -34,6 +48,14 @@ export default class KnowledgeAssist extends LightningElement {
     @api health;
     @api suggests = [];
     @api collapsed = false;
+    /**
+     * When true, the panel renders in the wider "expanded" state from
+     * Figma 140:26133/140:26134 — same content, larger real estate so
+     * reviewers can read suggestion cards without ellipsis and act on
+     * them in a single column. Width is owned by the parent shell via
+     * --ra-left-col; this prop only flips the panel's chrome to match.
+     */
+    @api expanded = false;
     @api knowledgeBlocks = [];
     @api insertedBlockIds = [];
     @api tocTree = [];
@@ -50,10 +72,36 @@ export default class KnowledgeAssist extends LightningElement {
     @track _tocExpanded = null;
 
     _ringAnimated = false;
+    // True once the score-ring count-up has played to completion. Re-expanding
+    // the collapsed rail must NOT replay it; only a real tab switch away from
+    // Metrics clears this so returning to the tab plays the intro again.
+    _ringHasPlayed = false;
     _animProxy = { deg: 0, pct: 0 };
     _ringTween = null;
     _gsapEnabled = true;
     _boundGsapToggle = null;
+
+    // Rail-indicator + tab-switch animation bookkeeping. The indicator
+    // is a single absolutely-positioned pill in the rail that GSAP
+    // slides between active button positions. Section content cross-
+    // fades by first animating the outgoing section out, swapping
+    // `activeRailTab` in `onComplete`, then animating the incoming
+    // section back in from `renderedCallback`. The newly active rail
+    // button gets a small `back.out` scale pop for click feedback.
+    _railIndicatorTween = null;
+    _outgoingTween = null;
+    _pendingInAnimation = false;
+    _pendingButtonPopId = null;
+
+    // Last-known vertical position of each structural suggestion card,
+    // keyed by suggestion id. Used for a GSAP FLIP when a card is marked
+    // "Updated" and floats to the bottom of the list.
+    _suggestPrevTops = null;
+    // Card id order at the time `_suggestPrevTops` was captured. The FLIP must
+    // only play on a genuine reorder (a card floated to the bottom). When the
+    // rail expands/collapses, cards reflow but keep their order — so comparing
+    // order (not raw position) prevents the cards from jumping on resize.
+    _suggestPrevOrder = null;
 
     connectedCallback() {
         this._boundGsapToggle = (e) => {
@@ -66,8 +114,28 @@ export default class KnowledgeAssist extends LightningElement {
         return this.collapsed === true || this.collapsed === 'true';
     }
 
+    get isExpanded() {
+        // Expanded only applies in the default (non-collapsed) state — a
+        // collapsed rail can't simultaneously be "expanded wider".
+        return !this.isCollapsed && (this.expanded === true || this.expanded === 'true');
+    }
+
     get panelClass() {
-        return `ka-panel${this.isCollapsed ? ' ka-panel_collapsed' : ''}`;
+        let cls = 'ka-panel';
+        if (this.isCollapsed) cls += ' ka-panel_collapsed';
+        else if (this.isExpanded) cls += ' ka-panel_expanded';
+        return cls;
+    }
+
+    // Expand/contract toggle in the panel header — swaps icon + label
+    // based on the current width state so the affordance matches the
+    // action it will perform on click.
+    get expandToggleIcon() {
+        return this.isExpanded ? 'utility:contract_alt' : 'utility:expand_alt';
+    }
+
+    get expandToggleLabel() {
+        return this.isExpanded ? 'Collapse Knowledge Assist panel' : 'Expand Knowledge Assist panel';
     }
 
     get railTabs() {
@@ -78,6 +146,13 @@ export default class KnowledgeAssist extends LightningElement {
                 btnClass: `ka-rail__btn${isActive ? ' ka-rail__btn_active' : ''}`,
             };
         });
+    }
+
+    // Only show the sliding indicator pill while the rail is expanded.
+    // The collapsed layout paints every button instead, so a single
+    // moving highlight would look out of place there.
+    get showRailIndicator() {
+        return !this.isCollapsed;
     }
 
     get isMetricsTab() {
@@ -195,12 +270,34 @@ export default class KnowledgeAssist extends LightningElement {
         return new Set(path);
     }
 
+    // Map an RAG/AI score (0–100) to a CSS color band:
+    //  - <50  → red    (#ba0517)  Poor
+    //  - 50–74→ amber  (#fe9339)  Fair
+    //  - ≥75  → green  (#2e844a)  Healthy
+    // Returned as a CSS color string so the conic-gradient inline style
+    // and the gsap onUpdate callback both share the same rule of thumb.
+    get ringColor() {
+        const score = this.health?.score ?? 0;
+        if (score < 50) return '#ba0517';
+        if (score < 75) return '#fe9339';
+        return '#2e844a';
+    }
+
+    get ringTrackColor() {
+        const score = this.health?.score ?? 0;
+        if (score < 50) return '#fde7e9';
+        if (score < 75) return '#fef1e1';
+        return '#d6e6ff';
+    }
+
     get progressStyle() {
+        const color = this.ringColor;
+        const track = this.ringTrackColor;
         if (!this._ringAnimated) {
-            return `background: conic-gradient(#2e844a 0deg 0deg, var(--slds-g-color-brand-base-90, #d6e6ff) 0deg 360deg);`;
+            return `background: conic-gradient(${color} 0deg 0deg, ${track} 0deg 360deg);`;
         }
         const deg = Math.round(this._animProxy.deg);
-        return `background: conic-gradient(#2e844a 0deg ${deg}deg, var(--slds-g-color-brand-base-90, #d6e6ff) ${deg}deg 360deg);`;
+        return `background: conic-gradient(${color} 0deg ${deg}deg, ${track} ${deg}deg 360deg);`;
     }
 
     get scoreLabel() {
@@ -225,11 +322,41 @@ export default class KnowledgeAssist extends LightningElement {
         return this.health?.reasonNote || '';
     }
 
+    // "Overall Performance" label/badge per Figma 125:67812. Defaults
+    // map score → label/variant when the data model omits an explicit
+    // override (older fixtures), so the panel always renders a badge.
+    get performanceLabel() {
+        if (this.health?.performanceLabel) return this.health.performanceLabel;
+        const score = this.health?.score ?? 0;
+        if (score < 50) return 'Poor Score';
+        if (score < 75) return 'Fair Score';
+        return 'Healthy';
+    }
+
+    get performanceBadgeClass() {
+        const variant = this.health?.performanceVariant
+            || ((this.health?.score ?? 0) < 50 ? 'error'
+                : (this.health?.score ?? 0) < 75 ? 'warning' : 'success');
+        return `ka-perf-badge ka-perf-badge_${variant}`;
+    }
+
+    get performanceIcon() {
+        const variant = this.health?.performanceVariant
+            || ((this.health?.score ?? 0) < 50 ? 'error'
+                : (this.health?.score ?? 0) < 75 ? 'warning' : 'success');
+        if (variant === 'error') return 'utility:warning';
+        if (variant === 'warning') return 'utility:warning';
+        return 'utility:success';
+    }
+
     get suggestCards() {
         return (this.suggests || []).map((s) => ({
             ...s,
-            coverageLabel: `+${s.coverageDelta}%`,
-            confidenceLabel: `+${s.confidenceDelta}%`,
+            // `scoreDelta` is the new Figma-aligned field; fall back to
+            // `coverageDelta` to keep older fixtures rendering.
+            scoreLabel: `+${s.scoreDelta ?? s.coverageDelta ?? 0}%`,
+            coverageLabel: `+${s.coverageDelta ?? 0}%`,
+            confidenceLabel: `+${s.confidenceDelta ?? 0}%`,
             isUpdated: s.status === 'updated',
             isApplied: s.status === 'applied',
             isAvailable: s.status === 'available',
@@ -238,38 +365,82 @@ export default class KnowledgeAssist extends LightningElement {
     }
 
     renderedCallback() {
+        // ─── Rail indicator + tab-switch animations ────────────────
+        // These run regardless of which tab is active. The indicator
+        // snap is gated on `_railIndicatorTween` so the sliding tween
+        // from handleRailClick owns the pill during a transition; on
+        // incidental re-renders we just confirm the position (a no-op
+        // visually). The in-tween and button-pop are pending-flag
+        // driven so they only fire once per tab switch.
+        if (!this.isCollapsed) {
+            if (!this._railIndicatorTween) {
+                this._moveIndicatorToTab(this.activeRailTab, { animate: false });
+            }
+
+            if (this._pendingInAnimation) {
+                this._pendingInAnimation = false;
+                this._runSectionInTween();
+            }
+
+            if (this._pendingButtonPopId) {
+                const popId = this._pendingButtonPopId;
+                this._pendingButtonPopId = null;
+                this._popRailButton(popId);
+            }
+        }
+
+        this._animateSuggestReorder();
+
+        // ─── Score-ring animation ──────────────────────────────────
+        const targetPct = Math.max(0, Math.min(100, this.health?.score || 0));
+        const targetDeg = Math.round((targetPct / 100) * 360);
+
         if (this.isCollapsed || this.activeRailTab !== 'metrics') {
-            this._ringAnimated = false;
             if (this._ringTween) {
                 this._ringTween.kill();
                 this._ringTween = null;
             }
-            this._animProxy.deg = 0;
-            this._animProxy.pct = 0;
+            if (this.isCollapsed) {
+                // Collapsing the rail: freeze the ring at its final value so
+                // re-expanding shows it filled without replaying the count-up.
+                if (this._ringAnimated) {
+                    this._animProxy.deg = targetDeg;
+                    this._animProxy.pct = targetPct;
+                    this._ringHasPlayed = true;
+                }
+            } else {
+                // A genuine tab switch away from Metrics — reset so returning
+                // to the tab replays the intro.
+                this._ringAnimated = false;
+                this._ringHasPlayed = false;
+                this._animProxy.deg = 0;
+                this._animProxy.pct = 0;
+            }
             return;
         }
 
         const ring = this.querySelector('.ka-score__ring');
         if (!ring || this._ringTween) return;
 
-        const targetPct = Math.max(0, Math.min(100, this.health?.score || 0));
-        const targetDeg = Math.round((targetPct / 100) * 360);
+        const ringColor = this.ringColor;
+        const trackColor = this.ringTrackColor;
+        const inner = ring.querySelector('.ka-score__inner');
 
-        this._ringAnimated = true;
-
-        if (!this._gsapEnabled) {
+        // Already played once (e.g. re-expanding the rail) or reduced-motion:
+        // render the final state instantly instead of re-animating.
+        if (this._ringHasPlayed || !this._gsapEnabled) {
+            this._ringAnimated = true;
+            this._ringHasPlayed = true;
             this._animProxy.deg = targetDeg;
             this._animProxy.pct = targetPct;
-            ring.style.background = `conic-gradient(#2e844a 0deg ${targetDeg}deg, var(--slds-g-color-brand-base-90, #d6e6ff) ${targetDeg}deg 360deg)`;
-            const inner = ring.querySelector('.ka-score__inner');
+            ring.style.background = `conic-gradient(${ringColor} 0deg ${targetDeg}deg, ${trackColor} ${targetDeg}deg 360deg)`;
             if (inner) inner.textContent = `${targetPct}%`;
             return;
         }
 
+        this._ringAnimated = true;
         this._animProxy.deg = 0;
         this._animProxy.pct = 0;
-
-        const inner = ring.querySelector('.ka-score__inner');
 
         this._ringTween = gsap.to(this._animProxy, {
             deg: targetDeg,
@@ -278,11 +449,12 @@ export default class KnowledgeAssist extends LightningElement {
             ease: 'power2.out',
             onUpdate: () => {
                 const d = Math.round(this._animProxy.deg);
-                ring.style.background = `conic-gradient(#2e844a 0deg ${d}deg, var(--slds-g-color-brand-base-90, #d6e6ff) ${d}deg 360deg)`;
+                ring.style.background = `conic-gradient(${ringColor} 0deg ${d}deg, ${trackColor} ${d}deg 360deg)`;
                 if (inner) inner.textContent = `${Math.round(this._animProxy.pct)}%`;
             },
             onComplete: () => {
                 this._ringTween = null;
+                this._ringHasPlayed = true;
             },
         });
     }
@@ -291,6 +463,14 @@ export default class KnowledgeAssist extends LightningElement {
         if (this._ringTween) {
             this._ringTween.kill();
             this._ringTween = null;
+        }
+        if (this._railIndicatorTween) {
+            this._railIndicatorTween.kill();
+            this._railIndicatorTween = null;
+        }
+        if (this._outgoingTween) {
+            this._outgoingTween.kill();
+            this._outgoingTween = null;
         }
         if (this._boundGsapToggle) {
             window.removeEventListener('gsap:toggle', this._boundGsapToggle);
@@ -308,11 +488,184 @@ export default class KnowledgeAssist extends LightningElement {
             this.dispatchEvent(new CustomEvent('expand', { detail: { id } }));
             return;
         }
-        this.activeRailTab = id;
+        // With the header close button removed, the rail tabs double as the
+        // close affordance: clicking the already-active tab folds the panel
+        // back to its 56px rail (works from both default 379px and expanded
+        // 600px states). Clicking a different tab still just swaps tabs.
+        if (id === this.activeRailTab) {
+            this.dispatchEvent(new CustomEvent('close'));
+            return;
+        }
+        // Coordinated tab switch: indicator slides immediately so the
+        // pill leads the content swap; the outgoing section briefly
+        // fades up; then `activeRailTab` flips in onComplete and
+        // renderedCallback animates the new section in and pops the
+        // newly active button.
+        this._moveIndicatorToTab(id, { animate: true });
+        this._fadeOutAndSwap(id);
     }
 
-    handleClose() {
-        this.dispatchEvent(new CustomEvent('close'));
+    // ─── Tab-switch animation helpers ──────────────────────────────
+    // Positions the indicator pill over the rail button for `tabId`.
+    // When `animate` is false (initial render, reduced-motion, etc.)
+    // we snap with `gsap.set`; otherwise we tween `top` for an iOS-
+    // tabbar-like slide. The tween is tracked on `_railIndicatorTween`
+    // so renderedCallback can avoid snapping while a slide is mid-flight.
+    _moveIndicatorToTab(tabId, { animate } = { animate: false }) {
+        const rail = this.querySelector('.ka-rail');
+        const indicator = this.querySelector('.ka-rail__indicator');
+        const btn = this.querySelector(`.ka-rail__btn[data-id="${tabId}"]`);
+        if (!rail || !indicator || !btn) return;
+
+        const railRect = rail.getBoundingClientRect();
+        const btnRect = btn.getBoundingClientRect();
+        const targetTop = btnRect.top - railRect.top;
+
+        if (this._railIndicatorTween) {
+            this._railIndicatorTween.kill();
+            this._railIndicatorTween = null;
+        }
+
+        if (!animate || !this._gsapEnabled) {
+            gsap.set(indicator, { top: targetTop });
+            return;
+        }
+
+        this._railIndicatorTween = gsap.to(indicator, {
+            top: targetTop,
+            duration: 0.42,
+            ease: 'expo.out',
+            onComplete: () => {
+                this._railIndicatorTween = null;
+            },
+        });
+    }
+
+    // Fades the current tab's body content out, then commits the tab
+    // switch. The in-tween is handled in renderedCallback after LWC
+    // re-renders the swapped section(s).
+    _fadeOutAndSwap(newTabId) {
+        const targets = this._getCardBodyTargets();
+
+        const commit = () => {
+            this._outgoingTween = null;
+            this._pendingInAnimation = true;
+            this._pendingButtonPopId = newTabId;
+            this.activeRailTab = newTabId;
+        };
+
+        if (!this._gsapEnabled || targets.length === 0) {
+            commit();
+            return;
+        }
+
+        if (this._outgoingTween) this._outgoingTween.kill();
+        this._outgoingTween = gsap.to(targets, {
+            opacity: 0,
+            y: -6,
+            duration: 0.14,
+            ease: 'power2.in',
+            onComplete: commit,
+        });
+    }
+
+    _runSectionInTween() {
+        const targets = this._getCardBodyTargets();
+        if (!targets.length || !this._gsapEnabled) return;
+        gsap.fromTo(
+            targets,
+            { opacity: 0, y: 8 },
+            {
+                opacity: 1,
+                y: 0,
+                duration: 0.32,
+                ease: 'power2.out',
+                stagger: 0.04,
+                clearProps: 'transform',
+            }
+        );
+    }
+
+    // FLIP animation for the structural suggestion list. We record every
+    // card's top on each render; when the order changes (a card was marked
+    // Updated and moved to the bottom), each card that shifted is snapped
+    // back to its old position and tweened to its new one.
+    _animateSuggestReorder() {
+        if (this.isCollapsed || this.activeRailTab !== 'metrics') {
+            this._suggestPrevTops = null;
+            this._suggestPrevOrder = null;
+            return;
+        }
+        const cards = Array.from(this.querySelectorAll('.ka-suggest[data-sid]'));
+        if (!cards.length) {
+            this._suggestPrevTops = null;
+            this._suggestPrevOrder = null;
+            return;
+        }
+        const newTops = new Map();
+        const newOrder = [];
+        cards.forEach((c) => {
+            newTops.set(c.dataset.sid, c.getBoundingClientRect().top);
+            newOrder.push(c.dataset.sid);
+        });
+
+        const prev = this._suggestPrevTops;
+        const prevOrder = this._suggestPrevOrder;
+        // Only FLIP on a genuine reorder. A width change (expand/collapse)
+        // reflows cards but keeps their order, so the position delta is a
+        // layout shift we must ignore — otherwise the cards "jump".
+        const orderChanged =
+            prevOrder != null &&
+            (prevOrder.length !== newOrder.length ||
+                prevOrder.some((id, i) => id !== newOrder[i]));
+        if (prev && orderChanged && this._gsapEnabled) {
+            cards.forEach((c) => {
+                const id = c.dataset.sid;
+                const oldTop = prev.get(id);
+                const newTop = newTops.get(id);
+                if (oldTop != null && Math.abs(oldTop - newTop) > 1) {
+                    gsap.fromTo(
+                        c,
+                        { y: oldTop - newTop },
+                        { y: 0, duration: 0.5, ease: 'power3.inOut', clearProps: 'transform' }
+                    );
+                }
+            });
+        }
+        this._suggestPrevTops = newTops;
+        this._suggestPrevOrder = newOrder;
+    }
+
+    _popRailButton(tabId) {
+        const btn = this.querySelector(`.ka-rail__btn[data-id="${tabId}"]`);
+        if (!btn || !this._gsapEnabled) return;
+        gsap.fromTo(
+            btn,
+            { scale: 0.82 },
+            {
+                scale: 1,
+                duration: 0.45,
+                ease: 'back.out(2.4)',
+                clearProps: 'transform',
+            }
+        );
+    }
+
+    // Animatable body children inside `.ka-card`: every `<section>`,
+    // the divider `<hr>`, and the empty placeholder. The `<header>`
+    // is excluded so the panel title stays anchored across switches.
+    _getCardBodyTargets() {
+        const card = this.querySelector('.ka-card');
+        if (!card) return [];
+        return Array.from(card.children).filter(
+            (child) => !child.matches('header')
+        );
+    }
+
+    // Fired when the user clicks the expand/contract toggle. The parent
+    // shell owns the actual width tween — we just announce intent.
+    handleToggleExpand() {
+        this.dispatchEvent(new CustomEvent('togglewidth'));
     }
 
     handleUpdateAll() {

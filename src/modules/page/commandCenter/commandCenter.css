@@ -827,9 +827,8 @@ page-command-center {
 }
 
 /* ── Expanded row table — Figma 45:10533 ─────────────────────────
-   Bordered SLDS data-table with surface-container-2 header strip,
-   first row highlighted (brand-base-90) to call out the focused
-   article, the rest on white. Sits inset from the row icon. */
+   Bordered SLDS data-table with surface-container-2 header strip
+   and rows on white. Sits inset from the row icon. */
 .cc-action__detail {
     margin: 0 var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-3, 12px) 56px;
     border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
@@ -838,8 +837,12 @@ page-command-center {
     background-color: var(--slds-g-color-surface-container-1, #fff);
 }
 
+/* Fixed layout so the seven columns share the available width instead of
+   collapsing and overlapping when the intrinsic content is wider than the
+   container. Article/Description wrap; the numeric columns stay compact. */
 .cc-action-table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     font-size: var(--slds-g-font-scale-base, 13px);
     line-height: 18px;
@@ -852,38 +855,77 @@ page-command-center {
     font-weight: var(--slds-g-font-weight-6, 600);
     color: var(--slds-g-color-on-surface-1, #5c5c5c);
     border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    vertical-align: middle;
     white-space: nowrap;
+    overflow: hidden;
 }
 
 .cc-action-table tbody td {
     padding: var(--slds-g-spacing-2, 8px);
     color: var(--slds-g-color-on-surface-1, #5c5c5c);
     border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
-    white-space: nowrap;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .cc-action-table tbody tr:last-child td {
     border-bottom: 0;
 }
 
-/* Highlight the first row (matches Figma "Cell 1" brand-base-90) */
-.cc-action-table tbody tr:first-child td {
-    background-color: var(--slds-g-color-brand-base-90, #d6e6ff);
+/* Column sizing (table-layout: fixed). The Description column is left
+   unsized so it absorbs the remaining width after the others are set. */
+.cc-action-table th:nth-child(1) { width: 27%; }      /* Article */
+.cc-action-table th:nth-child(3) { width: 8rem; }     /* No. of Violations */
+.cc-action-table th:nth-child(4) { width: 6rem; }     /* AI Score */
+.cc-action-table th:nth-child(5) { width: 7.5rem; }   /* Last Updated on */
+.cc-action-table th:nth-child(6) { width: 9rem; }     /* Actions */
+
+/* Header label + sort indicator, matching the Structural Violations table.
+   Keep the label on a single line and truncate with an ellipsis when the
+   column is too narrow; the sort icon never shrinks. */
+.cc-action-table__th-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    max-width: 100%;
 }
 
-.cc-action-table tbody tr:first-child .cc-action-table__title {
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+.cc-action-table__th-inner > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
-.cc-action-table__link {
+.cc-action-table__th-inner lightning-icon {
+    flex-shrink: 0;
+}
+
+.cc-action-table__title {
+    white-space: normal;
+}
+
+.cc-action-table__article-link {
     color: var(--slds-g-color-accent-2, #0250d9);
     font-weight: var(--slds-g-font-weight-4, 400);
 }
 
-.cc-action-table__title {
-    max-width: 220px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.cc-action-table__desc {
+    white-space: normal;
+}
+
+/* AI Score tone, mirroring the Structural Violations table. */
+.cc-action-table__ai {
+    font-weight: var(--slds-g-font-weight-7, 700);
+}
+
+.cc-action-table__ai--positive {
+    color: var(--slds-g-color-success-base-50, #2e844a);
+}
+
+.cc-action-table__ai--warning {
+    color: var(--slds-g-color-warning-base-50, #a96504);
 }
 
 .cc-action-table__actions-th {

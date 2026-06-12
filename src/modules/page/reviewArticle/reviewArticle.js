@@ -51,6 +51,9 @@ export default class ReviewArticle extends LightningElement {
     knowledgeToc = knowledgeBaseToc;
     @track showAssistPanel = true;
     @track isAssistCollapsed = false;
+    // When true, the Knowledge Assist panel widens beyond its default
+    // 379px (Figma 140:26133). Mutually exclusive with the collapsed rail.
+    @track isAssistExpanded = false;
     @track showChatPanel = false;
     _chatAnimating = false;
     @track selectedBlockId = null;
@@ -58,6 +61,109 @@ export default class ReviewArticle extends LightningElement {
     @track activeCollaborators = [];
     @track extraCollaboratorCount = 0;
     @track animationEnabled = true;
+
+    // ─── Article tab navigation (Editor | Metadata | Enrichments) ─────
+    @track activeTab = 'editor';
+    @track openTabs = [
+        { id: 'editor', label: 'Editor', count: 12 },
+        { id: 'metadata', label: 'Metadata', count: 8 },
+        { id: 'enrichments', label: 'Enrichments', count: 6 },
+    ];
+
+    // ─── Metadata tab (Figma 437:62640) ──────────────────────────────
+    // AI-generated metadata the writer can edit. Multi-value fields keep
+    // their selections as removable tag pills; single-value fields show
+    // the value inline. `ai` fields get the sparkle "generate" affordance.
+    @track metadataFields = [
+        { id: 'products', label: 'Products', required: true, ai: true, kind: 'combobox', multi: true, value: '', tags: [{ id: 'products-platform', label: 'Platform' }], extra: 0,
+            options: ['Platform', 'Sales Cloud', 'Service Cloud', 'Marketing Cloud', 'Commerce Cloud', 'Data Cloud', 'Slack', 'Tableau', 'MuleSoft'] },
+        { id: 'features', label: 'Features', required: true, ai: true, kind: 'combobox', multi: true, value: '', tags: [{ id: 'features-flows', label: 'Flows' }], extra: 0,
+            options: ['Flows', 'Apex', 'Lightning Web Components', 'Reports & Dashboards', 'Permissions', 'Automation', 'Einstein'] },
+        { id: 'primary-audience', label: 'Primary Audience', required: true, ai: true, kind: 'combobox', multi: false, value: 'Admin', tags: [], extra: 0,
+            options: ['Admin', 'Developer', 'End User', 'Architect', 'Business Analyst'] },
+        { id: 'content-type', label: 'Content Type', required: true, ai: true, kind: 'combobox', multi: false, value: 'Procedure', tags: [], extra: 0,
+            options: ['Procedure', 'Concept', 'Reference', 'Troubleshooting', 'FAQ', 'Release Notes'] },
+        { id: 'release-versions', label: 'Release Versions', required: true, ai: true, kind: 'combobox', multi: true, value: '', tags: [{ id: 'rv-spring26', label: "Spring '26" }], extra: 0,
+            options: ["Winter '26", "Spring '26", "Summer '26", "Winter '27"] },
+        { id: 'use-cases', label: 'Use Cases', required: true, ai: true, kind: 'combobox', multi: true, value: '', tags: [{ id: 'uc-setup', label: 'Setup' }, { id: 'uc-config', label: 'Configuration' }], extra: 0,
+            options: ['Setup', 'Configuration', 'Integration', 'Migration', 'Administration', 'Reporting'] },
+        { id: 'confidence-level', label: 'Confidence Level', required: true, ai: true, kind: 'combobox', multi: false, value: 'In Review', tags: [], extra: 0,
+            options: ['In Review', 'Draft', 'Verified', 'High', 'Medium', 'Low'] },
+        { id: 'complexity-level', label: 'Complexity Level', required: true, ai: true, kind: 'combobox', multi: false, value: 'Intermediate', tags: [], extra: 0,
+            options: ['Beginner', 'Intermediate', 'Advanced', 'Expert'] },
+        { id: 'industry-vertical', label: 'Industry/Vertical', required: true, ai: true, kind: 'combobox', multi: true, value: '', tags: [{ id: 'iv-aviation', label: 'Aviation & Travel' }], extra: 0,
+            options: ['Aviation & Travel', 'Financial Services', 'Healthcare', 'Retail', 'Manufacturing', 'Public Sector', 'Education'] },
+        { id: 'language-region', label: 'Language/Region', required: false, ai: false, kind: 'input', value: 'English (US)', tags: [], extra: 0 },
+        { id: 'article-owner', label: 'Article Owner', required: true, ai: false, kind: 'input', value: 'Jordan Avery', tags: [], extra: 0 },
+    ];
+
+    // Combobox dropdown UI state — only one open at a time. `_comboQuery`
+    // is the live search text for the open field; it filters `options`.
+    @track _openComboId = null;
+    @track _comboQuery = '';
+
+    @track metadataProperties = [
+        { id: 'article-number', label: 'Article Number', value: '000123456', addable: true },
+        { id: 'publication-status', label: 'Publication Status', value: 'Draft', addable: false },
+        { id: 'version-number', label: 'Version Number', value: '3', addable: false },
+        { id: 'last-modified', label: 'Last Modified Date', value: 'Jun 6, 2026', addable: false },
+        { id: 'total-views', label: 'Article Total View Count', value: '12,480', addable: false },
+        { id: 'first-published', label: 'First Published Date', value: 'Mar 2, 2026', addable: false },
+    ];
+
+    @track metaSectionOpen = true;
+    @track propsSectionOpen = true;
+
+    // ─── Enrichments tab (Figma 462:63733) ───────────────────────────
+    @track aiAbstract = {
+        summary:
+            'This article summarizes how airline baggage policies impact operational ' +
+            'efficiency, passenger satisfaction, and airline revenue. It analyzes the ' +
+            '"de-bundling" of ancillary fees and offers a framework for balancing optimal ' +
+            'baggage allowance with profitability.',
+    };
+
+    @track enrichmentQuestions = [
+        { id: 'q1', text: 'What is the standard carry-on baggage allowance?',
+            answer: 'Each passenger may bring one carry-on bag plus one personal item that fits in the overhead bin or under the seat in front of them.' },
+        { id: 'q2', text: 'How much does it cost to add a checked bag?',
+            answer: 'The first checked bag is $35 when added online during booking, or $45 if added at the airport.' },
+        { id: 'q3', text: 'What are the size and weight limits for checked luggage?',
+            answer: 'Checked luggage must not exceed 62 linear inches (length + width + height) and 50 lbs to avoid additional fees.' },
+        { id: 'q4', text: 'Are there fees for overweight or oversized bags?',
+            answer: 'Bags between 51–70 lbs incur a $100 overweight fee, and bags exceeding 62 linear inches are charged a $150 oversize fee.' },
+        { id: 'q5', text: 'What items are prohibited in carry-on baggage?',
+            answer: 'Liquids over 3.4 oz, sharp objects, and flammable materials are not permitted in carry-on bags and must be checked or left behind.' },
+        { id: 'q6', text: 'How do I report delayed or lost baggage?',
+            answer: 'File a report at the airline’s baggage service desk before leaving the airport, or submit a claim online within 24 hours.' },
+    ];
+
+    _expandedQuestions = new Set();
+    _editingQuestionId = null;
+    // Controlled draft buffers for the question in inline-edit mode.
+    @track _draftQuestionText = '';
+    @track _draftQuestionAnswer = '';
+
+    @track relatedFields = [
+        { id: 'related-products', label: 'Related Products', required: true, ai: true, kind: 'combobox', multi: true, value: '', extra: 6,
+            tags: [
+                { id: 'related-products-checked-baggage', label: 'Checked Baggage' },
+                { id: 'related-products-carry-on', label: 'Carry-On Allowance' },
+                { id: 'related-products-priority-boarding', label: 'Priority Boarding' },
+            ],
+            options: ['Checked Baggage', 'Carry-On Allowance', 'Priority Boarding', 'Excess Baggage', 'Travel Insurance', 'Seat Selection', 'Lounge Access', 'Sports Equipment', 'Pet in Cabin'] },
+        { id: 'related-features', label: 'Related Features', required: true, ai: true, kind: 'combobox', multi: true, value: '', extra: 6,
+            tags: [
+                { id: 'related-features-online-checkin', label: 'Online Check-in' },
+                { id: 'related-features-baggage-tracking', label: 'Baggage Tracking' },
+                { id: 'related-features-bag-fee-calculator', label: 'Bag Fee Calculator' },
+            ],
+            options: ['Online Check-in', 'Baggage Tracking', 'Bag Fee Calculator', 'Mobile Boarding Pass', 'Lost Baggage Claim', 'Weight Allowance Alerts', 'Fare Rules Lookup', 'Auto Rebooking', 'Trip Notifications'] },
+    ];
+
+    @track abstractSectionOpen = true;
+    @track questionsSectionOpen = true;
+    @track entitiesSectionOpen = true;
 
     // Drag-and-drop state
     _dragSourceId = null;
@@ -158,13 +264,16 @@ export default class ReviewArticle extends LightningElement {
     get assistPanelClass() {
         const base = 'ra-shell__aside ra-shell__aside_left';
         if (!this.showAssistPanel) return `${base} ra-hidden`;
-        return this.isAssistCollapsed ? `${base} ra-shell__aside_collapsed` : base;
+        if (this.isAssistCollapsed) return `${base} ra-shell__aside_collapsed`;
+        if (this.isAssistExpanded) return `${base} ra-shell__aside_expanded`;
+        return base;
     }
 
     get shellClass() {
         let cls = 'ra-shell';
         if (!this.showAssistPanel) cls += ' ra-shell_no-left';
         else if (this.isAssistCollapsed) cls += ' ra-shell_assist-collapsed';
+        else if (this.isAssistExpanded) cls += ' ra-shell_assist-expanded';
         if (!this.showChatPanel) cls += ' ra-shell_no-right';
         return cls;
     }
@@ -176,6 +285,330 @@ export default class ReviewArticle extends LightningElement {
 
     get mainClass() {
         return `ra-shell__main ${this.showAssistPanel ? '' : 'ra-shell__main_no-left'}`;
+    }
+
+    // ─── Article tabs ────────────────────────────────────────────────
+    get articleTabs() {
+        return this.openTabs.map((t) => ({
+            ...t,
+            active: t.id === this.activeTab ? 'true' : 'false',
+            class: `ra-tab${t.id === this.activeTab ? ' ra-tab_active' : ''}`,
+        }));
+    }
+
+    handleTabClick(event) {
+        const tabId = event.currentTarget.dataset.tab;
+        if (!tabId || tabId === this.activeTab) return;
+        this.activeTab = tabId;
+    }
+
+    get isMetadataTab() {
+        return this.activeTab === 'metadata';
+    }
+
+    get isEnrichmentsTab() {
+        return this.activeTab === 'enrichments';
+    }
+
+    // ─── Enrichments getters / handlers ──────────────────────────────
+    get relatedEntityFields() {
+        return this.relatedFields.map((f) => this._decorateField(f));
+    }
+
+    get enrichmentQuestionList() {
+        return this.enrichmentQuestions.map((q) => {
+            const expanded = this._expandedQuestions.has(q.id);
+            const editing = q.id === this._editingQuestionId;
+            return {
+                ...q,
+                expanded,
+                editing,
+                chevron: expanded ? 'utility:chevrondown' : 'utility:chevronright',
+                cardClass: `ra-enrich-q${expanded ? ' ra-enrich-q_expanded' : ''}`,
+            };
+        });
+    }
+
+    get questionsChevron() {
+        return this.questionsSectionOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    get entitiesChevron() {
+        return this.entitiesSectionOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    handleToggleQuestionsSection() {
+        this.questionsSectionOpen = !this.questionsSectionOpen;
+    }
+
+    handleToggleEntitiesSection() {
+        this.entitiesSectionOpen = !this.entitiesSectionOpen;
+    }
+
+    handleRegenerateAbstract() {
+        // Prototype: re-trigger the "AI" summary (no-op refresh affordance).
+        this.aiAbstract = { ...this.aiAbstract };
+    }
+
+    handleQuestionToggle(event) {
+        const id = event.currentTarget.dataset.id;
+        const next = new Set(this._expandedQuestions);
+        if (next.has(id)) {
+            next.delete(id);
+        } else {
+            next.add(id);
+        }
+        this._expandedQuestions = next;
+    }
+
+    handleQuestionDelete(event) {
+        const id = event.currentTarget.dataset.id;
+        this.enrichmentQuestions = this.enrichmentQuestions.filter((q) => q.id !== id);
+    }
+
+    get draftQuestionText() {
+        return this._draftQuestionText;
+    }
+
+    get draftQuestionAnswer() {
+        return this._draftQuestionAnswer;
+    }
+
+    handleQuestionEdit(event) {
+        const id = event.currentTarget.dataset.id;
+        const question = this.enrichmentQuestions.find((q) => q.id === id);
+        this._draftQuestionText = question ? question.text : '';
+        this._draftQuestionAnswer = question ? question.answer : '';
+        this._editingQuestionId = id;
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        requestAnimationFrame(() => {
+            const el = this.template.querySelector(`.ra-enrich-q__qinput[data-id="${id}"]`);
+            if (el) el.focus();
+        });
+    }
+
+    handleQuestionDraftTextChange(event) {
+        this._draftQuestionText = event.target.value;
+    }
+
+    handleQuestionDraftAnswerChange(event) {
+        this._draftQuestionAnswer = event.target.value;
+    }
+
+    handleQuestionEditSave(event) {
+        const id = event.currentTarget.dataset.id;
+        const text = this._draftQuestionText;
+        const answer = this._draftQuestionAnswer;
+        this.enrichmentQuestions = this.enrichmentQuestions.map((q) =>
+            q.id === id ? { ...q, text, answer } : q
+        );
+        this._editingQuestionId = null;
+        const next = new Set(this._expandedQuestions);
+        next.add(id);
+        this._expandedQuestions = next;
+    }
+
+    handleQuestionEditCancel() {
+        this._editingQuestionId = null;
+        this._draftQuestionText = '';
+        this._draftQuestionAnswer = '';
+    }
+
+    // ─── Metadata getters / handlers ─────────────────────────────────
+    _decorateField(f) {
+        const isOpen = f.id === this._openComboId;
+        const query = isOpen ? (this._comboQuery || '') : '';
+        const selectedLabels = f.multi
+            ? new Set((f.tags || []).map((t) => t.label))
+            : new Set(f.value ? [f.value] : []);
+        let options = f.options || [];
+        if (query) {
+            const q = query.toLowerCase();
+            options = options.filter((o) => o.toLowerCase().includes(q));
+        }
+        const filteredOptions = options.map((label, i) => {
+            const selected = selectedLabels.has(label);
+            return {
+                id: `${f.id}-opt-${i}`,
+                label,
+                selected,
+                optionClass: `ra-meta-listbox__option${selected ? ' ra-meta-listbox__option_selected' : ''}`,
+            };
+        });
+        const selectedCount = f.multi ? (f.tags || []).length : 0;
+        let inputValue;
+        if (isOpen) {
+            inputValue = query;
+        } else if (f.multi) {
+            inputValue = selectedCount > 0 ? `${selectedCount} selected` : '';
+        } else {
+            inputValue = f.value || '';
+        }
+        return {
+            ...f,
+            isCombobox: f.kind === 'combobox',
+            isInput: f.kind === 'input',
+            hasTags: (f.tags || []).length > 0,
+            showExtra: (f.extra || 0) > 0,
+            extraLabel: `+${f.extra || 0} more`,
+            isDirty: !!f._original,
+            showSparkle: f.ai && !f._original,
+            fieldClass: `ra-meta-field${f._original ? ' ra-meta-field_dirty' : ''}`,
+            isOpen,
+            inputValue,
+            filteredOptions,
+            noOptions: isOpen && filteredOptions.length === 0,
+        };
+    }
+
+    get metadataFieldsLeft() {
+        return this.metadataFields
+            .filter((_, i) => i % 2 === 0)
+            .map((f) => this._decorateField(f));
+    }
+
+    get metadataFieldsRight() {
+        return this.metadataFields
+            .filter((_, i) => i % 2 === 1)
+            .map((f) => this._decorateField(f));
+    }
+
+    get metaChevron() {
+        return this.metaSectionOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    get propsChevron() {
+        return this.propsSectionOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    handleToggleMetaSection() {
+        this.metaSectionOpen = !this.metaSectionOpen;
+    }
+
+    handleTogglePropsSection() {
+        this.propsSectionOpen = !this.propsSectionOpen;
+    }
+
+    handleMetaInput(event) {
+        const id = event.currentTarget.dataset.id;
+        const value = event.target.value;
+        this.metadataFields = this.metadataFields.map((f) => {
+            if (f.id !== id) return f;
+            const updated = { ...f, value };
+            if (f.ai && !f._original) {
+                updated._original = { value: f.value, tags: f.tags ? [...f.tags] : [] };
+            }
+            return updated;
+        });
+    }
+
+    // Combobox fields live in two arrays (metadata + related entities);
+    // these helpers find/update a field by id in whichever array owns it.
+    _findComboField(id) {
+        return this.metadataFields.find((f) => f.id === id)
+            || this.relatedFields.find((f) => f.id === id);
+    }
+
+    _setComboField(id, mapper) {
+        if (this.metadataFields.some((f) => f.id === id)) {
+            this.metadataFields = this.metadataFields.map((f) => (f.id === id ? mapper(f) : f));
+        } else if (this.relatedFields.some((f) => f.id === id)) {
+            this.relatedFields = this.relatedFields.map((f) => (f.id === id ? mapper(f) : f));
+        }
+    }
+
+    handleMetaTagRemove(event) {
+        const fieldId = event.currentTarget.dataset.field;
+        const tagId = event.currentTarget.dataset.tag;
+        this._setComboField(fieldId, (f) => {
+            const updated = { ...f, tags: (f.tags || []).filter((t) => t.id !== tagId) };
+            if (f.ai && !f._original) {
+                updated._original = { value: f.value, tags: f.tags ? [...f.tags] : [] };
+            }
+            return updated;
+        });
+    }
+
+    handleMetaUndo(event) {
+        const id = event.currentTarget.dataset.id;
+        this.metadataFields = this.metadataFields.map((f) => {
+            if (f.id !== id || !f._original) return f;
+            return { ...f, value: f._original.value, tags: [...f._original.tags], _original: undefined };
+        });
+    }
+
+    handleComboFocus(event) {
+        this._openComboId = event.currentTarget.dataset.id;
+        this._comboQuery = '';
+    }
+
+    handleComboInput(event) {
+        this._openComboId = event.currentTarget.dataset.id;
+        this._comboQuery = event.target.value;
+    }
+
+    handleComboBlur() {
+        this._openComboId = null;
+        this._comboQuery = '';
+    }
+
+    handleComboChevron(event) {
+        event.preventDefault();
+        const id = event.currentTarget.dataset.id;
+        if (this._openComboId === id) {
+            this._openComboId = null;
+            this._comboQuery = '';
+        } else {
+            this._openComboId = id;
+            this._comboQuery = '';
+            this._focusComboInput(id);
+        }
+    }
+
+    handleOptionSelect(event) {
+        event.preventDefault();
+        const fieldId = event.currentTarget.dataset.field;
+        const label = event.currentTarget.dataset.label;
+        const field = this._findComboField(fieldId);
+        if (!field) return;
+        const isMulti = !!field.multi;
+        this._setComboField(fieldId, (f) => {
+            const updated = { ...f };
+            if (f.ai && !f._original) {
+                updated._original = { value: f.value, tags: f.tags ? [...f.tags] : [] };
+            }
+            if (isMulti) {
+                const exists = (f.tags || []).some((t) => t.label === label);
+                updated.tags = exists
+                    ? (f.tags || []).filter((t) => t.label !== label)
+                    : [...(f.tags || []), { id: `${f.id}-${this._slug(label)}`, label }];
+            } else {
+                updated.value = label;
+            }
+            return updated;
+        });
+        if (isMulti) {
+            this._comboQuery = '';
+            this._focusComboInput(fieldId);
+        } else {
+            this._openComboId = null;
+            this._comboQuery = '';
+        }
+    }
+
+    _slug(label) {
+        return String(label)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+    }
+
+    _focusComboInput(id) {
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        requestAnimationFrame(() => {
+            const input = this.template.querySelector(`input.ra-meta-combobox__input[data-id="${id}"]`);
+            if (input) input.focus();
+        });
     }
 
     // ─── Block edits ───────────────────────────────────────────────
@@ -205,6 +638,9 @@ export default class ReviewArticle extends LightningElement {
             ...this.article,
             blockData: this.article.blockData.filter((b) => b.id !== id),
         };
+        if (this.selectedBlockId === id) {
+            this.selectedBlockId = null;
+        }
     }
 
     // ─── Notion-like block editor key handling ─────────────────────
@@ -643,6 +1079,54 @@ export default class ReviewArticle extends LightningElement {
         this._animatePanel(false);
     }
 
+    // Toggle between the default 379px panel and the wider 600px panel
+    // (Figma 140:26133/140:26134). Only meaningful when the panel is in
+    // its non-collapsed state — otherwise the user expands from the rail
+    // first via handleAssistExpand.
+    handleAssistToggleWidth() {
+        if (this.isAssistCollapsed) return;
+        this._animateAssistWidth(!this.isAssistExpanded);
+    }
+
+    _animateAssistWidth(toExpanded) {
+        const shell = this.querySelector('.ra-shell');
+        const fromWidth = toExpanded ? '379px' : '600px';
+        const toWidth = toExpanded ? '600px' : '379px';
+
+        const skipAnimation = !shell ||
+            !this.animationEnabled ||
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (skipAnimation) {
+            this.isAssistExpanded = toExpanded;
+            return;
+        }
+
+        // Flip the @track flag first so the class flip (.ra-shell_assist-expanded)
+        // owns the final width, then pin the previous width inline and tween it
+        // toward the new width; cleanup removes the inline style so the class
+        // CSS variable wins again.
+        this.isAssistExpanded = toExpanded;
+        shell.style.setProperty('--ra-left-col', fromWidth);
+
+        this._panelAnims?.forEach((a) => { try { a.stop?.(); } catch (_) {} });
+
+        const easeTrack = [0.22, 0.61, 0.36, 1];
+        const trackAnim = motionAnimate(
+            shell,
+            { '--ra-left-col': [fromWidth, toWidth] },
+            { duration: 0.36, ease: easeTrack },
+        );
+        this._panelAnims = [trackAnim];
+
+        const awaitDone = (anim) => (anim?.finished ? anim.finished : Promise.resolve(anim));
+        awaitDone(trackAnim)
+            .catch(() => {})
+            .finally(() => {
+                shell.style.removeProperty('--ra-left-col');
+                this._panelAnims = [];
+            });
+    }
+
     /**
      * Collapse / expand the Knowledge Assist (left) panel using Motion.
      *
@@ -662,10 +1146,17 @@ export default class ReviewArticle extends LightningElement {
         const shell = this.querySelector('.ra-shell');
         if (!shell) return;
 
+        // Snapshot the expanded state so the collapse tween starts from the
+        // right width (600px if expanded, else 379px). We clear the flag in
+        // `settle()` after isAssistCollapsed flips, not here, so the class
+        // swap doesn't drop --ra-left-col mid-tween.
+        const wasExpanded = this.isAssistExpanded;
+
         const skipAnimation = !this.animationEnabled ||
             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (skipAnimation) {
             this.isAssistCollapsed = collapse;
+            if (collapse) this.isAssistExpanded = false;
             this._panelAnimating = false;
             return;
         }
@@ -711,9 +1202,10 @@ export default class ReviewArticle extends LightningElement {
                     { duration: 0.2, ease: easeFade },
                 ));
             }
+            const fromCol = wasExpanded ? '600px' : '379px';
             const trackAnim = motionAnimate(
                 shell,
-                { '--ra-left-col': ['379px', '56px'] },
+                { '--ra-left-col': [fromCol, '56px'] },
                 { duration: 0.36, ease: easeTrack, delay: 0.04 },
             );
             anims.push(trackAnim);
@@ -737,6 +1229,8 @@ export default class ReviewArticle extends LightningElement {
                 .catch(() => {})
                 .finally(() => {
                     this.isAssistCollapsed = true;
+                    // Reopening should land on the default 379px, not 600px.
+                    if (wasExpanded) this.isAssistExpanded = false;
                     settle();
                 });
             return;
@@ -904,13 +1398,15 @@ export default class ReviewArticle extends LightningElement {
 
     handleUpdateAll() {
         this.pushUndo();
-        // Apply every available suggestion in sequence.
-        this.suggests.forEach((s) => {
-            if (s.status === 'available') this.applySuggestionById(s.id, false);
-        });
+        // Snapshot the available ids first — applySuggestionById reorders
+        // `this.suggests` as it marks each one updated.
+        const ids = this.suggests
+            .filter((s) => s.status === 'available')
+            .map((s) => s.id);
+        ids.forEach((id) => this.applySuggestionById(id, false));
         this.applyHealthBoost(12, 5);
         this.addAgentMessage(
-            'Applied all Smart Suggests. Article coverage score improved and new blocks were added to the draft.'
+            'Applied all structural suggestions. New sections were added to the draft and the coverage score improved.'
         );
     }
 
@@ -923,7 +1419,7 @@ export default class ReviewArticle extends LightningElement {
         const idx = this.suggests.findIndex((s) => s.id === id);
         if (idx === -1) return;
         const suggestion = this.suggests[idx];
-        if (suggestion.status === 'applied') return;
+        if (suggestion.status === 'updated') return;
 
         this.pushUndo();
 
@@ -935,14 +1431,21 @@ export default class ReviewArticle extends LightningElement {
             };
         }
 
-        // Mark suggestion as applied
-        this.suggests = this.suggests.map((s, i) => (i === idx ? { ...s, status: 'applied' } : s));
+        // Mark as updated and float the card to the bottom of the list so the
+        // remaining actionable suggestions stay at the top. The card movement
+        // is animated (GSAP FLIP) inside <ui-knowledge-assist>.
+        const updated = { ...suggestion, status: 'updated' };
+        const rest = this.suggests.filter((_, i) => i !== idx);
+        this.suggests = [...rest, updated];
 
-        this.applyHealthBoost(suggestion.coverageDelta, suggestion.confidenceDelta);
+        this.applyHealthBoost(
+            suggestion.coverageDelta ?? suggestion.scoreDelta,
+            suggestion.confidenceDelta
+        );
 
         if (announce) {
             this.addAgentMessage(
-                `Applied "${suggestion.label}". ${newBlocks.length} block${newBlocks.length === 1 ? '' : 's'} added to the article draft.`
+                `Added the "${suggestion.section || suggestion.label}" section to the article. Coverage score improved.`
             );
         }
 
@@ -955,8 +1458,30 @@ export default class ReviewArticle extends LightningElement {
         }, 800);
     }
 
+    // Answer-first section content for the structural suggestions. Each adds
+    // a heading + a short, direct paragraph so the article reads as more
+    // comprehensive once the writer accepts the suggestion.
+    _sectionBlocks(s) {
+        const byId = {
+            'suggest-structure-open-flow-builder':
+                'To open Flow Builder, go to Setup, type Flows in the Quick Find box, select Flows, then click New Flow. Choose the flow type that matches your use case and click Create to open the canvas.',
+            'suggest-structure-add-flow-elements':
+                'To add elements to a flow, drag them from the Elements tab on the left of the canvas onto the flow path. Connect each element in the order it should run, then configure its settings in the panel that opens.',
+            'suggest-structure-activate-the-flow':
+                'To activate a flow, open it in Flow Builder and click Activate in the top-right toolbar. Once active, the flow runs automatically for users based on its trigger; click Deactivate at any time to pause it.',
+        };
+        const heading = s.section || s.label;
+        const body = byId[s.id] || s.description;
+        return [
+            { id: freshId('b'), type: 'h2', content: heading },
+            { id: freshId('b'), type: 'p', content: body },
+        ];
+    }
+
     blocksForSuggestion(s) {
         switch (s.actionKind) {
+            case 'update-section':
+                return this._sectionBlocks(s);
             case 'update-video':
                 return [
                     {
