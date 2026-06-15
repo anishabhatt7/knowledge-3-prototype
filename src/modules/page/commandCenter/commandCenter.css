@@ -455,7 +455,7 @@ page-command-center {
    trend value carries the tone instead, in keeping with SLDS 2 cards. */
 .cc-capability-row {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: var(--slds-g-spacing-4, 16px);
     margin-bottom: var(--slds-g-spacing-5, 24px);
 }
@@ -561,7 +561,7 @@ page-command-center {
 /* ── Watchlist ─────────────────────────────────────────────────── */
 .cc-watch-row {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: var(--slds-g-spacing-4, 16px);
 }
 

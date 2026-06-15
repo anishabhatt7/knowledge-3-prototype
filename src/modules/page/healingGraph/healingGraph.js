@@ -564,6 +564,16 @@ export default class HealingGraph extends LightningElement {
         this._navigateToArticle(title);
     }
 
+    /** Split-button primary action → open both articles side by side to compare. */
+    handleCompareArticles(event) {
+        const titleA = event.currentTarget?.dataset?.titleA;
+        const titleB = event.currentTarget?.dataset?.titleB;
+        const titles = [titleA, titleB].filter(Boolean);
+        if (!titles.length) return;
+        titles.forEach((t) => this._addArticleTab(t));
+        this._navigateToArticle(titles[titles.length - 1]);
+    }
+
     /** Similarity → open a merged knowledge record combining both articles. */
     handleMergeArticles(event) {
         const title = event.currentTarget?.dataset?.title || 'Merged Article';

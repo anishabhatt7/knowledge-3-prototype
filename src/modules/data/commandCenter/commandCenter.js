@@ -76,6 +76,15 @@ export const seedWatchlist = [
         deltaPositive: false,
         footerLink: 'Go to Engagement Details',
     },
+    {
+        id: 'avg-handle-time',
+        title: 'Average Handle Time Savings',
+        cadence: 'Week to Date, Facebook Ads',
+        value: '4.2 mins',
+        delta: '+8%',
+        deltaPositive: true,
+        footerLink: 'Go to Knowledge Impact',
+    },
 ];
 
 export const seedPlatformMetrics = {

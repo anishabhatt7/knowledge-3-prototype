@@ -152,8 +152,13 @@ export default class CommandCenter extends LightningElement {
         agents: '/knowledge-agents',
     };
 
+    // Capability keys temporarily hidden from the card row.
+    _hiddenCapabilityKeys = ['memory'];
+
     get capabilitySummariesComputed() {
-        return seedCapabilitySummaries.map((s) => {
+        return seedCapabilitySummaries
+            .filter((s) => !this._hiddenCapabilityKeys.includes(s.key))
+            .map((s) => {
             const route = this._capabilityRoutes[s.key];
             const isInteractive = Boolean(route);
             // Split "+12% this week" → number "+12%" + label " this week"

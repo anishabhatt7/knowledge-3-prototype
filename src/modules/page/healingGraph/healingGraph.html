@@ -434,7 +434,12 @@
                                         <template lwc:if={q.isSimilarity}>
                                             <lightning-button variant="brand" label="Merge Articles" data-title={q.title} onclick={handleMergeArticles}></lightning-button>
                                         </template>
-                                        <lightning-button variant="brand-outline" label="Ignore Issue" data-id={q.id} onclick={handleIgnoreIssue}></lightning-button>
+                                        <lightning-button-group>
+                                            <lightning-button variant="brand-outline" label="Compare Articles" data-title-a={q.itemA.articleTitle} data-title-b={q.itemB.articleTitle} onclick={handleCompareArticles}></lightning-button>
+                                            <lightning-button-menu variant="border-filled" menu-alignment="right" alternative-text="More actions" data-id={q.id} onselect={handleIgnoreIssue}>
+                                                <lightning-menu-item value="ignore" label="Ignore Issue"></lightning-menu-item>
+                                            </lightning-button-menu>
+                                        </lightning-button-group>
                                     </div>
                                 </div>
 
