@@ -432,6 +432,124 @@ export default class ReviewQueue extends LightningElement {
         this._activeTab = id;
     }
 
+    // ── Metadata tab (Figma 612:84084 "Properties") ─────────────────
+    // Two-column form of AI-identified metadata. Gen-AI fields carry a
+    // sparkle marker; multi-select fields list a few pill values plus a
+    // "+N more" affordance. Article Owner / Language-Region are plain
+    // inputs (no AI marker). Prototype: values are display-only.
+
+    get isMetadataTab() {
+        return this._activeTab === 'metadata';
+    }
+
+    get showCompare() {
+        return this._activeTab === 'content';
+    }
+
+    get metadataColumns() {
+        const columns = [
+            [
+                { id: 'products', label: 'Products', ai: true, type: 'select', value: 'Analytics', pills: ['Analytics', 'Dashboard', 'CRM Suite'], moreLabel: '+6 more' },
+                { id: 'primary-audience', label: 'Primary Audience', ai: true, type: 'select', value: 'Enterprise Customers' },
+                { id: 'release-versions', label: 'Release Versions', ai: true, type: 'select', value: 'v3.2', pills: ['v3.2', 'v3.1', 'v3.0'], moreLabel: '+6 more' },
+                { id: 'confidence-level', label: 'Confidence Level', ai: true, type: 'select', value: 'High' },
+                { id: 'industry-vertical', label: 'Industry/Vertical', ai: true, type: 'select', value: 'Technology', pills: ['Technology', 'Financial Services', 'Healthcare'], moreLabel: '+6 more' },
+                { id: 'article-owner', label: 'Article Owner', ai: false, type: 'text', value: 'Sarah Mitchell' },
+            ],
+            [
+                { id: 'features', label: 'Features', ai: true, type: 'select', value: 'Data Export', pills: ['Data Export', 'Real-time Sync', 'API Access'], moreLabel: '+6 more' },
+                { id: 'content-type', label: 'Content Type', ai: true, type: 'select', value: 'Tutorial' },
+                { id: 'use-cases', label: 'Use Cases', ai: true, type: 'select', value: 'Enterprise Onboarding', pills: ['Onboarding', 'API Integration', 'Data Migration'], moreLabel: '+6 more' },
+                { id: 'complexity-level', label: 'Complexity Level', ai: true, type: 'select', value: 'Intermediate' },
+                { id: 'language-region', label: 'Language/Region', ai: false, type: 'text', value: 'English (US)' },
+            ],
+        ];
+
+        return columns.map((fields, i) => ({
+            id: `meta-col-${i}`,
+            fields: fields.map((f) => ({
+                ...f,
+                isSelect: f.type === 'select',
+                hasPills: Array.isArray(f.pills) && f.pills.length > 0,
+                pills: (f.pills || []).map((label) => ({ id: `${f.id}-${label}`, label })),
+            })),
+        }));
+    }
+
+    // ── Enrichments tab (Figma 612:84888) ───────────────────────────
+    // AI-generated abstract + a collapsible grid of "Top Questions" the
+    // article answers + a collapsible "Related Entities" form. Editing
+    // is display-only in the prototype; delete actually removes a row.
+
+    @track _questionsOpen = true;
+    @track _entitiesOpen = true;
+    @track _removedQuestionIds = [];
+
+    enrichAbstract =
+        'This article summarizes how airline baggage policies impact operational ' +
+        'efficiency, passenger satisfaction, and airline revenue. It analyzes the ' +
+        '"de-bundling" of ancillary fees and offers a framework for balancing optimal ' +
+        'baggage allowance with profitability.';
+
+    _enrichQuestions = [
+        { id: 'q1', text: 'What is the checked baggage weight limit?' },
+        { id: 'q2', text: 'How much does an extra checked bag cost?' },
+        { id: 'q3', text: 'What items are prohibited in carry-on luggage?' },
+        { id: 'q4', text: 'Can I bring a personal item with my carry-on?' },
+        { id: 'q5', text: 'What are the size limits for carry-on bags?' },
+        { id: 'q6', text: 'How do I report delayed or lost baggage?' },
+    ];
+
+    get isEnrichmentsTab() {
+        return this._activeTab === 'enrichments';
+    }
+
+    get enrichQuestions() {
+        return this._enrichQuestions.filter((q) => !this._removedQuestionIds.includes(q.id));
+    }
+
+    get questionsOpen() {
+        return this._questionsOpen;
+    }
+
+    get entitiesOpen() {
+        return this._entitiesOpen;
+    }
+
+    get questionsChevron() {
+        return this._questionsOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    get entitiesChevron() {
+        return this._entitiesOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    get relatedEntityFields() {
+        return [
+            { id: 'related-products', label: 'Related Products', value: '3 Selected' },
+            { id: 'related-features', label: 'Related Features', value: '3 selected' },
+        ];
+    }
+
+    handleEnrichToggle(event) {
+        const section = event.currentTarget?.dataset?.section;
+        if (section === 'questions') {
+            this._questionsOpen = !this._questionsOpen;
+        } else if (section === 'entities') {
+            this._entitiesOpen = !this._entitiesOpen;
+        }
+    }
+
+    handleEditQuestion() {
+        // Display-only in the prototype.
+    }
+
+    handleDeleteQuestion(event) {
+        const id = event.currentTarget?.dataset?.id;
+        if (!id) return;
+        this._removedQuestionIds = [...this._removedQuestionIds, id];
+    }
+
     // ── Current Article paragraphs ──────────────────────────────────
 
     get paragraphsRendered() {

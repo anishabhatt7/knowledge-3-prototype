@@ -445,6 +445,232 @@
     font-weight: var(--slds-g-font-weight-6, 590);
 }
 
+/* ── Metadata tab (Figma 612:84084 "Properties") ────────── */
+
+.rq-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-7, 32px);
+    align-content: start;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding-bottom: var(--slds-g-spacing-4, 16px);
+}
+
+.rq-meta__col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.rq-meta-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-1, 4px);
+}
+
+.rq-meta-field__label {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    font-size: var(--slds-g-font-scale-neg-1, 0.8125rem);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.rq-meta-field__req {
+    color: var(--slds-g-color-error-1, #ea001e);
+    text-decoration: none;
+}
+
+.rq-meta-field__ai,
+.rq-meta-field__ctrl-spark {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+}
+
+.rq-meta-field__ai {
+    width: 14px;
+    height: 14px;
+}
+
+.rq-meta-field__control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-2, 8px);
+    min-height: 32px;
+    padding: 0 var(--slds-g-spacing-3, 12px);
+    background: var(--slds-g-color-surface-1, #fff);
+    border: 1px solid var(--slds-g-color-border-2, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-1, 4px);
+}
+
+.rq-meta-field__value {
+    flex: 1 1 auto;
+    font-size: var(--slds-g-font-scale-1, 14px);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rq-meta-field__control-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    flex: 0 0 auto;
+}
+
+.rq-meta-field__pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    margin-top: var(--slds-g-spacing-1, 4px);
+}
+
+.rq-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    padding: 2px var(--slds-g-spacing-2, 8px);
+    border: 1px solid var(--slds-g-color-border-2, #c9c9c9);
+    border-radius: 999px;
+    background: var(--slds-g-color-surface-1, #fff);
+    font-size: var(--slds-g-font-scale-neg-1, 0.8125rem);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.rq-meta-field__more {
+    font-size: var(--slds-g-font-scale-neg-1, 0.8125rem);
+    color: var(--slds-g-color-accent-2, #0250d9);
+    cursor: pointer;
+}
+
+/* ── Enrichments tab (Figma 612:84888) ──────────────────── */
+
+.rq-enrich {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-5, 24px);
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding-bottom: var(--slds-g-spacing-4, 16px);
+}
+
+.rq-enrich-card {
+    border: 1px solid var(--slds-g-color-border-1, #e5e5e5);
+    border-radius: var(--slds-g-radius-border-4, 20px);
+    padding: var(--slds-g-spacing-4, 16px);
+    background: var(--slds-g-color-surface-1, #fff);
+}
+
+.rq-enrich-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-2, 8px);
+    margin-bottom: var(--slds-g-spacing-3, 12px);
+}
+
+.rq-enrich-card__title {
+    font-size: var(--slds-g-font-scale-2, 16px);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-on-surface-2, #181818);
+}
+
+.rq-enrich-summary {
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    padding: var(--slds-g-spacing-3, 12px);
+    background: #f3eaff;
+}
+
+.rq-enrich-summary__label {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    margin-bottom: var(--slds-g-spacing-2, 8px);
+    font-size: var(--slds-g-font-scale-neg-1, 0.8125rem);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-on-surface-2, #181818);
+}
+
+.rq-enrich-summary__spark {
+    width: 16px;
+    height: 16px;
+}
+
+.rq-enrich-summary__text {
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 1.5;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.rq-enrich-section__head {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    width: 100%;
+    padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
+    border: 0;
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    background: var(--slds-g-color-surface-container-1, #f3f3f3);
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
+.rq-enrich-section__title {
+    font-size: var(--slds-g-font-scale-1, 14px);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-on-surface-2, #181818);
+}
+
+.rq-enrich-q-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--slds-g-spacing-3, 12px);
+    margin-top: var(--slds-g-spacing-3, 12px);
+}
+
+.rq-enrich-q {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-3, 12px);
+    border: 1px solid var(--slds-g-color-border-1, #e5e5e5);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    background: var(--slds-g-color-surface-1, #fff);
+}
+
+.rq-enrich-q__text {
+    flex: 1 1 auto;
+    font-size: var(--slds-g-font-scale-1, 14px);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-accent-2, #0250d9);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rq-enrich-q__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    flex: 0 0 auto;
+}
+
+.rq-enrich-entities {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-7, 32px);
+    margin-top: var(--slds-g-spacing-3, 12px);
+}
+
 /* ── Side-by-side compare ───────────────────────────────── */
 
 .rq-split {

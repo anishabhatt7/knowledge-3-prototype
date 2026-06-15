@@ -129,6 +129,7 @@
             </nav>
 
             <!-- Side-by-side content -->
+            <template lwc:if={showCompare}>
             <section class="rq-split" aria-label="Side-by-side article comparison">
                 <article class="rq-pane rq-pane--current" aria-label="Current article">
                     <header class="rq-pane__head">Current Article</header>
@@ -243,6 +244,124 @@
                     </div>
                 </article>
             </section>
+            </template>
+
+            <!-- Metadata tab — Figma 612:84084 "Properties" -->
+            <template lwc:if={isMetadataTab}>
+            <section class="rq-meta" aria-label="Article metadata">
+                <template for:each={metadataColumns} for:item="col">
+                    <div key={col.id} class="rq-meta__col">
+                        <template for:each={col.fields} for:item="f">
+                            <div key={f.id} class="rq-meta-field">
+                                <div class="rq-meta-field__label">
+                                    <abbr class="rq-meta-field__req" title="Required">*</abbr>
+                                    <span class="rq-meta-field__label-text">{f.label}</span>
+                                    <template lwc:if={f.ai}>
+                                        <img src="./images/sparkles.svg" alt="" class="rq-meta-field__ai" />
+                                    </template>
+                                </div>
+                                <div class="rq-meta-field__control">
+                                    <span class="rq-meta-field__value">{f.value}</span>
+                                    <template lwc:if={f.isSelect}>
+                                        <span class="rq-meta-field__control-icons">
+                                            <lightning-icon icon-name="utility:chevrondown" size="xx-small" alternative-text="" class="rq-meta-field__chevron"></lightning-icon>
+                                            <img src="./images/sparkles.svg" alt="" class="rq-meta-field__ctrl-spark" />
+                                        </span>
+                                    </template>
+                                </div>
+                                <template lwc:if={f.hasPills}>
+                                    <div class="rq-meta-field__pills">
+                                        <template for:each={f.pills} for:item="p">
+                                            <span key={p.id} class="rq-meta-pill">
+                                                <span class="rq-meta-pill__label">{p.label}</span>
+                                                <lightning-icon icon-name="utility:close" size="xx-small" alternative-text="Remove" class="rq-meta-pill__remove"></lightning-icon>
+                                            </span>
+                                        </template>
+                                        <template lwc:if={f.moreLabel}>
+                                            <span class="rq-meta-field__more">{f.moreLabel}</span>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </section>
+            </template>
+
+            <!-- Enrichments tab — Figma 612:84888 -->
+            <template lwc:if={isEnrichmentsTab}>
+            <section class="rq-enrich" aria-label="Article enrichments">
+                <article class="rq-enrich-card">
+                    <header class="rq-enrich-card__head">
+                        <h3 class="rq-enrich-card__title">AI Generated Abstract</h3>
+                        <lightning-button-icon
+                            icon-name="utility:refresh"
+                            variant="bare"
+                            size="small"
+                            alternative-text="Regenerate abstract"
+                            class="rq-enrich-card__refresh"
+                        ></lightning-button-icon>
+                    </header>
+                    <div class="rq-enrich-summary">
+                        <div class="rq-enrich-summary__label">
+                            <img src="./images/sparkles.svg" alt="" class="rq-enrich-summary__spark" />
+                            <span class="rq-enrich-summary__label-text">Article Summary</span>
+                            <lightning-icon icon-name="utility:info" size="xx-small" alternative-text="About this summary" class="rq-enrich-summary__info"></lightning-icon>
+                        </div>
+                        <p class="rq-enrich-summary__text">{enrichAbstract}</p>
+                    </div>
+                </article>
+
+                <div class="rq-enrich-section">
+                    <button type="button" class="rq-enrich-section__head" data-section="questions" aria-expanded={questionsOpen} onclick={handleEnrichToggle}>
+                        <lightning-icon icon-name={questionsChevron} size="xx-small" alternative-text="" class="rq-enrich-section__chevron"></lightning-icon>
+                        <span class="rq-enrich-section__title">Top Questions this Article answers</span>
+                    </button>
+                    <template lwc:if={questionsOpen}>
+                        <div class="rq-enrich-q-grid">
+                            <template for:each={enrichQuestions} for:item="q">
+                                <div key={q.id} class="rq-enrich-q">
+                                    <lightning-icon icon-name="utility:chevronright" size="xx-small" alternative-text="" class="rq-enrich-q__chevron"></lightning-icon>
+                                    <span class="rq-enrich-q__text">{q.text}</span>
+                                    <span class="rq-enrich-q__actions">
+                                        <lightning-button-icon icon-name="utility:edit" variant="bare" size="small" alternative-text="Edit question" data-id={q.id} onclick={handleEditQuestion}></lightning-button-icon>
+                                        <lightning-button-icon icon-name="utility:delete" variant="border-filled" size="small" alternative-text="Delete question" data-id={q.id} onclick={handleDeleteQuestion}></lightning-button-icon>
+                                    </span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="rq-enrich-section">
+                    <button type="button" class="rq-enrich-section__head" data-section="entities" aria-expanded={entitiesOpen} onclick={handleEnrichToggle}>
+                        <lightning-icon icon-name={entitiesChevron} size="xx-small" alternative-text="" class="rq-enrich-section__chevron"></lightning-icon>
+                        <span class="rq-enrich-section__title">Related Entities</span>
+                    </button>
+                    <template lwc:if={entitiesOpen}>
+                        <div class="rq-enrich-entities">
+                            <template for:each={relatedEntityFields} for:item="f">
+                                <div key={f.id} class="rq-meta-field">
+                                    <div class="rq-meta-field__label">
+                                        <abbr class="rq-meta-field__req" title="Required">*</abbr>
+                                        <span class="rq-meta-field__label-text">{f.label}</span>
+                                        <img src="./images/sparkles.svg" alt="" class="rq-meta-field__ai" />
+                                    </div>
+                                    <div class="rq-meta-field__control">
+                                        <span class="rq-meta-field__value">{f.value}</span>
+                                        <span class="rq-meta-field__control-icons">
+                                            <lightning-icon icon-name="utility:chevrondown" size="xx-small" alternative-text="" class="rq-meta-field__chevron"></lightning-icon>
+                                            <img src="./images/sparkles.svg" alt="" class="rq-meta-field__ctrl-spark" />
+                                        </span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </section>
+            </template>
         </main>
     </div>
 </template>
