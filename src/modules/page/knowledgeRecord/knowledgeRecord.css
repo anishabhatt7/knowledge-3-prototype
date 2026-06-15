@@ -504,87 +504,459 @@ page-knowledge-record {
     border-radius: 999px;
 }
 
-/* ════════ ANALYSIS TAB — STRUCTURAL VIOLATIONS TABLE ════════════════
- * The Figma renders a 5-column data table with a grey header strip,
- * blue link text in the Article + Action columns, and sort arrows
- * per header. `<lightning-datatable>` gives us all of that out of
- * the box (button-base columns render text as links), so the only
- * tuning we do here is the heading typography + the rounded outer
- * border to match the 12px radius shown in the design.
+/* ════════ ANALYSIS TAB — STRUCTURAL VIOLATIONS ═════════════════════
+ * Figma frames 612:43216 (collapsed) + 612:70638 (expanded). Each
+ * violation is an expandable tile: a bordered, rounded card holding a
+ * chevron toggle, a title with two pill badges, a description, and a
+ * neutral "Edit to Resolve" pill. Expanding reveals a lavender detail
+ * panel of individual findings + their coverage / confidence lift.
  */
-.kr-violations {
+.kr-sv {
     display: flex;
     flex-direction: column;
-    gap: var(--slds-g-spacing-4, 16px);
-    margin-block-start: var(--slds-g-spacing-3, 12px);
+    gap: var(--slds-g-spacing-3, 12px);
+    margin-block-start: var(--slds-g-spacing-4, 16px);
 }
 
-/* Header row — title block on the left, brand-outline pill CTA on
- * the right. Mirrors Figma frame 207:33626. */
-.kr-violations__header {
+.kr-sv__header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: var(--slds-g-spacing-4, 16px);
 }
 
-.kr-violations__heading {
+.kr-sv__heading {
     display: flex;
     flex-direction: column;
     gap: 2px;
     min-width: 0;
 }
 
-.kr-violations__title {
+.kr-sv__title {
     margin: 0;
     font-size: var(--slds-g-font-scale-2, 16px);
     line-height: 22px;
-    font-weight: var(--slds-g-font-weight-6, 600);
+    font-weight: var(--slds-g-font-weight-7, 700);
     color: var(--slds-g-color-on-surface-3, #03234d);
 }
 
-.kr-violations__subtitle {
+.kr-sv__subtitle {
     margin: 0;
     font-size: var(--slds-g-font-scale-neg-1, 12px);
     line-height: 17px;
     font-weight: var(--slds-g-font-weight-4, 400);
     color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.kr-sv__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-3, 12px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* Tile — bordered rounded card. */
+.kr-sv-tile {
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-3, 12px);
+    background: var(--slds-g-color-surface-1, #fff);
+    overflow: hidden;
+}
+
+.kr-sv-tile--open {
+    border-color: var(--slds-g-color-border-accent-1, #0176d3);
+}
+
+.kr-sv-tile__main {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--slds-g-spacing-2, 8px);
+    padding: var(--slds-g-spacing-4, 16px);
+}
+
+/* Chevron toggle button — borderless, just the icon. */
+.kr-sv-tile__chevron {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--slds-g-sizing-6, 20px);
+    height: var(--slds-g-sizing-6, 20px);
+    margin-block-start: 2px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    --slds-c-icon-color-foreground: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.kr-sv-tile__content {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-1, 4px);
+}
+
+.kr-sv-tile__titlerow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.kr-sv-tile__title {
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.kr-sv-tile__desc {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 20px;
+    color: var(--slds-g-color-on-surface-2, #444);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-/* Pill the brand-outline CTA so it matches the Figma's rounded
- * "Edit Article to Resolve" button. */
-.kr-violations__cta lightning-button button {
+.kr-sv-tile__cta {
+    flex: 0 0 auto;
+}
+
+.kr-sv-tile__cta button {
     border-radius: 999px;
 }
 
-.kr-violations__table {
-    border-radius: var(--slds-g-radius-border-3, 12px);
-    overflow: hidden;
-    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+/* Pill badges in the tile title row. */
+.kr-sv-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    padding-block: 2px;
+    padding-inline: var(--slds-g-spacing-2, 8px);
+    border-radius: var(--slds-g-radius-border-pill, 999px);
+    font-size: var(--slds-g-font-scale-neg-2, 11px);
+    line-height: 16px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    white-space: nowrap;
 }
 
-/* AI Score deltas — `cellAttributes.class` binds these per row so
- * the +7% reads green and the smaller +1/+2 lifts read amber, as in
- * the Figma. The class lands on the cell wrapper inside the
- * datatable, so we target the inner truncate span to override its
- * default neutral colour and pick up the bold weight. */
-.kr-violations__delta .slds-truncate,
-.kr-violations__delta lightning-formatted-text,
-.kr-violations__delta {
+.kr-sv-badge--violations {
+    background: var(--slds-g-color-error-container-1, #feded8);
+    color: var(--slds-g-color-error-1, #ba0517);
+}
+
+.kr-sv-badge--score {
+    background: var(--slds-g-color-success-container-1, #cdefc4);
+    color: var(--slds-g-color-success-1, #2e844a);
+}
+
+.kr-sv-badge__icon {
+    --slds-c-icon-color-foreground: var(--slds-g-color-success-1, #2e844a);
+}
+
+/* Expanded detail panel — lavender surface, one row per finding. */
+.kr-sv-tile__details {
+    display: flex;
+    flex-direction: column;
+    margin: 0 var(--slds-g-spacing-4, 16px) var(--slds-g-spacing-4, 16px);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    background: var(--slds-g-color-surface-container-1, #f3f3fb);
+}
+
+.kr-sv-detail {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 16px);
+    padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+}
+
+.kr-sv-detail + .kr-sv-detail {
+    border-block-start: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #e5e5f7);
+}
+
+.kr-sv-detail__info {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--slds-g-spacing-2, 8px);
+    min-width: 0;
+}
+
+.kr-sv-detail__icon--warning {
+    --slds-c-icon-color-foreground: var(--slds-g-color-accent-2, #0b5cab);
+}
+
+.kr-sv-detail__icon--info {
+    --slds-c-icon-color-foreground: var(--slds-g-color-accent-2, #0b5cab);
+}
+
+.kr-sv-detail__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.kr-sv-detail__title {
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 19px;
     font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
 }
 
-.kr-violations__delta--up,
-.kr-violations__delta--up .slds-truncate {
-    color: var(--slds-g-color-palette-green-50, #2e844a);
+.kr-sv-detail__desc {
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 17px;
+    color: var(--slds-g-color-on-surface-2, #444);
 }
 
-.kr-violations__delta--warn,
-.kr-violations__delta--warn .slds-truncate {
-    color: var(--slds-g-color-warning-base-50, #a96504);
+.kr-sv-detail__stats {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--slds-g-spacing-7, 32px);
+    flex: 0 0 auto;
+}
+
+.kr-sv-detail__stat {
+    display: flex;
+    flex-direction: column;
+    text-align: end;
+}
+
+.kr-sv-detail__stat-value {
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.kr-sv-detail__stat-label {
+    font-size: var(--slds-g-font-scale-neg-2, 11px);
+    line-height: 14px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* ════════ ANALYSIS TAB — TOP QUALITY ISSUES ════════════════════════
+ * Figma frame 612:71226. Each issue is a bordered card: a header row
+ * with title + type/confidence badges + actions, a lavender summary
+ * panel, and a two-column comparison of the source articles.
+ */
+.kr-qi {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-3, 12px);
+    margin-block-start: var(--slds-g-spacing-7, 32px);
+}
+
+.kr-qi__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.kr-qi__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.kr-qi__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.kr-qi__subtitle {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 17px;
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.kr-qi__viewall {
+    flex: 0 0 auto;
+    font-size: var(--slds-g-font-scale-1, 14px);
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-accent-1, #0176d3);
+    text-decoration: none;
+}
+
+.kr-qi__viewall:hover,
+.kr-qi__viewall:focus {
+    text-decoration: underline;
+}
+
+.kr-qi__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.kr-qi-card {
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-3, 12px);
+    background: var(--slds-g-color-surface-1, #fff);
+    padding: var(--slds-g-spacing-4, 16px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.kr-qi-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 16px);
+    flex-wrap: wrap;
+}
+
+.kr-qi-card__titlerow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--slds-g-spacing-2, 8px);
+    min-width: 0;
+}
+
+.kr-qi-card__title {
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: 22px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.kr-qi-card__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-2, 8px);
+    flex: 0 0 auto;
+}
+
+.kr-qi-card__btn button {
+    border-radius: 999px;
+}
+
+.kr-qi-badge {
+    display: inline-flex;
+    align-items: center;
+    padding-block: 2px;
+    padding-inline: var(--slds-g-spacing-2, 8px);
+    border-radius: var(--slds-g-radius-border-pill, 999px);
+    font-size: var(--slds-g-font-scale-neg-2, 11px);
+    line-height: 16px;
+    font-weight: var(--slds-g-font-weight-6, 600);
+    white-space: nowrap;
+}
+
+.kr-qi-badge--type {
+    border: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    color: var(--slds-g-color-on-surface-2, #444);
+}
+
+.kr-qi-badge--confidence {
+    background: var(--slds-g-color-success-container-1, #cdefc4);
+    color: var(--slds-g-color-success-1, #2e844a);
+}
+
+/* Lavender summary panel. */
+.kr-qi-card__summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-1, 4px);
+    padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    background: var(--slds-g-color-surface-container-1, #f3f3fb);
+}
+
+.kr-qi-card__summary-title {
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 19px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.kr-qi-card__summary-text {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-2, #444);
+}
+
+.kr-qi-card__cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--slds-g-spacing-7, 32px);
+}
+
+.kr-qi-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+    min-width: 0;
+}
+
+.kr-qi-col__label {
+    font-size: var(--slds-g-font-scale-1, 14px);
+    line-height: 19px;
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.kr-qi-col__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    font-size: var(--slds-g-font-scale-1, 14px);
+    font-weight: var(--slds-g-font-weight-6, 600);
+    color: var(--slds-g-color-accent-1, #0176d3);
+    text-decoration: none;
+}
+
+.kr-qi-col__link:hover,
+.kr-qi-col__link:focus {
+    text-decoration: underline;
+}
+
+.kr-qi-col__link-icon {
+    --slds-c-icon-color-foreground: var(--slds-g-color-accent-1, #0176d3);
+}
+
+.kr-qi-col__text {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 18px;
+    color: var(--slds-g-color-on-surface-2, #444);
+}
+
+.kr-qi-col__divider {
+    border-block-start: var(--slds-g-sizing-border-1, 1px) solid var(--slds-g-color-border-1, #c9c9c9);
+    margin-block: var(--slds-g-spacing-1, 4px);
+}
+
+.kr-qi-col__btn {
+    align-self: flex-start;
+}
+
+.kr-qi-col__btn button {
+    border-radius: 999px;
+}
+
+@media (max-width: 48em) {
+    .kr-qi-card__cols {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ════════ RIGHT — CONTEXT CARDS ═════════════════════════════════════ */

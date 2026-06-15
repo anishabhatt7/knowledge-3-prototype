@@ -8,21 +8,28 @@ import { getArticleEdit } from 'data/articleEdits';
 import {
     seedAIReadiness,
     seedStructuralViolations,
+    seedQualityIssues,
 } from 'data/commandCenter';
 
 /**
  * Knowledge Health page (formerly "Command Center" — renamed per
  * Figma frame 214-32880).
  *
- * Three sections sit inside the cc-main scroller:
+ * Four sections sit inside the cc-main scroller:
  *   1. Page header (Astro icon + title + subtitle + search).
  *   2. Two-card overview row — Knowledge AI Readiness donut on the
  *      left, Total Articles big-number + sparkline on the right.
- *   3. Structural Violations data table with a per-row action menu
- *      (Approve changes / Edit to Resolve). "Edit to Resolve" stashes
- *      the article in `data/editSession` and hands off to the Review
- *      Article (active authoring) page in a new workspace tab, the
- *      same path used by the Knowledge Record violations CTA.
+ *   3. Top Structural Violations to Resolve — a stack of expandable
+ *      tiles (Figma 612-43216 / 612-70638). Each tile shows the
+ *      article, a violations + AI Score badge pair, a one-line
+ *      summary and an "Edit to Resolve" action; the chevron expands
+ *      the per-issue breakdown. "Edit to Resolve" stashes the article
+ *      in `data/editSession` and hands off to the Review Article
+ *      (active authoring) page in a new workspace tab — the same path
+ *      used by the Knowledge Record violations CTA.
+ *   4. Top Quality Issues to Resolve — contradiction / similarity
+ *      cards (Figma 612-71226) comparing two source articles side by
+ *      side with Ignore / Merge / Archive actions.
  */
 export default class CommandCenter extends LightningElement {
     static renderMode = 'light';
@@ -165,106 +172,156 @@ export default class CommandCenter extends LightningElement {
     sparkForecastPath = 'M 260 50 L 470 0 L 470 50 L 260 60 Z';
     sparkGoalY = '40';
 
-    // ── Structural Violations table ─────────────────────────────────
+    // ── Structural Violations tiles ─────────────────────────────────
+    // Each violation renders as an expandable tile (Figma 612-43216 /
+    // 612-70638). Tiles start collapsed so the list reads as a compact
+    // summary on load.
     @track _violations = seedStructuralViolations.map((v) => ({
         ...v,
-        selected: false,
-        menuOpen: false,
+        expanded: false,
     }));
-    @track _allSelected = false;
 
     get violationsComputed() {
-        // The AI Score column is locked to a descending sort, matching
-        // the column header arrow indicator. Scores are stored as
-        // formatted strings like "+ 6%" / "− 4%" (using U+2212 unicode
-        // minus, not ASCII "-"), so normalise the sign before parseFloat.
+        // AI Score badges are locked to a descending sort, matching the
+        // ranked "Top … to Resolve" framing. Scores are stored as plain
+        // percent strings like "9%".
         const parseScore = (raw) => {
-            const normalised = String(raw).replace('−', '-').replace(/[\s%]/g, '');
-            const n = parseFloat(normalised);
+            const n = parseFloat(String(raw).replace(/[\s%]/g, ''));
             return Number.isNaN(n) ? 0 : n;
         };
         return [...this._violations]
             .sort((a, b) => parseScore(b.aiScore) - parseScore(a.aiScore))
             .map((v) => ({
                 ...v,
-                aiCellClass: v.aiTone === 'positive'
-                    ? 'cc-vt__ai cc-vt__ai--positive'
-                    : 'cc-vt__ai cc-vt__ai--warning',
-                menuClass: v.menuOpen ? 'cc-vt__menu cc-vt__menu--open' : 'cc-vt__menu',
-                actionsCellClass: v.menuOpen
-                    ? 'cc-vt__cell cc-vt__cell--actions cc-vt__cell--actions-open'
-                    : 'cc-vt__cell cc-vt__cell--actions',
+                tileClass: v.expanded
+                    ? 'cc-sv__tile cc-sv__tile--expanded'
+                    : 'cc-sv__tile',
+                chevronIcon: v.expanded ? 'utility:chevrondown' : 'utility:chevronright',
+                aiScoreLabel: `AI Score: ${v.aiScore}`,
+                violationsLabel: `${v.violations} Violations`,
+                issues: (v.issues || []).map((issue) => ({
+                    ...issue,
+                    iconName: this._issueIconName(issue.tone),
+                    iconClass: issue.tone === 'warning'
+                        ? 'cc-sv__issue-icon cc-sv__issue-icon--warning'
+                        : 'cc-sv__issue-icon cc-sv__issue-icon--info',
+                })),
             }));
     }
 
-    handleSelectAll(event) {
-        const checked = !!event.target?.checked;
-        this._allSelected = checked;
-        this._violations = this._violations.map((v) => ({ ...v, selected: checked }));
+    _issueIconName(tone) {
+        if (tone === 'list') return 'utility:list';
+        if (tone === 'enrich') return 'utility:data_graph';
+        return 'utility:warning';
     }
 
-    handleSelectRow(event) {
-        const id = event.target?.dataset?.id;
-        const checked = !!event.target?.checked;
+    // Tiles currently mid-animation (keyed by violation id) — guards
+    // against a rapid double-click queuing overlapping GSAP tweens.
+    _tileAnimating = {};
+
+    handleToggleViolation(event) {
+        const id = event.currentTarget?.dataset?.id;
+        if (!id || this._tileAnimating[id]) return;
+        const row = this._violations.find((v) => v.id === id);
+        if (!row) return;
+
+        const reduce =
+            typeof window !== 'undefined' &&
+            window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (row.expanded) {
+            // ── Collapse ──────────────────────────────────────────────
+            // Animate the panel's height/opacity down first, then drop
+            // it from the DOM by flipping `expanded` on completion.
+            const panel = this._issuesPanelForId(id);
+            if (!panel || !gsap || reduce) {
+                this._setExpanded(id, false);
+                return;
+            }
+            this._tileAnimating[id] = true;
+            gsap.to(panel, {
+                height: 0,
+                opacity: 0,
+                duration: 0.3,
+                ease: 'power2.inOut',
+                onComplete: () => {
+                    this._tileAnimating[id] = false;
+                    this._setExpanded(id, false);
+                },
+            });
+        } else {
+            // ── Expand ────────────────────────────────────────────────
+            // Flip state so LWC renders the panel, then reveal it on the
+            // next animation frame (by which point the microtask render
+            // has committed the markup to the DOM — same sequencing the
+            // left-rail expand uses).
+            this._setExpanded(id, true);
+            if (!gsap || reduce) return;
+            this._tileAnimating[id] = true;
+            requestAnimationFrame(() => this._animateExpand(id));
+        }
+    }
+
+    _setExpanded(id, expanded) {
         this._violations = this._violations.map((v) =>
-            v.id === id ? { ...v, selected: checked } : v
+            v.id === id ? { ...v, expanded } : v
         );
-        this._allSelected = this._violations.every((v) => v.selected);
     }
 
     /**
-     * Open the Knowledge Article record for the clicked violation row
-     * in a new workspace tab. Mirrors the list-view pattern in
-     * `knowledgeBase.js`: stash record metadata via `setRecord`,
-     * dispatch `workspace:addtab` so the global tab strip shows the
-     * new tab, then navigate to the parametric record route. Closing
-     * the tab returns the user to `/command-center` via the shell's
-     * `originPath` mechanism.
+     * Resolve the `.cc-sv__issues` panel for a given violation id by
+     * walking up from the summary toggle (which carries the data-id) to
+     * its owning tile, then back down to the issues container. Returns
+     * null when the tile is collapsed (no panel rendered).
      */
-    handleArticleOpen(event) {
-        event.preventDefault();
-        const id = event.currentTarget?.dataset?.id;
-        const row = this._violations.find((v) => v.id === id);
-        if (!row) return;
-        setRecord({
-            id: row.id,
-            title: row.article,
-            articleRecordType: 'FAQ',
-            language: 'English',
-            currentVersion: '1',
-            isKnowledgeBlock: false,
+    _issuesPanelForId(id) {
+        const btn = this.querySelector(`.cc-sv__summary[data-id="${id}"]`);
+        const tile = btn && btn.closest('.cc-sv__tile');
+        return tile ? tile.querySelector('.cc-sv__issues') : null;
+    }
+
+    /**
+     * GSAP height-reveal for a freshly expanded tile: grows the panel
+     * from 0 to its natural height while fading in, and floats the
+     * individual issue rows up in a quick stagger. Inline styles are
+     * cleared on completion so the layout reflows normally afterward.
+     */
+    _animateExpand(id) {
+        const panel = this._issuesPanelForId(id);
+        if (!panel || !gsap) {
+            this._tileAnimating[id] = false;
+            return;
+        }
+        const rows = panel.querySelectorAll('.cc-sv__issue');
+        // Measure the natural height while the panel is laid out, then
+        // collapse to 0 and tween back up.
+        gsap.set(panel, { height: 'auto', opacity: 1, overflow: 'hidden' });
+        const fullHeight = panel.offsetHeight;
+        gsap.fromTo(
+            panel,
+            { height: 0, opacity: 0 },
+            {
+                height: fullHeight,
+                opacity: 1,
+                duration: 0.36,
+                ease: 'power2.out',
+                onComplete: () => {
+                    panel.style.height = '';
+                    panel.style.opacity = '';
+                    panel.style.overflow = '';
+                    this._tileAnimating[id] = false;
+                },
+            }
+        );
+        gsap.from(rows, {
+            y: 8,
+            opacity: 0,
+            duration: 0.3,
+            ease: 'power2.out',
+            stagger: 0.05,
+            delay: 0.06,
         });
-        const path = `/knowledge-record/${encodeURIComponent(row.id)}`;
-        window.dispatchEvent(new CustomEvent('workspace:addtab', {
-            detail: {
-                label: row.article,
-                path,
-                originPath: '/command-center',
-            },
-        }));
-        navigate(path);
-    }
-
-    handleViolationMenuToggle(event) {
-        event.stopPropagation();
-        const id = event.currentTarget?.dataset?.id;
-        // Close any other open menu so only one popover is visible at
-        // a time — mirrors the row-actions UX in lightning-datatable.
-        this._violations = this._violations.map((v) => ({
-            ...v,
-            menuOpen: v.id === id ? !v.menuOpen : false,
-        }));
-        this._ensureDocumentClickListener();
-    }
-
-    handleApproveChanges(event) {
-        event.stopPropagation();
-        const id = event.currentTarget?.dataset?.id;
-        // Close the menu and mark the row as resolved (purely visual
-        // for the prototype — drops the row from the displayed list).
-        this._violations = this._violations
-            .map((v) => ({ ...v, menuOpen: false }))
-            .filter((v) => v.id !== id);
     }
 
     handleEditToResolve(event) {
@@ -272,9 +329,74 @@ export default class CommandCenter extends LightningElement {
         const id = event.currentTarget?.dataset?.id;
         const row = this._violations.find((v) => v.id === id);
         if (!row) return;
-        // Close any open menus before navigating.
-        this._violations = this._violations.map((v) => ({ ...v, menuOpen: false }));
         this._launchActiveAuthoring(row);
+    }
+
+    handleApproveAll() {
+        // Prototype-only: clear the violations list to signal a bulk
+        // approval. The Review-in-Queue CTA owns the richer flow.
+        this._violations = [];
+    }
+
+    // ── Top Quality Issues cards (Figma 612-71226) ──────────────────
+    @track _qualityIssues = seedQualityIssues;
+
+    get qualityIssuesComputed() {
+        return this._qualityIssues.map((q) => ({
+            ...q,
+            showMerge: q.variant === 'similarity',
+        }));
+    }
+
+    /**
+     * Open the Knowledge Article behind a quality-issue column (or a
+     * structural-violation tile) in a new workspace tab. Mirrors the
+     * list-view hand-off in `knowledgeBase.js`: stash record metadata
+     * via `setRecord`, announce the tab on the global strip, then
+     * navigate to the parametric record route. Closing the tab returns
+     * the user to `/command-center` via the shell's `originPath`.
+     */
+    _openArticle(id, title) {
+        if (!id) return;
+        setRecord({
+            id,
+            title,
+            articleRecordType: 'FAQ',
+            language: 'English',
+            currentVersion: '1',
+            isKnowledgeBlock: false,
+        });
+        const path = `/knowledge-record/${encodeURIComponent(id)}`;
+        window.dispatchEvent(new CustomEvent('workspace:addtab', {
+            detail: { label: title, path, originPath: '/command-center' },
+        }));
+        navigate(path);
+    }
+
+    handleQualityArticleOpen(event) {
+        event.preventDefault();
+        const { id, title } = event.currentTarget?.dataset || {};
+        this._openArticle(id, title);
+    }
+
+    handleIgnoreQualityIssue(event) {
+        event.stopPropagation();
+        const id = event.currentTarget?.dataset?.id;
+        this._qualityIssues = this._qualityIssues.filter((q) => q.id !== id);
+    }
+
+    handleMergeArticles(event) {
+        event.stopPropagation();
+        const id = event.currentTarget?.dataset?.id;
+        // Prototype-only: resolving the merge removes the card.
+        this._qualityIssues = this._qualityIssues.filter((q) => q.id !== id);
+    }
+
+    handleArchiveArticle(event) {
+        event.stopPropagation();
+        const id = event.currentTarget?.dataset?.id;
+        // Prototype-only: archiving an article resolves its issue card.
+        this._qualityIssues = this._qualityIssues.filter((q) => q.id !== id);
     }
 
     /**
@@ -350,27 +472,6 @@ export default class CommandCenter extends LightningElement {
         this._reviewInQueueTransition(event);
     }
 
-    // Close the open row-actions menu when the user clicks outside it.
-    _docClickHandler = null;
-
-    _ensureDocumentClickListener() {
-        if (this._docClickHandler) return;
-        this._docClickHandler = (e) => {
-            if (!this._violations.some((v) => v.menuOpen)) return;
-            const inside = e.target?.closest?.('.cc-vt__cell--actions');
-            if (inside) return;
-            this._violations = this._violations.map((v) => ({ ...v, menuOpen: false }));
-        };
-        document.addEventListener('click', this._docClickHandler);
-    }
-
-    disconnectedCallback() {
-        if (this._docClickHandler) {
-            document.removeEventListener('click', this._docClickHandler);
-            this._docClickHandler = null;
-        }
-    }
-
     // ── Motion entrance ─────────────────────────────────────────────
     _motionInited = false;
     _scoreAnimated = false;
@@ -387,7 +488,108 @@ export default class CommandCenter extends LightningElement {
         const scroller = this.querySelector('.cc-main');
         if (!scroller) return;
         this._motionInited = true;
-        scroller.style.scrollBehavior = 'smooth';
+        this._initSmoothScroll(scroller);
+    }
+
+    // ── GSAP smooth scrolling ───────────────────────────────────────
+    // State + bound handler for the inertial wheel scroll on `.cc-main`.
+    _ss = null;
+    _wheelHandler = null;
+    _scroller = null;
+
+    /**
+     * Inertial ("smooth") scrolling for the `.cc-main` viewport, driven
+     * by GSAP's ticker. Native wheel events are intercepted and folded
+     * into a `target` offset; each animation frame the actual scrollTop
+     * is eased toward that target (a classic lerp, à la ScrollSmoother /
+     * Lenis) for a weighted, glide-to-rest feel. The ticker is only
+     * subscribed while a glide is in flight, so it costs nothing at
+     * rest. Honors `prefers-reduced-motion` (falls back to native
+     * scrolling) and no-ops when GSAP is unavailable.
+     */
+    _initSmoothScroll(scroller) {
+        const reduce =
+            typeof window !== 'undefined' &&
+            window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce || !gsap) return;
+
+        const state = {
+            target: scroller.scrollTop,
+            current: scroller.scrollTop,
+            running: false,
+            // Per-frame easing factor — higher glides faster / settles
+            // sooner, lower feels heavier. 0.12 reads as smooth but
+            // responsive at 60fps.
+            ease: 0.12,
+        };
+        this._ss = state;
+        this._scroller = scroller;
+
+        const maxScroll = () => scroller.scrollHeight - scroller.clientHeight;
+
+        const tick = () => {
+            state.current += (state.target - state.current) * state.ease;
+            // Snap to rest once within a sub-pixel of the target so the
+            // tween terminates cleanly and we can release the ticker.
+            if (Math.abs(state.target - state.current) < 0.5) {
+                state.current = state.target;
+                scroller.scrollTop = state.current;
+                gsap.ticker.remove(tick);
+                state.running = false;
+                return;
+            }
+            scroller.scrollTop = state.current;
+        };
+
+        const onWheel = (event) => {
+            // Defer to the browser for pinch-zoom (ctrl+wheel) and any
+            // horizontal-intent gesture so we only smooth vertical scroll.
+            if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+                return;
+            }
+            const max = maxScroll();
+            if (max <= 0) return;
+
+            // Normalize line / page delta modes to pixels.
+            const factor =
+                event.deltaMode === 1
+                    ? 16
+                    : event.deltaMode === 2
+                        ? scroller.clientHeight
+                        : 1;
+            const delta = event.deltaY * factor;
+
+            event.preventDefault();
+            // Re-sync to the live position when starting a fresh glide so
+            // scrollbar drags / keyboard scrolls between gestures aren't
+            // overridden.
+            if (!state.running) state.current = scroller.scrollTop;
+            const base = state.running ? state.target : scroller.scrollTop;
+            state.target = Math.max(0, Math.min(max, base + delta));
+
+            if (!state.running) {
+                state.running = true;
+                gsap.ticker.add(tick);
+            }
+        };
+
+        scroller.addEventListener('wheel', onWheel, { passive: false });
+        this._wheelHandler = onWheel;
+        this._ssTick = tick;
+    }
+
+    disconnectedCallback() {
+        if (this._scroller && this._wheelHandler) {
+            this._scroller.removeEventListener('wheel', this._wheelHandler);
+        }
+        if (this._ssTick && gsap) {
+            gsap.ticker.remove(this._ssTick);
+        }
+        this._ss = null;
+        this._wheelHandler = null;
+        this._ssTick = null;
+        this._scroller = null;
     }
 
     /**

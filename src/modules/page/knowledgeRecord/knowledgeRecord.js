@@ -330,138 +330,165 @@ export default class KnowledgeRecord extends LightningElement {
         return 'Detected from a 25% spike in customer cases regarding baggage allowance policy change at various San Francisco airports.';
     }
 
-    // Datatable columns + rows for the Structural Violations table
-    // (Figma frame 207:33634 — 4 columns: Violation / Resolution /
-    // AI Score / Action). Every text column pins
-    // `cellAttributes.alignment: 'left'` so headers and cells share
-    // a single left-anchored reading edge.
-    //
-    // The AI Score column uses `cellAttributes.class` bound to a
-    // per-row field so the delta value renders green for higher
-    // scores and amber for the smaller +1/+2 lifts shown in the
-    // Figma. The Action column is a `type: 'button'` with
-    // `variant: 'base'` so clicks bubble up through `onrowaction`
-    // and we can route the user into the Review Article (active
-    // authoring) experience without the row link triggering a real
-    // browser navigation.
-    get violationColumns() {
-        const leftAlign = { alignment: 'left' };
+    // ── Structural Violations (Figma frame 612:43216 / 612:70638) ──
+    // The violations now render as a stack of expandable tiles instead
+    // of a datatable. Each tile carries a title, a "N Violations" error
+    // badge, an "AI Score" success badge, a short description, and a set
+    // of nested detail rows revealed by the chevron. `_expandedViolations`
+    // maps a tile id → boolean so multiple tiles can be open at once and
+    // the open state survives re-renders.
+    @track _expandedViolations = {};
+
+    // Raw tile definitions. `structuralViolationTiles` (below) decorates
+    // these with the derived chevron icon + expanded flag the template
+    // binds to, keeping this list focused on content.
+    get _violationTileData() {
+        const detail = (id, icon, iconClass, title) => ({
+            id,
+            icon,
+            iconClass,
+            title,
+            desc: 'First 2 sentences should state the direct answer in "Open Flow Builder" section',
+            coverage: '+6%',
+            coverageLabel: 'Increase in Coverage',
+            confidence: '+2%',
+            confidenceLabel: 'AI confidence',
+        });
+        const makeDetails = (prefix) => [
+            detail(`${prefix}-d1`, 'utility:warning', 'kr-sv-detail__icon kr-sv-detail__icon--warning', 'No answer-first structure'),
+            detail(`${prefix}-d2`, 'utility:warning', 'kr-sv-detail__icon kr-sv-detail__icon--warning', 'No answer-first structure'),
+            detail(`${prefix}-d3`, 'utility:warning', 'kr-sv-detail__icon kr-sv-detail__icon--warning', 'No answer-first structure'),
+            detail(`${prefix}-d4`, 'utility:list', 'kr-sv-detail__icon kr-sv-detail__icon--info', '12 Metadata Suggestions'),
+            detail(`${prefix}-d5`, 'utility:data_graph', 'kr-sv-detail__icon kr-sv-detail__icon--info', '3 Enrichment Suggestions'),
+        ];
+        const description =
+            'Detected from a 25% spike in customer cases regarding slow charging speeds at various San Francisco charging stations.';
         return [
             {
-                label: 'Violation',
-                fieldName: 'violation',
-                type: 'text',
-                sortable: true,
-                cellAttributes: leftAlign,
+                id: 'sv1',
+                title: 'Filter Replacement: Environmental changes',
+                violationsLabel: '12 Violations',
+                aiScoreLabel: 'AI Score: 9%',
+                description,
+                details: makeDetails('sv1'),
             },
             {
-                label: 'Resolution',
-                fieldName: 'resolution',
-                type: 'text',
-                sortable: true,
-                cellAttributes: leftAlign,
+                id: 'sv2',
+                title: 'Filter Replacement: Environmental changes',
+                violationsLabel: '12 Violations',
+                aiScoreLabel: 'AI Score: 9%',
+                description,
+                details: makeDetails('sv2'),
             },
             {
-                label: 'AI Score',
-                fieldName: 'aiScore',
-                type: 'text',
-                sortable: true,
-                initialWidth: 124,
-                cellAttributes: {
-                    alignment: 'left',
-                    class: { fieldName: 'aiScoreClass' },
-                },
-            },
-            {
-                label: 'Action',
-                type: 'button',
-                sortable: false,
-                initialWidth: 163,
-                cellAttributes: leftAlign,
-                typeAttributes: {
-                    label: { fieldName: 'action' },
-                    name: 'edit-article',
-                    variant: 'base',
-                    title: 'Edit Article to resolve this violation',
-                },
+                id: 'sv3',
+                title: 'Filter Replacement: Environmental changes',
+                violationsLabel: '12 Violations',
+                aiScoreLabel: 'AI Score: 9%',
+                description,
+                details: makeDetails('sv3'),
             },
         ];
     }
 
-    get violationRows() {
-        // Mixed structural-quality issues drawn from the kinds of
-        // findings the AI auditor surfaces in real Knowledge audits —
-        // missing answer-first sentences, contradictory cross-article
-        // policy claims, deprecated procedure references, missing
-        // alt text, and ungrouped FAQ scaffolding. The AI Score column
-        // shows the projected lift from resolving each violation; the
-        // class pointer drives the green/amber colouring shown in the
-        // Figma.
-        const greenClass = 'kr-violations__delta kr-violations__delta--up';
-        const amberClass = 'kr-violations__delta kr-violations__delta--warn';
-        return [
-            {
-                id: 'v1',
-                violation: "Missing answer-first sentence in 'Relocation Bonus' section",
-                resolution: 'Lead with a one-sentence direct answer before policy details',
-                aiScore: '+ 7%',
-                aiScoreClass: greenClass,
-                action: 'Edit Article',
-                actionHref: '/',
-            },
-            {
-                id: 'v2',
-                violation: "Contradicts payout window in 'New Hire FAQ' article",
-                resolution: 'Reconcile the 30-day vs 60-day payout window with policy v4.2',
-                aiScore: '+ 4%',
-                aiScoreClass: greenClass,
-                action: 'Edit Article',
-                actionHref: '/',
-            },
-            {
-                id: 'v3',
-                violation: 'References deprecated `submitRelocationForm` workflow',
-                resolution: 'Replace step 3 with the new Workday Relocation request flow',
-                aiScore: '+ 3%',
-                aiScoreClass: amberClass,
-                action: 'Edit Article',
-                actionHref: '/',
-            },
-            {
-                id: 'v4',
-                violation: 'Eligibility table missing alt text and column headers',
-                resolution: 'Add a caption and scope="col" headers so the table is screen-reader friendly',
-                aiScore: '+ 2%',
-                aiScoreClass: amberClass,
-                action: 'Edit Article',
-                actionHref: '/',
-            },
-            {
-                id: 'v5',
-                violation: 'FAQ block uses paragraph headings instead of Q/A format',
-                resolution: 'Restructure the four sub-topics into question + answer pairs',
-                aiScore: '+ 1%',
-                aiScoreClass: amberClass,
-                action: 'Edit Article',
-                actionHref: '/',
-            },
-        ];
+    get structuralViolationTiles() {
+        return this._violationTileData.map((tile) => {
+            const expanded = !!this._expandedViolations[tile.id];
+            return {
+                ...tile,
+                expanded,
+                chevron: expanded ? 'utility:chevrondown' : 'utility:chevronright',
+                tileClass: expanded ? 'kr-sv-tile kr-sv-tile--open' : 'kr-sv-tile',
+            };
+        });
     }
 
-    /**
-     * Routes both the section-header CTA ("Edit Article to Resolve")
-     * and the per-row "Edit Article" buttons into the same flow.
-     * `lightning-datatable` rowaction events carry `event.detail.row`
-     * — for plain `onclick` from the CTA there's no detail, so we
-     * just handle the article-level edit case.
-     */
-    handleViolationAction(event) {
-        // Optional: capture the violation row so the editor could
-        // scroll to (or pre-select) the offending block. Not yet wired
-        // through to Review Article, but we keep it handy for follow-
-        // up work.
-        const violation = event?.detail?.row || null;
+    // Chevron toggle — flips the open state for a single tile. A fresh
+    // object is assigned so LWC's reactivity picks up the change.
+    handleToggleViolation(event) {
+        const id = event.currentTarget.dataset.id;
+        if (!id) return;
+        this._expandedViolations = {
+            ...this._expandedViolations,
+            [id]: !this._expandedViolations[id],
+        };
+    }
+
+    // "Edit to Resolve" on a tile → same active-authoring hand-off used
+    // throughout the page. We pass the originating tile through so the
+    // editor can later scroll to / pre-select the offending block.
+    handleEditToResolve(event) {
+        const id = event.currentTarget.dataset.id;
+        const violation =
+            this._violationTileData.find((t) => t.id === id) || null;
         this._launchActiveAuthoring({ violation });
+    }
+
+    // Header split-button actions (placeholder hooks).
+    handleReviewInQueue() {
+        navigate('/review-queue');
+    }
+
+    handleApproveAll() {
+        // Placeholder — would bulk-approve the queued violations.
+    }
+
+    // ── Top Quality Issues (Figma frame 612:71226) ────────────────
+    // Two issue cards: a contradiction between two source articles and a
+    // similarity/merge candidate. The second card surfaces a "Merge
+    // Articles" brand action via `showMerge`.
+    get qualityIssues() {
+        const summary =
+            'The following information has been identified as a contradiction. Both documents are discussing the same topic (Settlement and Payout in insurance claims) and specifically mention the Claims Processing Timeframes. The information in Document A (5-10 days) directly contradicts the information in Document B (20-25 days). These timeframes are mutually exclusive and cannot both be true';
+        const articleText = 'The Claims Processing Timeframe mentioned in the text is 5 to 10 days.';
+        return [
+            {
+                id: 'qi1',
+                title: 'Contradictions Claiming Processing Timeframes',
+                typeBadge: 'Contradiction',
+                confidence: 'Confidence: 98%',
+                showMerge: false,
+                summaryTitle: 'Contradictions Claiming Processing Timeframes',
+                summary,
+                leftLabel: 'Option A',
+                rightLabel: 'Option B',
+                leftArticle: 'Product Care and Warranty Information',
+                rightArticle: 'Product Care and Warranty Information',
+                leftText: articleText,
+                rightText: articleText,
+            },
+            {
+                id: 'qi2',
+                title: 'Similarity in Warranty Claiming process',
+                typeBadge: 'Similar Article',
+                confidence: 'Confidence: 98%',
+                showMerge: true,
+                summaryTitle: 'Similarity Claiming Processing Timeframes',
+                summary,
+                leftLabel: 'Article 1',
+                rightLabel: 'Article 2',
+                leftArticle: 'Product Care and Warranty Information',
+                rightArticle: 'Product Care and Warranty Information',
+                leftText: articleText,
+                rightText: articleText,
+            },
+        ];
+    }
+
+    handleViewAllQuality() {
+        // Placeholder — would route to the full Quality Issues list.
+    }
+
+    handleIgnoreIssue() {
+        // Placeholder — would dismiss the issue from the queue.
+    }
+
+    handleMergeArticles() {
+        // Placeholder — would open the article-merge workflow.
+    }
+
+    handleArchiveArticle() {
+        // Placeholder — would archive the selected source article.
     }
 
     /**

@@ -199,12 +199,12 @@
                 </div>
             </section>
 
-            <!-- Structural Violations table -->
+            <!-- Top Structural Violations to Resolve (Figma 612-43216) -->
             <section class="cc-section">
                 <div class="cc-violations">
                     <header class="cc-violations__header">
                         <div class="cc-violations__heading">
-                            <h2 class="cc-violations__title">Structural Violations</h2>
+                            <h2 class="cc-violations__title">Top Structural Violations to Resolve</h2>
                             <p class="cc-violations__subtitle">Unified view of decisions, expertise, and organizational knowledge</p>
                         </div>
                         <div class="cc-violations__actions slds-button-group" role="group">
@@ -216,115 +216,155 @@
                             <button
                                 type="button"
                                 class="slds-button slds-button_outline-brand cc-violations__action cc-violations__action--right"
+                                onclick={handleApproveAll}
                             >Approve All</button>
                         </div>
                     </header>
 
-                    <div class="cc-vt" role="table" aria-label="Structural violations">
-                        <!-- Header row -->
-                        <div class="cc-vt__row cc-vt__row--head" role="row">
-                            <div class="cc-vt__cell cc-vt__cell--check" role="columnheader">
-                                <input
-                                    type="checkbox"
-                                    class="cc-vt__checkbox"
-                                    aria-label="Select all violations"
-                                    onchange={handleSelectAll}
-                                />
-                            </div>
-                            <div class="cc-vt__cell cc-vt__cell--article" role="columnheader">
-                                <span class="cc-vt__head-label">Article</span>
-                                <lightning-icon icon-name="utility:chevrondown" size="xx-small" alternative-text="Sort"></lightning-icon>
-                            </div>
-                            <div class="cc-vt__cell cc-vt__cell--desc" role="columnheader">
-                                <span class="cc-vt__head-label">Description</span>
-                                <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
-                            </div>
-                            <div class="cc-vt__cell cc-vt__cell--num" role="columnheader">
-                                <span class="cc-vt__head-label">No. of Violations</span>
-                                <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
-                            </div>
-                            <div class="cc-vt__cell cc-vt__cell--ai" role="columnheader">
-                                <span class="cc-vt__head-label">AI Score</span>
-                                <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
-                            </div>
-                            <div class="cc-vt__cell cc-vt__cell--date" role="columnheader">
-                                <span class="cc-vt__head-label">Last Updated on</span>
-                                <lightning-icon icon-name="utility:arrowdown" size="xx-small" alternative-text="Sort descending"></lightning-icon>
-                            </div>
-                            <div class="cc-vt__cell cc-vt__cell--actions" role="columnheader" aria-label="Row actions"></div>
-                        </div>
-
-                        <!-- Body rows -->
+                    <ul class="cc-sv">
                         <template for:each={violationsComputed} for:item="v">
-                            <div key={v.id} class="cc-vt__row" role="row">
-                                <div class="cc-vt__cell cc-vt__cell--check" role="cell">
-                                    <input
-                                        type="checkbox"
-                                        class="cc-vt__checkbox"
-                                        data-id={v.id}
-                                        checked={v.selected}
-                                        aria-label="Select violation"
-                                        onchange={handleSelectRow}
-                                    />
-                                </div>
-                                <div class="cc-vt__cell cc-vt__cell--article" role="cell">
-                                    <a
-                                        href="javascript:void(0);"
-                                        class="cc-vt__article-link"
-                                        data-id={v.id}
-                                        onclick={handleArticleOpen}
-                                    >{v.article}</a>
-                                </div>
-                                <div class="cc-vt__cell cc-vt__cell--desc" role="cell">
-                                    <span class="cc-vt__desc">{v.description}</span>
-                                </div>
-                                <div class="cc-vt__cell cc-vt__cell--num" role="cell">
-                                    <span>{v.violations}</span>
-                                </div>
-                                <div class="cc-vt__cell cc-vt__cell--ai" role="cell">
-                                    <span class={v.aiCellClass}>{v.aiScore}</span>
-                                </div>
-                                <div class="cc-vt__cell cc-vt__cell--date" role="cell">
-                                    <span>{v.lastUpdated}</span>
-                                </div>
-                                <div class={v.actionsCellClass} role="cell">
+                            <li key={v.id} class={v.tileClass}>
+                                <div class="cc-sv__head">
+                                    <div class="cc-sv__head-text">
+                                        <button
+                                            type="button"
+                                            class="cc-sv__summary"
+                                            data-id={v.id}
+                                            aria-expanded={v.expanded}
+                                            onclick={handleToggleViolation}
+                                        >
+                                            <lightning-icon
+                                                icon-name={v.chevronIcon}
+                                                size="x-small"
+                                                alternative-text="Toggle details"
+                                                class="cc-sv__chevron"
+                                            ></lightning-icon>
+                                            <span class="cc-sv__title">{v.article}</span>
+                                            <span class="cc-sv__badge cc-sv__badge--violations">{v.violationsLabel}</span>
+                                            <span class="cc-sv__badge cc-sv__badge--score">
+                                                <lightning-icon
+                                                    icon-name="utility:arrowup"
+                                                    size="xx-small"
+                                                    alternative-text="Up"
+                                                    class="cc-sv__badge-icon"
+                                                ></lightning-icon>
+                                                <span>{v.aiScoreLabel}</span>
+                                            </span>
+                                        </button>
+                                        <p class="cc-sv__desc">{v.description}</p>
+                                    </div>
                                     <button
                                         type="button"
-                                        class="cc-vt__actions-btn"
+                                        class="slds-button slds-button_neutral cc-sv__resolve"
                                         data-id={v.id}
-                                        aria-haspopup="menu"
-                                        aria-expanded={v.menuOpen}
-                                        aria-label="Show row actions"
-                                        onclick={handleViolationMenuToggle}
-                                    >
-                                        <lightning-icon
-                                            icon-name="utility:down"
-                                            size="xx-small"
-                                            alternative-text=""
-                                        ></lightning-icon>
-                                    </button>
-                                    <template lwc:if={v.menuOpen}>
-                                        <div class={v.menuClass} role="menu">
-                                            <button
-                                                type="button"
-                                                class="cc-vt__menu-item"
-                                                role="menuitem"
-                                                data-id={v.id}
-                                                onclick={handleApproveChanges}
-                                            >Approve changes</button>
-                                            <button
-                                                type="button"
-                                                class="cc-vt__menu-item"
-                                                role="menuitem"
-                                                data-id={v.id}
-                                                onclick={handleEditToResolve}
-                                            >Edit to Resolve</button>
-                                        </div>
+                                        onclick={handleEditToResolve}
+                                    >Edit to Resolve</button>
+                                </div>
+
+                                <template lwc:if={v.expanded}>
+                                    <div class="cc-sv__issues">
+                                        <template for:each={v.issues} for:item="issue">
+                                            <div key={issue.id} class="cc-sv__issue">
+                                                <div class="cc-sv__issue-main">
+                                                    <lightning-icon
+                                                        icon-name={issue.iconName}
+                                                        size="x-small"
+                                                        alternative-text=""
+                                                        class={issue.iconClass}
+                                                    ></lightning-icon>
+                                                    <div class="cc-sv__issue-text">
+                                                        <span class="cc-sv__issue-title">{issue.title}</span>
+                                                        <span class="cc-sv__issue-subtitle">{issue.subtitle}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="cc-sv__issue-metrics">
+                                                    <div class="cc-sv__metric">
+                                                        <span class="cc-sv__metric-value">{issue.coverageDelta}</span>
+                                                        <span class="cc-sv__metric-label">Increase in Coverage</span>
+                                                    </div>
+                                                    <div class="cc-sv__metric">
+                                                        <span class="cc-sv__metric-value">{issue.confidenceDelta}</span>
+                                                        <span class="cc-sv__metric-label">AI confidence</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Top Quality Issues to Resolve (Figma 612-71226) -->
+            <section class="cc-section">
+                <div class="cc-quality">
+                    <header class="cc-quality__header">
+                        <div class="cc-quality__heading">
+                            <h2 class="cc-quality__title">Top Quality Issues to Resolve</h2>
+                            <p class="cc-quality__subtitle">Unified view of decisions, expertise, and organizational knowledge</p>
+                        </div>
+                        <a href="javascript:void(0);" class="cc-quality__view-all">View All</a>
+                    </header>
+
+                    <template for:each={qualityIssuesComputed} for:item="q">
+                        <article key={q.id} class="cc-qi">
+                            <header class="cc-qi__head">
+                                <h3 class="cc-qi__title">{q.title}</h3>
+                                <span class="cc-qi__type">{q.typeLabel}</span>
+                                <span class="cc-qi__confidence">Confidence: {q.confidence}</span>
+                                <div class="cc-qi__actions">
+                                    <button
+                                        type="button"
+                                        class="slds-button slds-button_neutral cc-qi__action"
+                                        data-id={q.id}
+                                        onclick={handleIgnoreQualityIssue}
+                                    >Ignore Issue</button>
+                                    <template lwc:if={q.showMerge}>
+                                        <button
+                                            type="button"
+                                            class="slds-button slds-button_brand cc-qi__action"
+                                            data-id={q.id}
+                                            onclick={handleMergeArticles}
+                                        >Merge Articles</button>
                                     </template>
                                 </div>
+                            </header>
+
+                            <p class="cc-qi__summary">{q.description}</p>
+
+                            <div class="cc-qi__columns">
+                                <template for:each={q.columns} for:item="col">
+                                    <div key={col.articleId} class="cc-qi__col">
+                                        <span class="cc-qi__col-label">{col.label}</span>
+                                        <a
+                                            href="javascript:void(0);"
+                                            class="cc-qi__col-link"
+                                            data-id={col.articleId}
+                                            data-title={col.articleTitle}
+                                            onclick={handleQualityArticleOpen}
+                                        >
+                                            <lightning-icon
+                                                icon-name="utility:knowledge_base"
+                                                size="xx-small"
+                                                alternative-text="Article"
+                                                class="cc-qi__col-link-icon"
+                                            ></lightning-icon>
+                                            <span>{col.articleTitle}</span>
+                                        </a>
+                                        <p class="cc-qi__col-text">{col.text}</p>
+                                        <button
+                                            type="button"
+                                            class="slds-button slds-button_neutral cc-qi__archive"
+                                            data-id={q.id}
+                                            onclick={handleArchiveArticle}
+                                        >Archive Article</button>
+                                    </div>
+                                </template>
                             </div>
-                        </template>
-                    </div>
+                        </article>
+                    </template>
                 </div>
             </section>
         </main>

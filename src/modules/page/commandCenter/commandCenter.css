@@ -648,14 +648,14 @@ page-command-center {
  * the outer-side padding to 8px pulls the label closer to the curve
  * so the rounded end stops feeling oversized. */
 .cc-violations__action--left {
-    border-top-left-radius: var(--slds-g-radius-border-circle, 9999px);
-    border-bottom-left-radius: var(--slds-g-radius-border-circle, 9999px);
+    border-top-left-radius: 9999px;
+    border-bottom-left-radius: 9999px;
     padding-inline-start: var(--slds-g-spacing-2, 8px);
 }
 
 .cc-violations__action--right {
-    border-top-right-radius: var(--slds-g-radius-border-circle, 9999px);
-    border-bottom-right-radius: var(--slds-g-radius-border-circle, 9999px);
+    border-top-right-radius: 9999px;
+    border-bottom-right-radius: 9999px;
     padding-inline-end: var(--slds-g-spacing-2, 8px);
     /* Each button carries its own 1px border, so the inner seam would
      * otherwise render at 2px. Pull the right cap back by one border
@@ -672,176 +672,407 @@ page-command-center {
     background-color: var(--slds-g-color-surface-1, #ffffff);
 }
 
-/* Violations data table — CSS grid for predictable column widths. */
-.cc-vt {
+/* ── Structural Violations tiles (Figma 612-43216 / 612-70638) ───
+ * Each violation is an expandable card: a clickable summary row
+ * (chevron + title + badge pair) with an "Edit to Resolve" action,
+ * a one-line description, and a collapsible per-issue breakdown.
+ */
+.cc-sv {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
-    border-radius: var(--slds-g-radius-border-3, 12px);
-    overflow: hidden;
+    gap: var(--slds-g-spacing-3, 12px);
+}
+
+.cc-sv__tile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+    padding: var(--slds-g-spacing-4, 16px);
     background-color: var(--slds-g-color-surface-container-1, #fff);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-5, 20px);
 }
 
-.cc-vt__row {
-    display: grid;
-    grid-template-columns: 40px minmax(180px, 1.4fr) minmax(220px, 2fr) 152px 152px 175px 50px;
-    align-items: stretch;
-    border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+/* The "Edit to Resolve" action centers vertically against the whole
+ * title + description text block (Figma 612-43216). */
+.cc-sv__head {
+    display: flex;
+    align-items: center;
+    gap: 0;
 }
 
-.cc-vt__row:last-child {
-    border-bottom: 0;
+.cc-sv__head-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
 }
 
-.cc-vt__row--head {
-    background-color: var(--slds-g-color-surface-2, #f3f3f3);
-}
-
-.cc-vt__cell {
+/* The summary is a single button so the entire title row toggles the
+ * tile. It is reset to look like inline content rather than a button. */
+.cc-sv__summary {
+    align-self: stretch;
+    min-width: 0;
     display: flex;
     align-items: center;
     gap: var(--slds-g-spacing-2, 8px);
-    min-height: 36px;
-    padding: var(--slds-g-spacing-2, 8px) var(--slds-g-spacing-2, 8px);
-    font-size: var(--slds-g-font-scale-base, 13px);
+    padding: 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+}
+
+.cc-sv__chevron {
+    flex-shrink: 0;
+    --slds-c-icon-color-foreground: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.cc-sv__title {
+    font-size: var(--slds-g-font-scale-2, 16px);
     line-height: var(--slds-g-line-height-3, 1.4);
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
-    overflow: hidden;
-}
-
-.cc-vt__row--head .cc-vt__cell {
-    color: var(--slds-g-color-on-surface-1, #5c5c5c);
-}
-
-/* Header column dividers — Figma renders a 1px left border on every
- * sortable header cell except Article (the first text column) and
- * the leading checkbox cell. */
-.cc-vt__row--head .cc-vt__cell--desc,
-.cc-vt__row--head .cc-vt__cell--num,
-.cc-vt__row--head .cc-vt__cell--ai,
-.cc-vt__row--head .cc-vt__cell--date {
-    border-left: 1px solid var(--slds-g-color-border-1, #c9c9c9);
-}
-
-.cc-vt__cell--check {
-    justify-content: center;
-}
-
-.cc-vt__cell--actions {
-    justify-content: flex-end;
-    position: relative;
-    overflow: visible;
-}
-
-.cc-vt__head-label {
-    font-weight: var(--slds-g-font-weight-6, 600);
-}
-
-.cc-vt__article-link {
-    color: var(--slds-g-color-link-base-1, #0b5cab);
-    text-decoration: none;
-    font-weight: var(--slds-g-font-weight-4, 400);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-on-surface-3, #03234d);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.cc-vt__article-link:hover {
+.cc-sv__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    flex-shrink: 0;
+    padding: 2px var(--slds-g-spacing-2, 8px);
+    border-radius: var(--slds-g-radius-border-1, 4px);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 16px;
+    font-weight: var(--slds-g-font-weight-6, 590);
+    white-space: nowrap;
+}
+
+.cc-sv__badge--violations {
+    background-color: var(--slds-g-color-error-container-1, #fddde3);
+    color: var(--slds-g-color-on-error-1, #b60554);
+}
+
+.cc-sv__badge--score {
+    background-color: var(--slds-g-color-success-container-1, #acf3e4);
+    color: var(--slds-g-color-on-success-1, #056764);
+}
+
+.cc-sv__badge-icon {
+    --slds-c-icon-color-foreground: var(--slds-g-color-on-success-1, #056764);
+}
+
+/* Pill-shaped action button. `--slds-g-radius-border-circle` resolves
+ * to 100% in this theme, which renders a rectangular button as an
+ * ellipse — so use a large fixed radius for a true pill (corners fully
+ * rounded, sides straight), matching the repo's existing pill pattern. */
+.cc-sv__resolve {
+    flex-shrink: 0;
+    --slds-c-button-radius-border: 9999px;
+    border-radius: 9999px;
+}
+
+/* Description aligns under the title text (past the 16px chevron and
+ * its 8px gap) so it reads as a continuation of the summary. */
+.cc-sv__desc {
+    margin: 0;
+    padding-inline-start: 24px;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Expanded per-issue breakdown — light indigo panel (Figma Indigo/95). */
+.cc-sv__issues {
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--slds-g-spacing-1, 4px);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    background-color: var(--slds-g-color-surface-2, #f1f3fb);
+    overflow: hidden;
+}
+
+.cc-sv__issue {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 16px);
+    padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+}
+
+.cc-sv__issue-main {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--slds-g-spacing-2, 8px);
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+/* All issue glyphs (warning / list / enrichment) read in electric
+ * blue. These are default-variant utility icons, whose SVG carries
+ * the `.slds-icon-text-default` class — that class re-defines
+ * `--slds-c-icon-color-foreground` from the *-default* hook chain
+ * (lightning-icon icon.slds.css), so the plain foreground hook is
+ * ignored. Set the `-default` hooks instead so the override resolves
+ * to electric blue. */
+.cc-sv__issue-icon,
+.cc-sv__issue-icon--warning,
+.cc-sv__issue-icon--info {
+    flex-shrink: 0;
+    margin-top: 2px;
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-palette-electric-blue-50, #066afe);
+    --sds-c-icon-color-foreground-default: var(--slds-g-color-palette-electric-blue-50, #066afe);
+}
+
+.cc-sv__issue-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cc-sv__issue-title {
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.cc-sv__issue-subtitle {
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.cc-sv__issue-metrics {
+    display: flex;
+    gap: var(--slds-g-spacing-6, 24px);
+    flex-shrink: 0;
+}
+
+.cc-sv__metric {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.cc-sv__metric-value {
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: var(--slds-g-line-height-2, 1.25);
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.cc-sv__metric-label {
+    font-size: var(--slds-g-font-scale-neg-2, 10px);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+/* ── Top Quality Issues to Resolve (Figma 612-71226) ─────────────
+ * A stack of contradiction / similarity cards, each comparing two
+ * source articles side by side with Ignore / Merge / Archive actions.
+ */
+.cc-quality {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-4, 16px);
+    padding: var(--slds-g-spacing-6, 24px) 0 0;
+}
+
+.cc-quality__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--slds-g-spacing-4, 16px);
+}
+
+.cc-quality__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.cc-quality__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-2, 16px);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.cc-quality__subtitle {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    color: var(--slds-g-color-on-surface-1, #5c5c5c);
+}
+
+.cc-quality__view-all {
+    flex-shrink: 0;
+    color: var(--slds-g-color-accent-2, #0250d9);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    font-weight: var(--slds-g-font-weight-6, 590);
+    text-decoration: none;
+}
+
+.cc-quality__view-all:hover {
     text-decoration: underline;
 }
 
-.cc-vt__desc {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.cc-vt__ai {
-    font-weight: var(--slds-g-font-weight-7, 700);
-}
-
-.cc-vt__ai--positive {
-    color: var(--slds-g-color-success-base-50, #2e844a);
-}
-
-.cc-vt__ai--warning {
-    color: var(--slds-g-color-warning-base-50, #a96504);
-}
-
-.cc-vt__checkbox {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--slds-g-color-border-accent-1, #066afe);
-    cursor: pointer;
-}
-
-.cc-vt__actions-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    background-color: var(--slds-g-color-surface-container-1, #fff);
-    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
-    border-radius: var(--slds-g-radius-border-circle, 9999px);
-    color: var(--slds-g-color-on-surface-3, #03234d);
-    cursor: pointer;
-}
-
-.cc-vt__actions-btn:hover {
-    background-color: var(--slds-g-color-surface-2, #f3f3f3);
-}
-
-.cc-vt__actions-btn:focus-visible {
-    outline: 2px solid var(--slds-g-color-border-accent-1, #066afe);
-    outline-offset: 2px;
-}
-
-/* Row-actions popover (Approve changes / Edit to Resolve). */
-.cc-vt__menu {
-    position: absolute;
-    top: calc(100% + 4px);
-    right: var(--slds-g-spacing-3, 12px);
-    z-index: 50;
+.cc-qi {
     display: flex;
     flex-direction: column;
-    min-width: 180px;
-    padding: var(--slds-g-spacing-1, 4px) 0;
+    gap: var(--slds-g-spacing-4, 16px);
+    padding: var(--slds-g-spacing-4, 16px);
     background-color: var(--slds-g-color-surface-container-1, #fff);
     border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
-    border-radius: var(--slds-g-radius-border-2, 8px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-radius: var(--slds-g-radius-border-3, 12px);
 }
 
-.cc-vt__menu-item {
+.cc-qi__head {
     display: flex;
     align-items: center;
-    height: 32px;
-    padding: 0 var(--slds-g-spacing-4, 16px);
-    background: transparent;
-    border: 0;
-    color: var(--slds-g-color-on-surface-3, #03234d);
-    font-family: inherit;
-    font-size: var(--slds-g-font-scale-base, 13px);
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.cc-qi__title {
+    margin: 0;
+    font-size: var(--slds-g-font-scale-2, 16px);
     line-height: var(--slds-g-line-height-3, 1.4);
-    text-align: left;
-    cursor: pointer;
+    font-weight: var(--slds-g-font-weight-6, 590);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.cc-qi__type {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 2px var(--slds-g-spacing-2, 8px);
+    border: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    border-radius: var(--slds-g-radius-border-1, 4px);
+    background-color: var(--slds-g-color-surface-container-1, #fff);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 16px;
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
     white-space: nowrap;
 }
 
-.cc-vt__menu-item:hover {
-    background-color: var(--slds-g-color-surface-2, #f3f3f3);
+.cc-qi__confidence {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 2px var(--slds-g-spacing-2, 8px);
+    border-radius: var(--slds-g-radius-border-1, 4px);
+    background-color: var(--slds-g-color-success-container-1, #acf3e4);
+    color: var(--slds-g-color-on-success-1, #056764);
+    font-size: var(--slds-g-font-scale-neg-1, 12px);
+    line-height: 16px;
+    font-weight: var(--slds-g-font-weight-6, 590);
+    white-space: nowrap;
 }
 
-.cc-vt__menu-item:focus-visible {
-    outline: 2px solid var(--slds-g-color-border-accent-1, #066afe);
-    outline-offset: -2px;
+.cc-qi__actions {
+    margin-inline-start: auto;
+    display: flex;
+    gap: var(--slds-g-spacing-2, 8px);
+    flex-shrink: 0;
+}
+
+.cc-qi__action {
+    --slds-c-button-radius-border: 9999px;
+    border-radius: 9999px;
+}
+
+.cc-qi__summary {
+    margin: 0;
+    padding: var(--slds-g-spacing-3, 12px) var(--slds-g-spacing-4, 16px);
+    border-radius: var(--slds-g-radius-border-2, 8px);
+    background-color: var(--slds-g-color-surface-2, #f1f3fb);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: var(--slds-g-line-height-4, 1.5);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.cc-qi__columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--slds-g-spacing-6, 24px);
+}
+
+.cc-qi__col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--slds-g-spacing-2, 8px);
+}
+
+.cc-qi__col-label {
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: var(--slds-g-line-height-3, 1.4);
+    font-weight: var(--slds-g-font-weight-7, 700);
+    color: var(--slds-g-color-on-surface-3, #03234d);
+}
+
+.cc-qi__col-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--slds-g-spacing-1, 4px);
+    color: var(--slds-g-color-accent-2, #0250d9);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    text-decoration: none;
+}
+
+.cc-qi__col-link:hover {
+    text-decoration: underline;
+}
+
+.cc-qi__col-link-icon {
+    --slds-c-icon-color-foreground: var(--slds-g-color-accent-2, #0250d9);
+}
+
+.cc-qi__col-text {
+    margin: 0;
+    padding-bottom: var(--slds-g-spacing-3, 12px);
+    border-bottom: 1px solid var(--slds-g-color-border-1, #c9c9c9);
+    font-size: var(--slds-g-font-scale-base, 13px);
+    line-height: var(--slds-g-line-height-4, 1.5);
+    color: var(--slds-g-color-on-surface-2, #2e2e2e);
+}
+
+.cc-qi__archive {
+    align-self: flex-start;
+    --slds-c-button-radius-border: 9999px;
+    border-radius: 9999px;
 }
 
 /* ── Responsive: stack overview cards under ~960px ─────────────── */
 @media (max-width: 959px) {
     .cc-overview-row {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cc-qi__columns {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cc-sv__issue {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--slds-g-spacing-2, 8px);
+    }
+
+    .cc-sv__issue-metrics {
+        gap: var(--slds-g-spacing-4, 16px);
     }
 }

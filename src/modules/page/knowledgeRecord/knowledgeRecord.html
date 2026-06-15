@@ -275,34 +275,208 @@
                         </div>
                     </section>
 
-                    <section class="kr-violations" aria-labelledby="kr-violations-title">
-                        <!-- Header row: title + subtitle on the left, brand-
-                             outline CTA on the right. Mirrors Figma frame
-                             207:33626. -->
-                        <header class="kr-violations__header">
-                            <div class="kr-violations__heading">
-                                <h2 id="kr-violations-title" class="kr-violations__title">Structural Violations</h2>
-                                <p class="kr-violations__subtitle">14 Structural Violations Detected. Edit Article to Resolve them on by one</p>
+                    <!-- ════════ STRUCTURAL VIOLATIONS ══════════════════
+                         Figma frames 612:43216 (collapsed tiles) and
+                         612:70638 (expanded tile). Each tile is an
+                         expandable row: chevron + title + badges + a
+                         neutral "Edit to Resolve" pill. Expanding reveals
+                         a lavender detail panel listing each finding with
+                         its coverage / confidence lift. -->
+                    <section class="kr-sv" aria-labelledby="kr-sv-title">
+                        <header class="kr-sv__header">
+                            <div class="kr-sv__heading">
+                                <h2 id="kr-sv-title" class="kr-sv__title">Top Structural Violations to Resolve</h2>
+                                <p class="kr-sv__subtitle">Unified view of decisions, expertise, and organizational knowledge</p>
                             </div>
-                            <lightning-button
-                                variant="brand-outline"
-                                label="Edit Article to Resolve"
-                                class="kr-violations__cta"
-                                onclick={handleViolationAction}
-                            ></lightning-button>
+                            <lightning-button-group class="kr-sv__actions">
+                                <lightning-button
+                                    label="Review in Queue"
+                                    onclick={handleReviewInQueue}
+                                ></lightning-button>
+                                <lightning-button
+                                    label="Approve All"
+                                    onclick={handleApproveAll}
+                                ></lightning-button>
+                            </lightning-button-group>
                         </header>
-                        <!-- Reusing lightning-datatable for sort + cell
-                             behavior. The AI Score column applies a per-row
-                             class via `cellAttributes.class` so the delta
-                             renders green / amber based on the value. -->
-                        <lightning-datatable
-                            class="kr-violations__table"
-                            key-field="id"
-                            data={violationRows}
-                            columns={violationColumns}
-                            hide-checkbox-column
-                            onrowaction={handleViolationAction}
-                        ></lightning-datatable>
+
+                        <ul class="kr-sv__list">
+                            <template for:each={structuralViolationTiles} for:item="tile">
+                                <li key={tile.id} class={tile.tileClass}>
+                                    <div class="kr-sv-tile__main">
+                                        <button
+                                            type="button"
+                                            class="kr-sv-tile__chevron"
+                                            aria-expanded={tile.expanded}
+                                            aria-label="Toggle violations"
+                                            data-id={tile.id}
+                                            onclick={handleToggleViolation}
+                                        >
+                                            <lightning-icon
+                                                icon-name={tile.chevron}
+                                                size="x-small"
+                                                alternative-text="Toggle"
+                                            ></lightning-icon>
+                                        </button>
+                                        <div class="kr-sv-tile__content">
+                                            <div class="kr-sv-tile__titlerow">
+                                                <span class="kr-sv-tile__title">{tile.title}</span>
+                                                <span class="kr-sv-badge kr-sv-badge--violations">{tile.violationsLabel}</span>
+                                                <span class="kr-sv-badge kr-sv-badge--score">
+                                                    <lightning-icon
+                                                        icon-name="utility:arrowup"
+                                                        size="xx-small"
+                                                        class="kr-sv-badge__icon"
+                                                        alternative-text="Up"
+                                                    ></lightning-icon>
+                                                    <span>{tile.aiScoreLabel}</span>
+                                                </span>
+                                            </div>
+                                            <p class="kr-sv-tile__desc">{tile.description}</p>
+                                        </div>
+                                        <lightning-button
+                                            class="kr-sv-tile__cta"
+                                            variant="neutral"
+                                            label="Edit to Resolve"
+                                            data-id={tile.id}
+                                            onclick={handleEditToResolve}
+                                        ></lightning-button>
+                                    </div>
+
+                                    <template lwc:if={tile.expanded}>
+                                        <div class="kr-sv-tile__details">
+                                            <template for:each={tile.details} for:item="d">
+                                                <div key={d.id} class="kr-sv-detail">
+                                                    <div class="kr-sv-detail__info">
+                                                        <lightning-icon
+                                                            icon-name={d.icon}
+                                                            size="x-small"
+                                                            class={d.iconClass}
+                                                            alternative-text=""
+                                                        ></lightning-icon>
+                                                        <div class="kr-sv-detail__text">
+                                                            <span class="kr-sv-detail__title">{d.title}</span>
+                                                            <span class="kr-sv-detail__desc">{d.desc}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="kr-sv-detail__stats">
+                                                        <div class="kr-sv-detail__stat">
+                                                            <span class="kr-sv-detail__stat-value">{d.coverage}</span>
+                                                            <span class="kr-sv-detail__stat-label">{d.coverageLabel}</span>
+                                                        </div>
+                                                        <div class="kr-sv-detail__stat">
+                                                            <span class="kr-sv-detail__stat-value">{d.confidence}</span>
+                                                            <span class="kr-sv-detail__stat-label">{d.confidenceLabel}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </li>
+                            </template>
+                        </ul>
+                    </section>
+
+                    <!-- ════════ TOP QUALITY ISSUES ═════════════════════
+                         Figma frame 612:71226. Each card shows a
+                         contradiction / similarity finding with a type
+                         badge, a confidence badge, a lavender summary
+                         panel, and two source-article columns each ending
+                         in an "Archive Article" action. The similarity
+                         card additionally offers "Merge Articles". -->
+                    <section class="kr-qi" aria-labelledby="kr-qi-title">
+                        <header class="kr-qi__header">
+                            <div class="kr-qi__heading">
+                                <h2 id="kr-qi-title" class="kr-qi__title">Top Quality Issues to Resolve</h2>
+                                <p class="kr-qi__subtitle">Unified view of decisions, expertise, and organizational knowledge</p>
+                            </div>
+                            <a href="javascript:void(0)" class="kr-qi__viewall" onclick={handleViewAllQuality}>View All</a>
+                        </header>
+
+                        <ul class="kr-qi__list">
+                            <template for:each={qualityIssues} for:item="issue">
+                                <li key={issue.id} class="kr-qi-card">
+                                    <div class="kr-qi-card__head">
+                                        <div class="kr-qi-card__titlerow">
+                                            <span class="kr-qi-card__title">{issue.title}</span>
+                                            <span class="kr-qi-badge kr-qi-badge--type">{issue.typeBadge}</span>
+                                            <span class="kr-qi-badge kr-qi-badge--confidence">{issue.confidence}</span>
+                                        </div>
+                                        <div class="kr-qi-card__actions">
+                                            <lightning-button
+                                                variant="neutral"
+                                                label="Ignore Issue"
+                                                class="kr-qi-card__btn"
+                                                data-id={issue.id}
+                                                onclick={handleIgnoreIssue}
+                                            ></lightning-button>
+                                            <template lwc:if={issue.showMerge}>
+                                                <lightning-button
+                                                    variant="brand"
+                                                    label="Merge Articles"
+                                                    class="kr-qi-card__btn"
+                                                    data-id={issue.id}
+                                                    onclick={handleMergeArticles}
+                                                ></lightning-button>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <div class="kr-qi-card__summary">
+                                        <span class="kr-qi-card__summary-title">{issue.summaryTitle}</span>
+                                        <p class="kr-qi-card__summary-text">{issue.summary}</p>
+                                    </div>
+
+                                    <div class="kr-qi-card__cols">
+                                        <div class="kr-qi-col">
+                                            <span class="kr-qi-col__label">{issue.leftLabel}</span>
+                                            <a href="javascript:void(0)" class="kr-qi-col__link">
+                                                <lightning-icon
+                                                    icon-name="utility:knowledge_base"
+                                                    size="xx-small"
+                                                    class="kr-qi-col__link-icon"
+                                                    alternative-text=""
+                                                ></lightning-icon>
+                                                <span>{issue.leftArticle}</span>
+                                            </a>
+                                            <p class="kr-qi-col__text">{issue.leftText}</p>
+                                            <div class="kr-qi-col__divider"></div>
+                                            <lightning-button
+                                                variant="neutral"
+                                                label="Archive Article"
+                                                class="kr-qi-col__btn"
+                                                data-id={issue.id}
+                                                data-side="left"
+                                                onclick={handleArchiveArticle}
+                                            ></lightning-button>
+                                        </div>
+                                        <div class="kr-qi-col">
+                                            <span class="kr-qi-col__label">{issue.rightLabel}</span>
+                                            <a href="javascript:void(0)" class="kr-qi-col__link">
+                                                <lightning-icon
+                                                    icon-name="utility:knowledge_base"
+                                                    size="xx-small"
+                                                    class="kr-qi-col__link-icon"
+                                                    alternative-text=""
+                                                ></lightning-icon>
+                                                <span>{issue.rightArticle}</span>
+                                            </a>
+                                            <p class="kr-qi-col__text">{issue.rightText}</p>
+                                            <div class="kr-qi-col__divider"></div>
+                                            <lightning-button
+                                                variant="neutral"
+                                                label="Archive Article"
+                                                class="kr-qi-col__btn"
+                                                data-id={issue.id}
+                                                data-side="right"
+                                                onclick={handleArchiveArticle}
+                                            ></lightning-button>
+                                        </div>
+                                    </div>
+                                </li>
+                            </template>
+                        </ul>
                     </section>
                 </template>
                 </div>
